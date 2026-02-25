@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Source Sans 3", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+}
+
+:root {
+  --background: #f8fafc; /* Slate 50 - clean professional */
+  --foreground: #0f172a; /* Slate 900 - high readablity */
+  --primary: #1e293b; /* Slate 800 - professional dark */
+  --accent: #0f172a; /* Equal to foreground for neutral consistency */
+  --muted: #f1f5f9; /* Slate 100 */
+  --border: #e2e8f0; /* Slate 200 */
+  --action-positive: #22c55e; /* Green 500 */
+  --action-negative: #ef4444; /* Red 500 */
+  color-scheme: light;
+}
+
+.dark {
+  --background: #020617; /* Deep Charcoal */
+  --foreground: #f8fafc; /* Off-white */
+  --primary: #94a3b8; /* Slate 400 */
+  --accent: #f8fafc;
+  --muted: #0f172a;
+  --border: #1e293b;
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, 
+a,
+[role="button"] {
+  cursor: pointer;
+}
+
+@layer components {
+  .pro-card {
+    @apply border border-border bg-white p-6 transition-all hover:shadow-lg hover:border-slate-400;
+  }
+  
+  .pro-button {
+    @apply inline-flex items-center justify-center px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest transition-all hover:bg-slate-950 active:scale-[0.98] cursor-pointer;
+  }
+  
+  .pro-input {
+    @apply w-full bg-white border border-border px-4 py-2 outline-none focus:border-slate-900 transition-colors text-sm;
+  }
+
+  .nav-link-industrial {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60 hover:text-foreground transition-colors relative py-1 px-4 border-l-2 border-transparent hover:border-primary;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
