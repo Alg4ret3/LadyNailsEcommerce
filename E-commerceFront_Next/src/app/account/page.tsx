@@ -12,7 +12,7 @@ import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/navigation';
 
 export default function AccountPage() {
-  const { user, updateProfile, addAddress, deleteAddress, logout } = useUser();
+  const { user, updateProfile, deleteAddress, logout } = useUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState('perfil'); // 'perfil' or 'direcciones'
   
@@ -32,7 +32,7 @@ export default function AccountPage() {
 
   React.useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/auth/login');
     } else {
       setProfileForm({
         firstName: user.firstName,
@@ -44,7 +44,7 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    router.push('/auth/login');
   };
 
   const MENU_ITEMS = [

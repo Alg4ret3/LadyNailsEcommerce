@@ -5,6 +5,7 @@ export interface RegisterData {
     password: string;
     firstName: string;
     lastName: string;
+    phone?: string;
 }
 
 export interface LoginData {
@@ -146,6 +147,7 @@ export async function registerCustomer(
                     email: data.email,
                     first_name: data.firstName,
                     last_name: data.lastName,
+                    phone: data.phone,
                 }),
             },
         );
