@@ -150,7 +150,7 @@ export const Navbar: React.FC = () => {
             )}
           </Link>
 
-          <Link href="/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block">
+          <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block">
             <User size={18} strokeWidth={2.5} />
           </Link>
 

@@ -3,7 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/UserContext";
+import { UserProvider } from "@/context/UserContext";
 import { CompareProvider } from "@/context/CompareContext";
 import { CompareDrawer } from "@/components/organisms/CompareDrawer";
 import { WhatsAppButton } from "@/components/atoms/WhatsAppButton";
@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={`${outfit.variable} antialiased font-sans`}>
         <ThemeProvider>
-          <AuthProvider>
+          <UserProvider>
             <CartProvider>
               <WishlistProvider>
                 <CompareProvider>
@@ -40,7 +40,7 @@ export default function RootLayout({
                 </CompareProvider>
               </WishlistProvider>
             </CartProvider>
-          </AuthProvider>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

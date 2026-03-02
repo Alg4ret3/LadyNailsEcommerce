@@ -1,158 +1,413 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  registerCustomer,
+  loginCustomer,
+  logoutCustomer,
+  getCurrentCustomer,
+  createCustomerAddress,
+  listCustomerAddresses,
+  deleteCustomerAddress,
+  updateCustomerAddress,
+  updateCustomer as updateCustomerService,
+  sendOtp as sendOtpService,
+  verifyOtp as verifyOtpService,
+  requestPasswordReset as requestPasswordResetService,
+  updatePasswordWithToken as updatePasswordWithTokenService,
+  type RegisterData,
+  type LoginData,
+  type CustomerData
+} from '@/services/medusa';
 
 export interface Address {
   id: string;
-  name: string;
-  address: string;
+  label: string;
+  street: string;
   city: string;
+  country: string;
+  province?: string;
+  postalCode?: string;
+  apartment?: string;
   isDefault: boolean;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  company?: string;
 }
 
 export interface User {
   id: string;
+  name: string;
+  email: string;
+  phone: string;
   firstName: string;
   lastName: string;
-  email: string;
-  phone?: string;
-  addresses?: Address[];
   isLoggedIn: boolean;
+  addresses: Address[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-interface AuthContextType {
+interface UserContextType {
   user: User | null;
-  login: (credentials: Record<string, unknown>) => Promise<void>;
-  logout: () => Promise<void>;
-  signupStep1: (email: string) => Promise<void>;
-  signupStep2: (code: string) => Promise<boolean>;
-  signupStep3: (data: Partial<User> & { password?: string }) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-  addAddress: (address: Omit<Address, 'id'>) => Promise<void>;
-  updateAddress: (id: string, address: Partial<Address>) => Promise<void>;
-  deleteAddress: (id: string) => Promise<void>;
   isLoading: boolean;
+  error: string | null;
+  login: (data: LoginData) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  sendOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, code: string) => Promise<{ verified: boolean }>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => Promise<void>;
+  clearError: () => void;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (email: string, token: string, password: string) => Promise<void>;
+  createAddress: (data: CreateAddressInput) => Promise<void>;
+  listAddresses: () => Promise<void>;
+  deleteAddress: (addressId: string) => Promise<void>;
+  updateAddress: (
+    id: string,
+    data: CreateAddressInput
+  ) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface CreateAddressInput {
+  addressName: string;
+  firstName: string;
+  lastName: string;
+  street: string;
+  city: string;
+  country: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+}
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+
+/**
+ * Convert Medusa CustomerData to User format
+ */
+function customerToUser(customer: CustomerData): User {
+  const addresses: Address[] = (customer.addresses || []).map(addr => ({
+    id: addr.id,
+    label:
+      (addr as any).address_name ||
+      (addr.metadata?.label as string) ||
+      "Dirección",
+    street: addr.address_1 || "",
+    city: addr.city || "",
+    country: addr.country_code || "",
+    province: addr.province || "",
+    postalCode: addr.postal_code || "",
+    apartment: addr.address_2 || "",
+    isDefault: false, // opcional: mejorar luego
+    firstName: addr.first_name || "",
+    lastName: addr.last_name || "",
+    phone: addr.phone || "",
+  }));
+
+  return {
+    id: customer.id,
+    name: `${customer.first_name} ${customer.last_name}`,
+    email: customer.email,
+    phone: customer.phone || "",
+    firstName: customer.first_name,
+    lastName: customer.last_name,
+    isLoggedIn: true,
+    addresses,
+    createdAt: customer.created_at,
+    updatedAt: customer.updated_at,
+  };
+}
+
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [tempEmail, setTempEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Check for existing session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('ladynail-user');
-    if (savedUser) {
+    const checkSession = async () => {
       try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse user', e);
+        setIsLoading(true);
+        const customer = await getCurrentCustomer();
+
+        if (customer) {
+          setUser(customerToUser(customer));
+        }
+      } catch (err) {
+        console.error('Session check failed:', err);
+        // Don't set error for session check failures
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkSession();
   }, []);
 
-  const saveUser = (userData: User | null) => {
-    setUser(userData);
-    if (userData) {
-      localStorage.setItem('ladynail-user', JSON.stringify(userData));
-    } else {
-      localStorage.removeItem('ladynail-user');
+  const login = async (data: LoginData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { customer, token } = await loginCustomer(data);
+
+
+      localStorage.setItem("auth_token", token);
+
+      setUser(customerToUser(customer));
+    } catch (err: any) {
+      setError(err.message || "Error al iniciar sesión");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const login = async (credentials: Record<string, unknown>) => {
-    const mockUser: User = {
-      id: '1',
-      firstName: 'Invitado',
-      lastName: 'Premium',
-      email: (credentials.email as string) || 'invitado@example.com',
-      phone: '+57 321 000 0000',
-      addresses: [
-        { id: 'addr1', name: 'Oficina Principal', address: 'Parque Industrial Sur, Bloque C-12', city: 'Pasto', isDefault: true }
-      ],
-      isLoggedIn: true,
-    };
-    saveUser(mockUser);
+
+  const register = async (data: RegisterData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const customer = await registerCustomer(data);
+
+      // After registration, login automatically
+      await login({ email: data.email, password: data.password });
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar usuario');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const sendOtp = async (email: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await sendOtpService(email);
+    } catch (err: any) {
+      setError(err.message || 'Error al enviar código');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyOtp = async (email: string, code: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      return await verifyOtpService(email, code);
+    } catch (err: any) {
+      setError(err.message || 'Código inválido');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const logout = async () => {
-    saveUser(null);
-  };
+    try {
+      setIsLoading(true);
+      setError(null);
 
-  const signupStep1 = async (email: string) => {
-    setTempEmail(email);
-    console.log(`Sending code to ${email}... (Mock: 123456)`);
-  };
-
-  const signupStep2 = async (code: string) => {
-    return code === '123456';
-  };
-
-  const signupStep3 = async (data: Partial<User> & { password?: string }) => {
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      firstName: data.firstName || '',
-      lastName: data.lastName || '',
-      email: tempEmail || '',
-      phone: data.phone || '',
-      addresses: [],
-      isLoggedIn: true,
-    };
-    saveUser(newUser);
-    setTempEmail(null);
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    if (user) {
-      saveUser({ ...user, ...data });
+      localStorage.removeItem("auth_token");
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const addAddress = async (address: Omit<Address, 'id'>) => {
-    if (user) {
-      const newAddress = { ...address, id: Math.random().toString(36).substr(2, 9) };
-      saveUser({ ...user, addresses: [...(user.addresses || []), newAddress] });
+  const updateProfile = async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const updateData: any = {};
+      if (data.firstName) updateData.first_name = data.firstName;
+      if (data.lastName) updateData.last_name = data.lastName;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+
+      const customer = await updateCustomerService(updateData);
+      setUser(customerToUser(customer));
+    } catch (err: any) {
+      setError(err.message || 'Error al actualizar perfil');
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const updateAddress = async (id: string, address: Partial<Address>) => {
-    if (user && user.addresses) {
-      const updated = user.addresses.map(a => a.id === id ? { ...a, ...address } : a);
-      saveUser({ ...user, addresses: updated });
+  const createAddress = async (data: CreateAddressInput) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await createCustomerAddress({
+        address_name: data.addressName,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        address_1: data.street,
+        city: data.city,
+        country_code: data.country.toLowerCase(),
+        province: data.province,
+        postal_code: data.postalCode,
+        phone: data.phone,
+      });
+
+      await listAddresses(); // 🔥 sincronización real
+
+    } catch (err: any) {
+      setError(err.message || "Error al crear dirección");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const deleteAddress = async (id: string) => {
-    if (user && user.addresses) {
-      saveUser({ ...user, addresses: user.addresses.filter(a => a.id !== id) });
+  const listAddresses = async () => {
+    try {
+      setIsLoading(true);
+      const response = await listCustomerAddresses();
+      if (response.customer) {
+        setUser(customerToUser(response.customer));
+      }
+    } catch (err: any) {
+      setError(err.message || "Error al cargar direcciones");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateAddress = async (
+    id: string,
+    data: CreateAddressInput
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await updateCustomerAddress(id, {
+        address_name: data.addressName,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        address_1: data.street,
+        city: data.city,
+        country_code: data.country.toLowerCase(),
+        province: data.province,
+        postal_code: data.postalCode,
+        phone: data.phone,
+      });
+
+      // 🔥 sincronizamos
+      await listAddresses();
+
+    } catch (err: any) {
+      setError(err.message || "Error al actualizar dirección");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  const deleteAddress = async (addressId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await deleteCustomerAddress(addressId);
+
+      // 🔥 Opción profesional: refrescar desde backend
+      await listAddresses();
+
+      // ⚡ Alternativa rápida (optimista):
+      // setUser(prev =>
+      //   prev
+      //     ? { ...prev, addresses: prev.addresses.filter(a => a.id !== addressId) }
+      //     : prev
+      // );
+
+    } catch (err: any) {
+      setError(err.message || "Error al eliminar dirección");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await requestPasswordResetService(email);
+
+    } catch (err: any) {
+      // 🔒 Nunca exponemos si el correo existe
+      setError("Si el correo existe, recibirás instrucciones para restablecer tu contraseña");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string, token: string, password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await updatePasswordWithTokenService({
+        email,
+        token,
+        password,
+      });
+
+    } catch (err: any) {
+      setError(err.message || "No se pudo actualizar la contraseña");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      signupStep1, 
-      signupStep2, 
-      signupStep3,
+    <UserContext.Provider value={{
+      user,
+      isLoading,
+      error,
+      login,
+      register,
+      sendOtp,
+      verifyOtp,
+      logout,
       updateProfile,
-      addAddress,
-      updateAddress,
+      createAddress,
+      listAddresses,
       deleteAddress,
-      isLoading 
+      updateAddress,
+      clearError,
+      requestPasswordReset,
+      resetPassword
     }}>
       {children}
-    </AuthContext.Provider>
+    </UserContext.Provider>
   );
 };
 
 export const useUser = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within an AuthProvider');
-  }
+  const context = useContext(UserContext);
+  if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 };
+

@@ -9,6 +9,7 @@ interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -19,9 +20,10 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   className = '',
   type = 'button',
+  disabled = false,
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-200 active:scale-[0.98] border shadow-sm cursor-pointer';
-  
+  const baseStyles = 'inline-flex items-center justify-center px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-200 active:scale-[0.98] border shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100';
+
   const variants = {
     primary: 'bg-primary text-white border-primary hover:bg-slate-950 hover:shadow-md',
     secondary: 'bg-white text-primary border-primary hover:bg-slate-50',
@@ -40,7 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button type={type} onClick={onClick} className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <button type={type} onClick={onClick} className={`${baseStyles} ${variants[variant]} ${className}`} disabled={disabled}>
       {content}
     </button>
   );
