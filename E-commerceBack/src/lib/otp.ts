@@ -29,9 +29,9 @@ export const OtpService = {
             }
 
             await resend.emails.send({
-                from: 'NariñoTex <no-reply@visiontreepasto.com>',
+                from: 'LadyNails <no-reply@visiontreepasto.com>',
                 to: email,
-                subject: 'Tú código de verificación para activar tu cuenta en NariñoTex',
+                subject: 'Tú código de verificación para activar tu cuenta en LadyNails',
                 html: `
                 <div style="
                     max-width: 480px;
