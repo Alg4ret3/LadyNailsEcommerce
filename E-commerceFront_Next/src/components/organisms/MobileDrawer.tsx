@@ -11,7 +11,7 @@ import { NavItem } from '@/components/molecules/NavItem';
 interface MobileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  NAV_LINKS: any[];
+  categories: any[];
   expandedSections: string[];
   onToggleSection: (section: string) => void;
 }
@@ -19,7 +19,7 @@ interface MobileDrawerProps {
 export const MobileDrawer: React.FC<MobileDrawerProps> = ({ 
   isOpen, 
   onClose, 
-  NAV_LINKS, 
+  categories, 
   expandedSections, 
   onToggleSection 
 }) => {
@@ -85,15 +85,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                         <div className="space-y-3">
                           <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Categoría Principal</Typography>
                           <div className="grid grid-cols-1 gap-1">
-                             {NAV_LINKS[1]?.subcategories?.slice(0, 8).map((cat: any) => (
+                             {categories.map((category) => (
                                <Link 
-                                 key={cat.name} 
-                                 href={cat.href} 
+                                 key={category.id} 
+                                 href={`/shop/${category.handle}`} 
                                  onClick={onClose}
                                  className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
                                >
                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                 {cat.name}
+                                 {category.name}
                                </Link>
                              ))}
                           </div>
@@ -102,15 +102,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                         <div className="space-y-3">
                           <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Otras Categorías</Typography>
                           <div className="grid grid-cols-1 gap-1">
-                             {NAV_LINKS[1]?.subcategories?.slice(8, 16).map((cat: any) => (
+                             {categories.map((category) => (
                                <Link 
-                                 key={cat.name} 
-                                 href={cat.href} 
+                                 key={category.id} 
+                                 href={`/shop/${category.handle}`} 
                                  onClick={onClose}
                                  className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
                                >
                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-100" />
-                                 {cat.name}
+                                 {category.name}
                                </Link>
                              ))}
                           </div>

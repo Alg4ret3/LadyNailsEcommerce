@@ -10,44 +10,20 @@ import { MobileDrawer } from './MobileDrawer';
 import { SearchOverlay } from './SearchOverlay';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-
-export const NAV_LINKS = [
-  { name: 'Inicio', href: '/' },
-  { 
-    name: 'Catálogo', 
-    href: '/shop',
-    subcategories: [
-      { name: 'Lámparas UV y Eléctricos', href: '/shop/uv-lamps' },
-      { name: 'Puliadores y Driles', href: '/shop/drills' },
-      { name: 'Esmaltes Semipermanentes', href: '/shop/semi-permanent' },
-      { name: 'Brillos y Preparadores', href: '/shop/prep-finish' },
-      { name: 'Tips y Press-On', href: '/shop/tips-presson' },
-      { name: 'Herramientas Pro', href: '/shop/tools' },
-      { name: 'Decoración y Stickers', href: '/shop/decorations' },
-      { name: 'Removedores y Limpiadores', href: '/shop/removers' },
-      { name: 'Esmalte Tradicional', href: '/shop/traditional' },
-      { name: 'Geles y Polygel', href: '/shop/gels' },
-      { name: 'Pestañas y Cejas', href: '/shop/lashes' },
-      { name: 'Línea Spa y Cuidado', href: '/shop/spa' },
-      { name: 'Peluquería y Barbería', href: '/shop/barber-hair' },
-      { name: 'Cuidado de la Piel', href: '/shop/skincare' },
-      { name: 'Maquillaje Profesional', href: '/shop/makeup' },
-      { name: 'Pinceles y Brochas', href: '/shop/brushes' },
-      { name: 'Sistemas de Acrílico', href: '/shop/acrylics' },
-      { name: 'Perfumería', href: '/shop/perfumes' },
-      { name: 'Limas y Pulidores', href: '/shop/files' },
-    ]
-  },
-  { name: 'Contáctanos', href: '/contact' },
-];
+import { useCategories } from '@/context/CategoriesContext';
 
 export const Navbar: React.FC = () => {
+  const STATIC_LINKS = [
+    { name: "Inicio", href: "/" },
+    { name: "Contáctanos", href: "/contact" },
+  ]
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
   const { totalFavorites } = useWishlist();
+  const { categories } = useCategories();
 
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
@@ -61,7 +37,7 @@ export const Navbar: React.FC = () => {
       <MobileDrawer 
         isOpen={isOpen} 
         onClose={() => setIsOpen(false)} 
-        NAV_LINKS={NAV_LINKS}
+        categories={categories}
         expandedSections={expandedMobileSections}
         onToggleSection={toggleMobileSection}
       />
@@ -88,47 +64,54 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-8">
-          {NAV_LINKS.map((link) => (
-            <div 
-              key={link.name} 
-              onMouseEnter={() => link.subcategories && setActiveDropdown(link.name)}
-              onMouseLeave={() => setActiveDropdown(null)}
-              className="relative"
-            >
-              <NavItem 
-                name={link.name}
-                href={link.href}
-                hasSubcategories={!!link.subcategories}
-                active={activeDropdown === link.name}
-              />
+          <NavItem name="Inicio" href="/" />
 
-              <AnimatePresence>
-                {link.subcategories && activeDropdown === link.name && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 w-[500px] bg-white border border-slate-100 shadow-2xl py-6 z-50 overflow-hidden"
-                  >
-                    <div className="flex flex-col">
-                      <Typography variant="detail" className="px-8 mb-4 block text-[9px] text-slate-400">Categorías Principales</Typography>
-                      <div className="grid grid-cols-2 gap-y-1">
-                      {link.subcategories.map((sub) => (
-                        <Link 
-                          key={sub.name} 
-                          href={sub.href}
+          {/* Catálogo dinámico */}
+          <div
+            onMouseEnter={() => setActiveDropdown("catalogo")}
+            onMouseLeave={() => setActiveDropdown(null)}
+            className="relative"
+          >
+            <NavItem
+              name="Catálogo"
+              href="/shop"
+              hasSubcategories
+              active={activeDropdown === "catalogo"}
+            />
+
+            <AnimatePresence>
+              {activeDropdown === "catalogo" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 w-[500px] bg-white border border-slate-100 shadow-2xl py-6 z-50 overflow-hidden"
+                >
+                  <div className="flex flex-col">
+                    <Typography
+                      variant="detail"
+                      className="px-8 mb-4 block text-[9px] text-slate-400"
+                    >
+                      Categorías
+                    </Typography>
+
+                    <div className="grid grid-cols-2 gap-y-1">
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/shop/${category.handle}`}
                           className="px-8 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all border-l-2 border-transparent hover:border-slate-900"
                         >
-                          {sub.name}
+                          {category.name}
                         </Link>
                       ))}
-                      </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <NavItem name="Contacto" href="/contact" />
         </div>
 
         {/* Actions */}
