@@ -45,91 +45,196 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
         to,
         subject: "Restablecer tu contraseña",
         html: `
-<body style="margin:0; padding:0; background-color:#f4f4f7; font-family:Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7; padding:40px 0;">
+<body style="
+    margin:0;
+    padding:60px 20px;
+    background-color:#f3f2ef;
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:500px; margin:0 auto;">
     <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; padding:40px;">
-          
+      <td>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="
+            background:#ffffff;
+            border-radius:16px;
+            padding:45px 35px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.04);
+            text-align:center;
+        ">
+
+          <!-- LÍNEA NEGRA SUPERIOR -->
+          <tr>
+            <td align="center">
+              <div style="
+                  width:60px;
+                  height:3px;
+                  background:#111111;
+                  margin:0 auto 30px auto;
+                  border-radius:2px;
+              "></div>
+            </td>
+          </tr>
+
           <!-- LOGO -->
-          <div style="text-align:center; margin-bottom: 20px;">
+          <tr>
+            <td style="padding-bottom:30px;">
               <img 
-                src="cid:logo@narino"
-                alt="NariñoTex"
-                width="225"
+                src="cid:logo@ladynails"
+                alt="LadyNails"
+                width="170"
                 style="display:block; margin:0 auto;"
               />
-          </div>
+            </td>
+          </tr>
 
-          <!-- Título -->
+          <!-- TÍTULO -->
           <tr>
             <td>
-              <h2 style="color:#111827;">Restablecer tu contraseña</h2>
-              <p style="color:#4b5563; font-size:15px; line-height:1.6;">
+              <h2 style="
+                  font-size:22px;
+                  font-weight:500;
+                  color:#111111;
+                  margin-bottom:18px;
+                  letter-spacing:0.8px;
+              ">
+                Restablecer tu contraseña
+              </h2>
+
+              <p style="
+                  font-size:14px;
+                  color:#666666;
+                  margin-bottom:14px;
+                  line-height:1.6;
+              ">
                 Recibimos una solicitud para restablecer la contraseña de tu cuenta.
               </p>
-              <p style="color:#4b5563; font-size:15px; line-height:1.6;">
+
+              <p style="
+                  font-size:14px;
+                  color:#666666;
+                  margin-bottom:32px;
+                  line-height:1.6;
+              ">
                 Haz clic en el botón de abajo para crear una nueva contraseña.
               </p>
             </td>
           </tr>
 
-          <!-- Botón -->
+          <!-- BOTÓN -->
           <tr>
-            <td align="center" style="padding:30px 0;">
+            <td align="center" style="padding:10px 0 35px 0;">
               <a href="${resetLink}" 
-                 style="background-color:#111827; 
-                        color:#ffffff; 
-                        padding:14px 28px; 
-                        text-decoration:none; 
-                        border-radius:6px; 
-                        font-weight:bold;
-                        display:inline-block;">
+                 style="
+                    background-color:#111111;
+                    color:#ffffff;
+                    padding:16px 32px;
+                    text-decoration:none;
+                    border-radius:10px;
+                    font-weight:500;
+                    font-size:14px;
+                    display:inline-block;
+                    letter-spacing:0.5px;
+                 ">
                 Restablecer contraseña
               </a>
             </td>
           </tr>
 
-          <!-- Expiración -->
+          <!-- LÍNEA NEGRA INFERIOR -->
+          <tr>
+            <td align="center">
+              <div style="
+                  width:40px;
+                  height:2px;
+                  background:#111111;
+                  margin:30px auto;
+                  border-radius:2px;
+              "></div>
+            </td>
+          </tr>
+
+          <!-- TEXTO SECUNDARIO -->
           <tr>
             <td>
-              <p style="color:#6b7280; font-size:13px; line-height:1.6;">
+              <p style="
+                  font-size:13px;
+                  color:#888888;
+                  margin-bottom:14px;
+                  line-height:1.6;
+              ">
                 Este enlace expirará pronto por motivos de seguridad.
               </p>
-              <p style="color:#6b7280; font-size:13px; line-height:1.6;">
+
+              <p style="
+                  font-size:12px;
+                  color:#aaaaaa;
+                  margin-bottom:25px;
+                  line-height:1.6;
+              ">
                 Si no solicitaste este cambio, puedes ignorar este correo.
               </p>
             </td>
           </tr>
 
-          <!-- Fallback link -->
+          <!-- FALLBACK LINK -->
           <tr>
-            <td style="padding-top:20px;">
-              <p style="color:#9ca3af; font-size:12px;">
-                Si el botón no funciona, copia y pega este enlace en tu navegador:
+            <td style="padding-bottom:25px;">
+              <p style="
+                  font-size:12px;
+                  color:#999999;
+                  margin-bottom:8px;
+              ">
+                Si el botón no funciona, copia y pega este enlace:
               </p>
-              <p style="color:#2563eb; font-size:12px; word-break:break-all;">
+
+              <p style="
+                  font-size:12px;
+                  color:#111111;
+                  word-break:break-all;
+              ">
                 ${resetLink}
               </p>
             </td>
           </tr>
 
-        </table>
-
-        <!-- Footer -->
-        <table width="600" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+          <!-- REDES SOCIALES -->
           <tr>
-            <td align="center">
-              <p style="color:#9ca3af; font-size:12px;">
-                © ${new Date().getFullYear()} NariñoTex. Todos los derechos reservados.
+            <td align="center" style="padding-top:10px;">
+              <a href="https://facebook.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
+                <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" width="20" style="opacity:0.7;">
+              </a>
+
+              <a href="https://instagram.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
+                <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="20" style="opacity:0.7;">
+              </a>
+
+              <a href="https://tiktok.com/@TU_USUARIO" style="margin:0 12px; text-decoration:none;">
+                <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" width="20" style="opacity:0.7;">
+              </a>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td align="center" style="padding-top:40px;">
+              <p style="
+                  font-size:11px;
+                  color:#cccccc;
+                  letter-spacing:1px;
+              ">
+                © 2026 LadyNails
               </p>
             </td>
           </tr>
+
         </table>
 
       </td>
     </tr>
   </table>
+
 </body>
 `,
         attachments: [
@@ -137,7 +242,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
             filename: 'logo.png',
             content: logoBuffer.toString('base64'),
             contentType: 'image/png',
-            contentId: 'logo@narino'
+            contentId: 'logo@ladynails'
           }
         ]
       })
