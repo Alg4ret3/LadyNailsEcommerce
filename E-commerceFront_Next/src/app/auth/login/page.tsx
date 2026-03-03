@@ -92,7 +92,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
                     <Typography variant="detail" className="text-[10px] text-slate-400">Contraseña</Typography>
-                    <Link href="/auth/forgot-password" opacity-40 className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors">¿Olvidó su clave?</Link>
+                    <Link href="/auth/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors">¿Olvidó su clave?</Link>
                   </div>
                   <input
                     type="password"

@@ -32,10 +32,26 @@ export interface MedusaProduct {
 
 interface MedusaProductsResponse {
   products: MedusaProduct[]
+  count: number
 }
 
 interface MedusaProductResponse {
   product: any
+}
+
+export async function getAllProducts() {
+  const data = await medusaFetch<MedusaProductsResponse>(
+    "/store/products",
+    {
+      method: "GET",
+    },
+    {
+      limit: "100",
+      fields: "*variants,*variants.prices,*categories"
+    }
+  )
+
+  return data.products
 }
 
 export async function getProductsByCategoryHandle(handle: string) {

@@ -14,7 +14,7 @@ import Link from 'next/link';
 interface ProductCardProps {
   id: string;
   name: string;
-  price: number;
+  price?: number;
   image: string;
   hoverImage?: string;
   category: string;
@@ -85,7 +85,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               toggleFavorite({ id, name, price, image, slug, category, vendor });
+               toggleFavorite({ id, name, price: price ?? 0, image, slug, category, vendor });
              }}
              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${alreadyInWishlist ? 'bg-red-500 text-white' : 'bg-white/80 backdrop-blur text-slate-900 hover:bg-white'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir a favoritos'}
@@ -131,7 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               const compareItem: CompareItem = { id, name, price, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating };
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {
@@ -164,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         
         <div className="pt-2 sm:pt-4 border-t border-border flex items-center justify-between gap-2">
           <Typography variant="h3" className="text-base sm:text-lg font-black text-foreground tracking-tighter">
-            ${price.toLocaleString()}
+            ${(price ?? 0).toLocaleString()}
           </Typography>
           <div className="text-[7px] sm:text-[9px] text-foreground/40 font-bold uppercase tracking-widest whitespace-nowrap">
             Disponible
@@ -179,7 +179,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         product={{
           id,
           name,
-          price,
+          price: price ?? 0,
           image,
           slug,
           category,
