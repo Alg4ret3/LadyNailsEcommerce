@@ -37,7 +37,7 @@ module.exports = defineConfig({
             id: "resend",
             options: {
               api_key: process.env.RESEND_API_KEY,
-              from: "NariñoTex <no-reply@visiontreepasto.com>",
+              from: "LadyNails reset-password <no-reply@visiontreepasto.com>",
               channels: ["email"],
             },
           },

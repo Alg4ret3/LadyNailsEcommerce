@@ -115,7 +115,6 @@ export default function LoginPage() {
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
-=======
                     <Link href="/auth/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors">¿Olvidó su clave?</Link>
                   </div>
                 </div>
