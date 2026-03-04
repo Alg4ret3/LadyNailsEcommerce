@@ -1,7 +1,5 @@
 import { medusaFetch } from "./client"
-
-const BOLETERIA_COLLECTION_ID = "pcol_01KJ8R2WRZH06BM8AS1YG6GXAK"
-const STANDS_COLLECTION_ID = "pcol_01KJ8R3DMQGPARHWVTKV18N0M0"
+import { getCategories } from "./categories"
 
 interface MedusaPrice {
   amount: number
@@ -34,10 +32,49 @@ export interface MedusaProduct {
 
 interface MedusaProductsResponse {
   products: MedusaProduct[]
+  count: number
 }
 
 interface MedusaProductResponse {
   product: any
+}
+
+export async function getAllProducts() {
+  const data = await medusaFetch<MedusaProductsResponse>(
+    "/store/products",
+    {
+      method: "GET",
+    },
+    {
+      limit: "100",
+      fields: "*variants,*variants.prices,*categories"
+    }
+  )
+
+  return data.products
+}
+
+export async function getProductsByCategoryHandle(handle: string) {
+  const categoryRes = await medusaFetch<any>(
+    "/store/product-categories",
+    { method: "GET" },
+    { handle }
+  )
+
+  const category = categoryRes.product_categories?.[0]
+
+  if (!category) return [] // ✅ importante
+
+  const productsRes = await medusaFetch<any>(
+    "/store/products",
+    { method: "GET" },
+    {
+      "category_id": category.id,
+      fields: "*variants,*variants.prices,*categories"
+    }
+  )
+
+  return productsRes.products ?? []
 }
 
 export async function getProductById(id: string) {
@@ -46,20 +83,4 @@ export async function getProductById(id: string) {
   )
 
   return data.product
-}
-
-export async function getProductsByCollection(collectionId: string) {
-  const data = await medusaFetch<MedusaProductsResponse>(
-    `/store/products?collection_id[]=${collectionId}&fields=*variants,*variants.prices,*collection,*categories`
-  )
-
-  return data.products
-}
-
-export async function getBoleteriaProducts() {
-  return getProductsByCollection(BOLETERIA_COLLECTION_ID!)
-}
-
-export async function getStandProducts() {
-  return getProductsByCollection(STANDS_COLLECTION_ID!)
 }
