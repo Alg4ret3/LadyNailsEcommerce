@@ -6,7 +6,7 @@ import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { ProductCard } from '@/components/molecules/ProductCard';
 import { useWishlist } from '@/context/WishlistContext';
-import { Heart, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -34,12 +34,12 @@ export default function FavoritesPage() {
         </div>
 
         {favorites.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 bg-slate-100 border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             <AnimatePresence mode="popLayout">
               {favorites.map((product) => (
                 <motion.div 
                   key={product.id} 
-                  className="bg-white"
+                  className="h-full"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}

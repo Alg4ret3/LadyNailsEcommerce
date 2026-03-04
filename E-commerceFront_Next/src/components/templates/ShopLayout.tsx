@@ -148,13 +148,13 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
               <div className="space-y-4">
                  <Typography variant="detail" className="text-slate-400">{subtitle || 'Tendencias en Belleza & Cuidado'}</Typography>
-                 <Typography variant="h1" className="text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] font-medium">
+                 <Typography variant="h1" className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.85] sm:leading-[0.9] font-medium">
                    {title.split(' ')[0]} <br /> 
                    <span className="text-slate-200 font-light">{title.split(' ').slice(1).join(' ') || 'PARA TI'}</span>
                  </Typography>
               </div>
               
-              <div className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-4">
+               <div className="hidden md:flex w-full md:w-auto flex-col items-stretch sm:flex-row sm:items-center gap-3">
                  <div className="relative w-full sm:w-80 group">
                    <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-950 transition-colors" />
                    <input 
@@ -171,9 +171,9 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                  >
                     <SlidersHorizontal size={14} /> Ver Todo
                  </button>
-              </div>
-           </div>
-        </div>
+               </div>
+            </div>
+         </div>
 
         <div className="flex flex-col lg:flex-row gap-20">
            {/* Sidebar Filters */}
@@ -247,17 +247,59 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
 
            {/* Results Grid */}
            <div className="flex-1 space-y-12">
-              <div className="flex justify-between items-center py-6 border-b border-slate-100">
+
+              {/* Mobile-only search bar — placed right above products to minimize scroll */}
+              <div className="lg:hidden space-y-3">
+                <div className="relative w-full group">
+                  <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-950 transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="Busca lo que necesitas..." 
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full bg-white border border-slate-100 pl-12 pr-4 py-4 outline-none focus:border-slate-300 transition-all text-sm font-light placeholder:text-slate-300 rounded-xl"
+                  />
+                  {query && (
+                    <button 
+                      onClick={() => setQuery('')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors text-xs font-bold uppercase"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {query.trim() !== '' && (
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-full">
+                    {filteredProducts.length > 0 ? (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
+                          {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Sin resultados — intenta otra búsqueda
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 border-b border-slate-100 gap-6 sm:gap-4">
                  <div className="flex items-center gap-4">
-                    <Typography variant="detail" className="text-slate-400 normal-case">Mostrando</Typography>
-                    <Badge variant="outline" className="text-[10px] py-1 px-3 rounded-full">{filteredProducts.length} RESULTADOS</Badge>
+                    <Typography variant="detail" className="text-slate-400 normal-case whitespace-nowrap">Mostrando</Typography>
+                    <Badge variant="outline" className="text-[10px] py-1 px-3 rounded-full whitespace-nowrap">{filteredProducts.length} RESULTADOS</Badge>
                  </div>
-                 <div className="flex items-center gap-8">
+                 <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-4 sm:gap-8">
                     <div className="hidden sm:flex items-center gap-4 border-r border-slate-100 pr-8">
                        <button className="text-slate-950" aria-label="Grid view"><Grid2X2 size={20} /></button>
                        <button className="text-slate-200 hover:text-slate-400 transition-colors" aria-label="List view"><Filter size={20} /></button>
                     </div>
-                    <select className="bg-transparent font-black text-[10px] uppercase tracking-[0.2em] outline-none cursor-pointer">
+                    <select className="bg-transparent font-black text-[10px] uppercase tracking-[0.2em] outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate">
                        <option>Ordenar por: Popularidad</option>
                        <option>Recientes</option>
                        <option>Precio: Menor a Mayor</option>
@@ -266,11 +308,11 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
               </div>
 
               {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-1 bg-slate-100 border border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                    {filteredProducts.map((p) => (
-                     <div key={p.id} className="bg-white">
-                        <ProductCard {...p} slug={p.slug} />
-                     </div>
+                      <div key={p.id} className="h-full">
+                         <ProductCard {...p} slug={p.slug} />
+                      </div>
                    ))}
                 </div>
               ) : (

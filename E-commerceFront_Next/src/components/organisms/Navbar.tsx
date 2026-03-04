@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBasket, Search, Menu, Truck, Phone, Heart } from 'lucide-react';
+import { ShoppingBasket, Menu, Truck, Phone, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
 import { NavItem } from '@/components/molecules/NavItem';
 import { MobileDrawer } from './MobileDrawer';
-import { SearchOverlay } from './SearchOverlay';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useUser } from '@/context/UserContext';
@@ -46,7 +45,7 @@ export const NAV_LINKS = [
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
@@ -62,7 +61,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-900/10">
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
       <MobileDrawer 
         isOpen={isOpen} 
         onClose={() => setIsOpen(false)} 
@@ -72,12 +71,12 @@ export const Navbar: React.FC = () => {
       />
 
       {/* Utility Bar */}
-      <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-6 py-2.5 flex justify-between items-center border-b border-slate-100">
-        <div className="flex gap-6">
+      <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-4 sm:px-6 py-2.5 flex justify-between items-center border-b border-slate-100 overflow-hidden whitespace-nowrap">
+        <div className="flex gap-4 sm:gap-6 shrink-0">
           <span className="flex items-center gap-2 font-medium"><Truck size={10} strokeWidth={2} /> Envíos a toda Colombia</span>
         </div>
-        <div className="flex items-center gap-6">
-          <a href="tel:+570000000" className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"><Phone size={10} strokeWidth={2} /> Atención al Cliente</a>
+        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+          <a href="tel:+570000000" className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"><Phone size={10} strokeWidth={2} /> <span className="hidden xs:inline">Atención al Cliente</span><span className="xs:hidden">Soporte</span></a>
         </div>
       </div>
 
@@ -142,13 +141,7 @@ export const Navbar: React.FC = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-6">
-          <button 
-            onClick={() => setIsSearchOpen(true)}
-            className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block"
-            aria-label="Buscar"
-          >
-            <Search size={22} strokeWidth={2} />
-          </button>
+
           
           <Link href="/favorites" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group">
             <Heart size={18} strokeWidth={2.5} className="group-hover:text-red-500 transition-colors" />
@@ -221,14 +214,14 @@ export const Navbar: React.FC = () => {
             </Link>
           )}
 
-          <Link href="/cart" className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
-            <div className="flex items-center gap-3">
+          <Link href="/cart" className="flex items-center gap-2 px-3 sm:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
+            <div className="flex items-center gap-2 sm:gap-3">
               <ShoppingBasket size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
               <div className="hidden sm:flex flex-col items-start leading-none">
                 <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">MI CARRITO</span>
                 <span className="text-[11px] font-black mt-0.5">{totalItems} ARTÍCULOS</span>
               </div>
-              <span className="sm:hidden text-[11px] font-black">{totalItems}</span>
+              <span className="sm:hidden text-[10px] font-black">{totalItems}</span>
             </div>
           </Link>
           

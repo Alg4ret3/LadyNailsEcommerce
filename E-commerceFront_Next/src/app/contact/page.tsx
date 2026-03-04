@@ -1,13 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { validateEmail } from '@/utils/validations';
 
 export default function ContactPage() {
+  const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const isEmailValid = validateEmail(email);
+  const showEmailError = emailTouched && email.length > 0 && !isEmailValid;
+
   return (
     <main className="min-h-screen bg-[#f8fafc]">
       <Navbar />
@@ -28,7 +34,30 @@ export default function ContactPage() {
                     </div>
                     <div className="space-y-2">
                        <Typography variant="detail">Correo Electrónico</Typography>
-                       <input type="email" className="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-slate-900 transition-colors" />
+                       <input
+                         type="email"
+                         value={email}
+                         onChange={(e) => setEmail(e.target.value)}
+                         onBlur={() => setEmailTouched(true)}
+                         placeholder="ejemplo@correo.com"
+                         className={`w-full border-b-2 py-3 outline-none transition-colors placeholder:text-slate-300 ${
+                           showEmailError
+                             ? 'border-red-400 text-red-600'
+                             : emailTouched && isEmailValid
+                             ? 'border-green-500 text-slate-900'
+                             : 'border-slate-100 focus:border-slate-900'
+                         }`}
+                       />
+                       {showEmailError && (
+                         <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+                           Correo electrónico inválido
+                         </p>
+                       )}
+                       {emailTouched && isEmailValid && (
+                         <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                           ✓ Correo válido
+                         </p>
+                       )}
                     </div>
                  </div>
                  <div className="space-y-2">

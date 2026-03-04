@@ -67,9 +67,9 @@ export const FeaturedProducts: React.FC = () => {
             </Link>
           </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 bg-slate-100 border border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {LATEST_EQUIPMENT.map((item) => (
-            <div key={item.id} className="bg-white">
+            <div key={item.id} className="h-full">
               <ProductCard {...item} />
             </div>
           ))}

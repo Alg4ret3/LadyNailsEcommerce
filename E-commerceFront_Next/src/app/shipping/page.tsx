@@ -9,11 +9,11 @@ export default function ShippingPage() {
   return (
     <main className="min-h-screen bg-[#f8fafc]">
       <Navbar />
-      <section className="pt-44 pb-32 px-6 max-w-[1400px] mx-auto">
-        <div className="bg-white border border-slate-200 p-8 sm:p-20 shadow-sm max-w-4xl mx-auto space-y-16">
-           <div className="space-y-4 border-b border-slate-900 pb-8">
+      <section className="pt-32 sm:pt-44 pb-16 sm:pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
+        <div className="bg-white border border-slate-200 p-6 sm:p-12 md:p-20 shadow-sm max-w-4xl mx-auto space-y-10 sm:space-y-16">
+           <div className="space-y-4 border-b border-slate-900 pb-6 sm:pb-8">
               <Typography variant="detail" className="text-slate-400">Guía de Distribución</Typography>
-              <Typography variant="h1" className="text-5xl uppercase">Política de Envíos</Typography>
+              <Typography variant="h1" className="text-3xl sm:text-4xl md:text-5xl uppercase">Política de Envíos</Typography>
               <Typography variant="body" className="text-xs uppercase font-bold tracking-widest text-slate-400">Cobertura Nacional y Logística</Typography>
            </div>
 

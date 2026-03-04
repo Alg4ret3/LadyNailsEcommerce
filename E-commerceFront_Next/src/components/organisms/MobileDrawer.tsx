@@ -14,7 +14,7 @@ import { LogOut } from 'lucide-react';
 interface MobileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  NAV_LINKS: any[];
+  NAV_LINKS: { name: string; href: string; subcategories?: { name: string; href: string }[] }[];
   expandedSections: string[];
   onToggleSection: (section: string) => void;
 }
@@ -33,9 +33,9 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         <>
           <Overlay isOpen={isOpen} onClose={onClose} />
           <motion.div 
-             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+             initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
              transition={{ type: 'spring', damping: 25, stiffness: 200, mass: 0.8 }}
-             className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-white z-[101] flex flex-col shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
+             className="fixed left-0 top-0 bottom-0 w-full sm:w-[400px] bg-white z-100 flex flex-col shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
           >
             {/* Drawer Header */}
             <div className="flex justify-between items-center p-6 border-b border-slate-50">
@@ -89,38 +89,21 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                         className="overflow-hidden pl-14 pr-4 space-y-6 pb-4"
                       >
-                        <div className="space-y-3">
-                          <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Categoría Principal</Typography>
-                          <div className="grid grid-cols-1 gap-1">
-                             {NAV_LINKS[1]?.subcategories?.slice(0, 8).map((cat: any) => (
-                               <Link 
-                                 key={cat.name} 
-                                 href={cat.href} 
-                                 onClick={onClose}
-                                 className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
-                               >
-                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                 {cat.name}
-                               </Link>
-                             ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Otras Categorías</Typography>
-                          <div className="grid grid-cols-1 gap-1">
-                             {NAV_LINKS[1]?.subcategories?.slice(8, 16).map((cat: any) => (
-                               <Link 
-                                 key={cat.name} 
-                                 href={cat.href} 
-                                 onClick={onClose}
-                                 className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
-                               >
-                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-100" />
-                                 {cat.name}
-                               </Link>
-                             ))}
-                          </div>
+                         <div className="space-y-3">
+                           <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Todas las Categorías</Typography>
+                           <div className="grid grid-cols-1 gap-1">
+                              {NAV_LINKS[1]?.subcategories?.map((cat) => (
+                                <Link 
+                                  key={cat.name} 
+                                  href={cat.href} 
+                                  onClick={onClose}
+                                  className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
+                                >
+                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                  {cat.name}
+                                </Link>
+                              ))}
+                           </div>
                         </div>
                       </motion.div>
                     )}

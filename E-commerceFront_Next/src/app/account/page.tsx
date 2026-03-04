@@ -329,8 +329,8 @@ export default function AccountPage() {
                           <input type="text" value={addressForm.province} onChange={e => setAddressForm({ ...addressForm, province: e.target.value })} className="pro-input" />
                         </div>
                         <div className="space-y-2">
-                          <Typography variant="detail" className="text-[10px]">Código Postal</Typography>
-                          <input type="text" value={addressForm.postalCode} onChange={e => setAddressForm({ ...addressForm, postalCode: e.target.value })} className="pro-input" />
+                          <Typography variant="detail" className="text-[10px]">Código Postal (opcional)</Typography>
+                          <input type="text" value={addressForm.postalCode} onChange={e => setAddressForm({ ...addressForm, postalCode: e.target.value })} className="pro-input" placeholder="(Opcional)" />
                         </div>
                       </div>
                       <div className="flex gap-4">

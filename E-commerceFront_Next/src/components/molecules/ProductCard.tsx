@@ -50,7 +50,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -73,10 +72,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div 
-      className="group bg-background border border-border rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-[0_20px_50px_rgba(42,37,32,0.12)] transition-all duration-500 flex flex-col h-full font-sans"
-      onMouseEnter={() => setIsHovered(true)}
+      className="group bg-white border border-border rounded-2xl sm:rounded-3xl overflow-hidden hover:shadow-[0_20px_50px_rgba(42,37,32,0.12)] transition-all duration-500 flex flex-col h-full font-sans"
+      onMouseEnter={() => {}}
       onMouseLeave={() => {
-        setIsHovered(false);
         // Optional: Reset to first image on leave
         // setCurrentIndex(0);
       }}
