@@ -2,14 +2,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBasket, User, Search, Menu, Truck, Phone, Heart } from 'lucide-react';
+import { ShoppingBasket, Search, Menu, Truck, Phone, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
+import Image from 'next/image';
 import { NavItem } from '@/components/molecules/NavItem';
 import { MobileDrawer } from './MobileDrawer';
 import { SearchOverlay } from './SearchOverlay';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useUser } from '@/context/UserContext';
+import { LogOut, Package, User as UserIcon } from 'lucide-react';
 
 export const NAV_LINKS = [
   { name: 'Inicio', href: '/' },
@@ -45,9 +48,11 @@ export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
   const { totalFavorites } = useWishlist();
+  const { user, logout } = useUser();
 
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
@@ -78,11 +83,15 @@ export const Navbar: React.FC = () => {
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-900 text-white flex items-center justify-center font-black text-lg sm:text-xl group-hover:bg-slate-800 transition-colors">LN</div>
-          <div className="flex flex-col">
-            <Typography variant="h4" className="text-slate-900 leading-none text-sm sm:text-base tracking-tight">Ladynail Shop</Typography>
-            <Typography variant="detail" className="text-[7px] sm:text-[8px] mt-0.5 sm:mt-1 font-medium opacity-60 uppercase">Tu Tienda Profesional</Typography>
+        <Link href="/" className="flex items-center group py-2">
+          <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center">
+            <Image 
+              src="/assets/LogoProvicional.svg" 
+              alt="Ladynail Shop Logo" 
+              fill
+              className="object-contain group-hover:scale-105 transition-transform"
+              priority
+            />
           </div>
         </Link>
 
@@ -150,9 +159,67 @@ export const Navbar: React.FC = () => {
             )}
           </Link>
 
-          <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block">
-            <User size={18} strokeWidth={2.5} />
-          </Link>
+          {user?.isLoggedIn ? (
+            <div className="relative">
+              <button 
+                onMouseEnter={() => setIsProfileOpen(true)}
+                className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block relative group"
+              >
+                <UserIcon size={18} strokeWidth={2.5} className={isProfileOpen ? 'text-slate-900' : 'text-slate-400'} />
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></div>
+              </button>
+
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    onMouseEnter={() => setIsProfileOpen(true)}
+                    onMouseLeave={() => setIsProfileOpen(false)}
+                    className="absolute top-full right-0 w-64 bg-white border border-slate-100 shadow-2xl py-4 z-50 mt-2 rounded-2xl"
+                  >
+                    <div className="px-6 py-4 border-b border-slate-50 mb-2">
+                      <Typography variant="detail" className="text-[8px] text-slate-400">Usuario Activo</Typography>
+                      <Typography variant="h4" className="text-xs truncate">{user.name}</Typography>
+                    </div>
+                    <div className="flex flex-col">
+                      <Link 
+                        href="/account" 
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                      >
+                        <UserIcon size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mi Perfil</span>
+                      </Link>
+                      <Link 
+                        href="/account" 
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                      >
+                        <Package size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Pedidos</span>
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setIsProfileOpen(false);
+                        }}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-red-50 text-red-400 mt-2 transition-all group"
+                      >
+                        <LogOut size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-red-600 transition-colors">Cerrar Sesión</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block">
+              <UserIcon size={18} strokeWidth={2.5} />
+            </Link>
+          )}
 
           <Link href="/cart" className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
             <div className="flex items-center gap-3">

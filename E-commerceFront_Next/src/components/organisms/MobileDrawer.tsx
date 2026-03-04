@@ -4,9 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { X, Home, LayoutGrid, Package, Heart, HelpCircle, Truck, RefreshCcw, User, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Typography } from '@/components/atoms/Typography';
 import { Overlay } from '@/components/atoms/Overlay';
 import { NavItem } from '@/components/molecules/NavItem';
+import { useUser } from '@/context/UserContext';
+import { LogOut } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -23,6 +26,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   expandedSections, 
   onToggleSection 
 }) => {
+  const { user, logout } = useUser();
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,11 +39,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
           >
             {/* Drawer Header */}
             <div className="flex justify-between items-center p-6 border-b border-slate-50">
-              <Link href="/" onClick={onClose} className="flex items-center gap-2 group">
-                 <div className="w-10 h-10 bg-slate-900 text-white flex items-center justify-center font-black text-xs group-hover:bg-slate-800 transition-colors">LN</div>
-                 <div className="flex flex-col">
-                    <Typography variant="h4" className="text-[10px] tracking-widest leading-none">LADYNAIL</Typography>
-                    <span className="text-[8px] font-bold text-slate-400 mt-0.5">EST. 2026</span>
+              <Link href="/" onClick={onClose} className="flex items-center group">
+                 <div className="relative w-16 h-16 flex items-center justify-center">
+                    <Image 
+                      src="/assets/LogoProvicional.svg" 
+                      alt="Ladynail Shop Logo" 
+                      fill
+                      className="object-contain"
+                    />
                  </div>
               </Link>
               <button 
@@ -120,24 +127,42 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   </AnimatePresence>
                 </div>
 
-                <NavItem name="Mis Pedidos" href="/account/orders" type="mobile" icon={<Package size={20} />} />
+                <NavItem name="Mis Pedidos" href={user?.isLoggedIn ? "/account" : "/auth/login"} type="mobile" icon={<Package size={20} />} />
                 <NavItem name="Favoritos" href="/favorites" type="mobile" icon={<Heart size={20} />} />
-                <NavItem name="Ayuda" href="/help" type="mobile" icon={<HelpCircle size={20} />} />
-                <NavItem name="Envíos" href="/shipping-policy" type="mobile" icon={<Truck size={20} />} />
-                <NavItem name="Devoluciones" href="/return-policy" type="mobile" icon={<RefreshCcw size={20} />} />
+                <NavItem name="Ayuda" href="/faq" type="mobile" icon={<HelpCircle size={20} />} />
+                <NavItem name="Envíos" href="/shipping" type="mobile" icon={<Truck size={20} />} />
+                <NavItem name="Devoluciones" href="/returns" type="mobile" icon={<RefreshCcw size={20} />} />
               </div>
             </div>
 
             {/* Drawer Footer */}
             <div className="p-8 bg-slate-50 border-t border-slate-100 mt-auto">
               <div className="flex flex-col gap-4">
-                 <Link 
-                   href="/login" 
-                   onClick={onClose}
-                   className="w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 transition-all border border-slate-900"
-                 >
-                   <User size={18} /> Mi Cuenta
-                 </Link>
+                 {user?.isLoggedIn ? (
+                   <div className="space-y-4">
+                     <Link 
+                       href="/account" 
+                       onClick={onClose}
+                       className="w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 transition-all border border-slate-900"
+                     >
+                       <User size={18} /> Mi Perfil
+                     </Link>
+                     <button 
+                       onClick={() => { logout(); onClose(); }}
+                       className="w-full flex items-center justify-center gap-3 py-5 bg-white text-red-500 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] hover:bg-red-50 transition-all border border-red-100"
+                     >
+                       <LogOut size={18} /> Cerrar Sesión
+                     </button>
+                   </div>
+                 ) : (
+                   <Link 
+                     href="/auth/login" 
+                     onClick={onClose}
+                     className="w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 transition-all border border-slate-900"
+                   >
+                     <User size={18} /> Iniciar Sesión
+                   </Link>
+                 )}
               </div>
 
               <div className="mt-8 flex justify-between items-center text-slate-400">

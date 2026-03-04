@@ -5,7 +5,7 @@ import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -13,17 +13,22 @@ import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const { login, user, isLoading, error } = useUser();
+  const { login, user, isLoading, error, clearError } = useUser();
   const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  React.useEffect(() => {
+    clearError();
+  }, [clearError]);
   // const [isLoadingState, setIsLoadingState] = React.useState(false); // Eliminado para usar el del contexto
 
   React.useEffect(() => {
-    if (user?.isLoggedIn) {
+    if (!isLoading && user?.isLoggedIn) {
       router.push('/account');
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,16 +97,25 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
                     <Typography variant="detail" className="text-[10px] text-slate-400">Contraseña</Typography>
-                    <Link href="/auth/forgot-password" opacity-40 className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors">¿Olvidó su clave?</Link>
+                    <Link href="/auth/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors opacity-40">¿Olvidó su clave?</Link>
                   </div>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 px-6 py-4 outline-none focus:bg-white focus:border-slate-950 transition-all text-sm font-medium"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative group">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-100 px-6 py-4 outline-none focus:bg-white focus:border-slate-950 transition-all text-sm font-medium pr-12"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-950 transition-colors z-10 p-1"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

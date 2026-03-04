@@ -143,7 +143,7 @@ export default function CartPage() {
                          <Button 
                            label="Finalizar Compra" 
                            href="/checkout" 
-                           className="w-full py-6 bg-white text-slate-950 border-none hover:bg-[#22c55e] hover:text-white transition-all text-sm" 
+                           className="w-full py-6 !bg-white !text-slate-950 border-none hover:bg-[#22c55e] hover:text-white transition-all text-sm" 
                          />
                          <Link 
                            href="/shop" 

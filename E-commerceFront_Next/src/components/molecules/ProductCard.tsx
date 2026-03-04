@@ -17,6 +17,7 @@ interface ProductCardProps {
   price: number;
   image: string;
   hoverImage?: string;
+  images?: string[];
   category: string;
   slug: string;
   vendor?: string;
@@ -34,6 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   price,
   image,
   hoverImage,
+  images = [],
   category,
   slug,
   vendor = "Ladynail Shop",
@@ -49,33 +51,77 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  
+  const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextImage = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setCurrentIndex((prev) => (prev + 1) % gallery.length);
+  };
+
+  const prevImage = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setCurrentIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+  };
 
   return (
     <div 
       className="group bg-background border border-border rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-[0_20px_50px_rgba(42,37,32,0.12)] transition-all duration-500 flex flex-col h-full font-sans"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        // Optional: Reset to first image on leave
+        // setCurrentIndex(0);
+      }}
     >
       {/* Visual Workspace */}
       <div className="relative aspect-4/5 overflow-hidden bg-muted">
         <Link href={`/product/${slug}`} className="absolute inset-0 z-10">
           <AnimatePresence mode="wait">
             <motion.div
-              key={isHovered && hoverImage ? 'hover' : 'default'}
+              key={currentIndex}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="w-full h-full"
+              className="w-full h-full touch-none"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                const swipeThreshold = 50;
+                if (info.offset.x > swipeThreshold) prevImage();
+                else if (info.offset.x < -swipeThreshold) nextImage();
+              }}
             >
               <Image 
-                src={isHovered && hoverImage ? hoverImage : image} 
+                src={gallery[currentIndex]} 
                 alt={name} 
                 fill 
-                className="object-cover transition-transform duration-[2s] group-hover:scale-110"
+                className="object-cover transition-transform duration-[2s] group-hover:scale-105 select-none pointer-events-none"
               />
             </motion.div>
           </AnimatePresence>
+          
+          {/* Pagination Indicators (only if more than 1 image) */}
+          {gallery.length > 1 && (
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20 transition-opacity duration-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+              {gallery.map((_, i) => (
+                <div 
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-300 ${currentIndex === i ? 'w-4 bg-white shadow-sm' : 'w-1 bg-white/40'}`}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Quick Interaction Overlay */}
           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors duration-500" />
         </Link>
@@ -88,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                toggleFavorite({ id, name, price, image, slug, category, vendor });
              }}
              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${alreadyInWishlist ? 'bg-red-500 text-white' : 'bg-white/80 backdrop-blur text-slate-900 hover:bg-white'}`}
-             aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir a favoritos'}
+             aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
            >
              <Heart size={16} fill={alreadyInWishlist ? 'currentColor' : 'none'} className={alreadyInWishlist ? 'scale-110' : ''} />
            </button>

@@ -1,5 +1,6 @@
 const MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
 const MEDUSA_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+import { translateError } from '@/utils/error-translator';
 
 export async function medusaFetch<T>(
   path: string,
@@ -49,12 +50,14 @@ export async function medusaFetch<T>(
     const text = await res.text();
 
     if (!res.ok) {
+      let errorMessage = `HTTP Error ${res.status}`;
       try {
         const json = text ? JSON.parse(text) : null;
-        throw new Error(json?.message || `HTTP Error ${res.status}`);
+        errorMessage = json?.message || text || errorMessage;
       } catch {
-        throw new Error(text || `HTTP Error ${res.status}`);
+        errorMessage = text || errorMessage;
       }
+      throw new Error(translateError(errorMessage));
     }
 
     try {

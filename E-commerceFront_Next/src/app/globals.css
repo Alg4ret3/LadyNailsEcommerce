@@ -77,3 +77,14 @@ a,
   scrollbar-width: none;
 }
 
+/* Hide native password visibility toggles and clear buttons in Edge/Chrome */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+

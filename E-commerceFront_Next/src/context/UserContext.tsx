@@ -148,7 +148,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
   }, []);
 
-  const login = async (data: LoginData) => {
+  const login = React.useCallback(async (data: LoginData) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -159,60 +159,60 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("auth_token", token);
 
       setUser(customerToUser(customer));
-    } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión");
+    } catch (err: Error | any) {
+      setError(err.message || "Error desconocido");
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
 
-  const register = async (data: RegisterData) => {
+  const register = React.useCallback(async (data: RegisterData) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const customer = await registerCustomer(data);
+      await registerCustomer(data);
 
       // After registration, login automatically
       await login({ email: data.email, password: data.password });
-    } catch (err: any) {
-      setError(err.message || 'Error al registrar usuario');
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [login]);
 
-  const sendOtp = async (email: string) => {
+  const sendOtp = React.useCallback(async (email: string) => {
     try {
       setIsLoading(true);
       setError(null);
       await sendOtpService(email);
-    } catch (err: any) {
-      setError(err.message || 'Error al enviar código');
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const verifyOtp = async (email: string, code: string) => {
+  const verifyOtp = React.useCallback(async (email: string, code: string) => {
     try {
       setIsLoading(true);
       setError(null);
       return await verifyOtpService(email, code);
-    } catch (err: any) {
-      setError(err.message || 'Código inválido');
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
 
-  const logout = async () => {
+  const logout = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -222,9 +222,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => {
+  const updateProfile = React.useCallback(async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -236,15 +236,30 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const customer = await updateCustomerService(updateData);
       setUser(customerToUser(customer));
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar perfil');
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const createAddress = async (data: CreateAddressInput) => {
+  const listAddresses = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await listCustomerAddresses();
+      if (response.customer) {
+        setUser(customerToUser(response.customer));
+      }
+    } catch (err: Error | any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const createAddress = React.useCallback(async (data: CreateAddressInput) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -263,30 +278,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await listAddresses(); // 🔥 sincronización real
 
-    } catch (err: any) {
-      setError(err.message || "Error al crear dirección");
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [listAddresses]);
 
-  const listAddresses = async () => {
-    try {
-      setIsLoading(true);
-      const response = await listCustomerAddresses();
-      if (response.customer) {
-        setUser(customerToUser(response.customer));
-      }
-    } catch (err: any) {
-      setError(err.message || "Error al cargar direcciones");
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateAddress = async (
+  const updateAddress = React.useCallback(async (
     id: string,
     data: CreateAddressInput
   ) => {
@@ -309,19 +309,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 🔥 sincronizamos
       await listAddresses();
 
-    } catch (err: any) {
-      setError(err.message || "Error al actualizar dirección");
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [listAddresses]);
 
-  const clearError = () => {
+  const clearError = React.useCallback(() => {
     setError(null);
-  };
+  }, []);
 
-  const deleteAddress = async (addressId: string) => {
+  const deleteAddress = React.useCallback(async (addressId: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -331,22 +331,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 🔥 Opción profesional: refrescar desde backend
       await listAddresses();
 
-      // ⚡ Alternativa rápida (optimista):
-      // setUser(prev =>
-      //   prev
-      //     ? { ...prev, addresses: prev.addresses.filter(a => a.id !== addressId) }
-      //     : prev
-      // );
-
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar dirección");
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [listAddresses]);
 
-  const requestPasswordReset = async (email: string) => {
+  const requestPasswordReset = React.useCallback(async (email: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -360,9 +353,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const resetPassword = async (email: string, token: string, password: string) => {
+  const resetPassword = React.useCallback(async (email: string, token: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -373,13 +366,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
 
-    } catch (err: any) {
-      setError(err.message || "No se pudo actualizar la contraseña");
+    } catch (err: Error | any) {
+      setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return (
     <UserContext.Provider value={{

@@ -87,7 +87,9 @@ export async function getCurrentCustomer(): Promise<CustomerData | null> {
         // Si el error es 401, significa que no está autenticado
         if (
             error.message?.includes("401") ||
-            error.message?.includes("Unauthorized")
+            error.message?.includes("Unauthorized") ||
+            error.message?.includes("permiso") ||
+            error.message?.includes("Inicia sesión")
         ) {
             return null;
         }

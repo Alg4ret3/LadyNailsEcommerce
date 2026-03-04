@@ -6,10 +6,10 @@ import Image from 'next/image';
 import { Typography } from '@/components/atoms/Typography';
 
 const PARTNERS = [
-  { name: 'OPI', logo: 'https://styles.redditmedia.com/t5_2skov/styles/communityIcon_v07on4n5wka21.png' },
-  { name: 'Wahl', logo: 'https://logos-world.net/wp-content/uploads/2020/11/Wahl-Logo.png' },
-  { name: 'Andis', logo: 'https://logos-world.net/wp-content/uploads/2020/12/Andis-Logo.png' },
-  { name: 'Mía Secret', logo: 'https://miasecret.com/skin/frontend/miasecret/default/images/logo.png' },
+  { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
+  { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
+  { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
+  { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
   { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
   { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
 ];
@@ -29,7 +29,7 @@ export const LogoCarousel: React.FC = () => {
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         >
           {[...PARTNERS, ...PARTNERS, ...PARTNERS].map((partner, i) => (
-            <div key={i} className="flex-shrink-0 w-32 h-16 sm:w-48 sm:h-24 relative grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            <div key={i} className="shrink-0 w-32 h-16 sm:w-48 sm:h-24 relative grayscale-0 opacity-100 lg:grayscale lg:opacity-30 lg:hover:grayscale-0 lg:hover:opacity-100 transition-all duration-500">
               <Image 
                 src={partner.logo} 
                 alt={partner.name} 
