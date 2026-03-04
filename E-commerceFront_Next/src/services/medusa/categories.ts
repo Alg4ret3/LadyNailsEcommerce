@@ -8,6 +8,7 @@ export interface ProductCategory {
   rank: number
   created_at: string
   updated_at: string
+  category_children?: ProductCategory[]
 }
 
 export interface ProductCategoriesResponse {
@@ -25,6 +26,9 @@ export async function getCategories(
     {
       method: "GET",
     },
-    query
+    {
+      fields: "*category_children",
+      ...query
+    }
   )
 }

@@ -8,10 +8,12 @@ interface Props {
 }
 
 export default async function CategoryPage({ params }: Props) {
-  const { category: categorySlug } = await params;
+  const { category } = await params;
+
+  const categorySlug = decodeURIComponent(category); // 🔥 FIX
+
   const products = await getProductsByCategoryHandle(categorySlug);
 
-  // Format title for display
   const title = categorySlug.replace(/-/g, ' ').toUpperCase();
 
   return (

@@ -69,7 +69,7 @@ export async function getProductsByCategoryHandle(handle: string) {
     "/store/products",
     { method: "GET" },
     {
-      "category_id[]": category.id,
+      "category_id": category.id,
       fields: "*variants,*variants.prices,*categories"
     }
   )

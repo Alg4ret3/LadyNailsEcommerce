@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBasket, User, Search, Menu, Truck, Phone, Heart } from 'lucide-react';
+import { ShoppingBasket, User, Search, Menu, Truck, Phone, Heart, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import { NavItem } from '@/components/molecules/NavItem';
@@ -10,7 +10,7 @@ import { MobileDrawer } from './MobileDrawer';
 import { SearchOverlay } from './SearchOverlay';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { useCategories } from '@/context/CategoriesContext';
+import { useCategories, Category } from '@/context/CategoriesContext';
 
 export const Navbar: React.FC = () => {
   const STATIC_LINKS = [
@@ -23,11 +23,57 @@ export const Navbar: React.FC = () => {
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
   const { totalFavorites } = useWishlist();
-  const { categories } = useCategories();
+  const { getRootCategories } = useCategories();
+  const rootCategories = getRootCategories();
+
+  console.log(rootCategories);
 
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
       prev.includes(section) ? prev.filter((s: string) => s !== section) : [...prev, section]
+    );
+  };
+
+  const CategoryMenuItem = ({ category }: { category: Category }) => {
+    const [hovered, setHovered] = useState(false);
+    const hasChildren = category.category_children && category.category_children.length > 0;
+
+    return (
+      <div
+        className="relative"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <Link
+          href={`/shop/${category.handle}`}
+          className="flex items-center justify-between px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all"
+        >
+          {category.name}
+          {hasChildren && <ChevronRight size={10} strokeWidth={2.5} />}
+        </Link>
+
+        <AnimatePresence>
+          {hovered && hasChildren && (
+            <motion.div
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -4 }}
+              transition={{ duration: 0.15 }}
+              className="absolute left-full top-0 min-w-[200px] bg-white border border-slate-100 shadow-xl py-2 z-50"
+            >
+              {category.category_children!.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/shop/${sub.handle}`}
+                  className="block px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                >
+                  {sub.name}
+                </Link>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   };
 
@@ -37,7 +83,7 @@ export const Navbar: React.FC = () => {
       <MobileDrawer 
         isOpen={isOpen} 
         onClose={() => setIsOpen(false)} 
-        categories={categories}
+        categories={rootCategories}
         expandedSections={expandedMobileSections}
         onToggleSection={toggleMobileSection}
       />
@@ -85,28 +131,18 @@ export const Navbar: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 w-[500px] bg-white border border-slate-100 shadow-2xl py-6 z-50 overflow-hidden"
+                  className="absolute top-full left-0 min-w-[220px] bg-white border border-slate-100 shadow-2xl py-4 z-50"
                 >
-                  <div className="flex flex-col">
-                    <Typography
-                      variant="detail"
-                      className="px-8 mb-4 block text-[9px] text-slate-400"
-                    >
-                      Categorías
-                    </Typography>
+                  <Typography
+                    variant="detail"
+                    className="px-6 mb-3 block text-[9px] text-slate-400 uppercase tracking-widest"
+                  >
+                    Categorías
+                  </Typography>
 
-                    <div className="grid grid-cols-2 gap-y-1">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          href={`/shop/${category.handle}`}
-                          className="px-8 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all border-l-2 border-transparent hover:border-slate-900"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+                  {rootCategories.map((category) => (
+                    <CategoryMenuItem key={category.id} category={category} />
+                  ))}
                 </motion.div>
               )}
             </AnimatePresence>

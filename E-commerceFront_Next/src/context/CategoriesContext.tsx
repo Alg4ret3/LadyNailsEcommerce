@@ -38,7 +38,13 @@ export const CategoriesProvider = ({
       try {
         const { product_categories } = await getCategories()
 
-        setCategories(product_categories)
+        // La API devuelve raíces (con children) Y los hijos sueltos
+        // Solo necesitamos las raíces — ya traen sus hijos en category_children
+        const onlyRoots = product_categories.filter(
+          c => c.parent_category_id === null
+        )
+
+        setCategories(onlyRoots)
       } catch (error) {
         console.error("Error cargando categorías", error)
       } finally {
@@ -52,8 +58,7 @@ export const CategoriesProvider = ({
   const getCategoryByHandle = (handle: string) =>
     categories.find((c) => c.handle === handle)
 
-  const getRootCategories = () =>
-    categories.filter((c) => !c.parent_category_id)
+  const getRootCategories = () => categories
 
   return (
     <CategoriesContext.Provider
