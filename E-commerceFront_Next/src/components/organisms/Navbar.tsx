@@ -96,19 +96,19 @@ export const Navbar: React.FC = () => {
       />
 
       {/* Utility Bar */}
-      <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-4 sm:px-6 py-2.5 flex justify-between items-center border-b border-slate-100 overflow-hidden whitespace-nowrap">
-        <div className="flex gap-4 sm:gap-6 shrink-0">
+      <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-4 lg:px-6 py-2.5 flex justify-between items-center border-b border-slate-100 overflow-hidden whitespace-nowrap">
+        <div className="flex gap-4 lg:gap-6 shrink-0">
           <span className="flex items-center gap-2 font-medium"><Truck size={10} strokeWidth={2} /> Envíos a toda Colombia</span>
         </div>
-        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-          <a href="tel:+570000000" className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"><Phone size={10} strokeWidth={2} /> <span className="hidden xs:inline">Atención al Cliente</span><span className="xs:hidden">Soporte</span></a>
+        <div className="flex items-center gap-4 lg:gap-6 shrink-0">
+          <a href="tel:+570000000" className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"><Phone size={10} strokeWidth={2} /> <span className="hidden lg:inline">Atención al Cliente</span><span className="lg:hidden">Soporte</span></a>
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 h-16 lg:h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center group py-2">
-          <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center">
+          <div className="relative w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
             <Image 
               src="/assets/LogoProvicional.svg" 
               alt="Ladynail Shop Logo" 
@@ -162,7 +162,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-6">
+        <div className="flex items-center gap-1.5 lg:gap-6">
 
           
           <Link href="/favorites" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group">
@@ -178,7 +178,7 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button 
                 onMouseEnter={() => setIsProfileOpen(true)}
-                className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block relative group"
+                className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block relative group"
               >
                 <UserIcon size={18} strokeWidth={2.5} className={isProfileOpen ? 'text-slate-900' : 'text-slate-400'} />
                 <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></div>
@@ -231,19 +231,19 @@ export const Navbar: React.FC = () => {
               </AnimatePresence>
             </div>
           ) : (
-            <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden sm:block">
+            <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block">
               <UserIcon size={18} strokeWidth={2.5} />
             </Link>
           )}
 
-          <Link href="/cart" className="flex items-center gap-2 px-3 sm:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
-            <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/cart" className="flex items-center gap-2 px-3 lg:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
+            <div className="flex items-center gap-2 lg:gap-3">
               <ShoppingBasket size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
-              <div className="hidden sm:flex flex-col items-start leading-none">
+              <div className="hidden lg:flex flex-col items-start leading-none">
                 <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">MI CARRITO</span>
                 <span className="text-[11px] font-black mt-0.5">{totalItems} ARTÍCULOS</span>
               </div>
-              <span className="sm:hidden text-[10px] font-black">{totalItems}</span>
+              <span className="lg:hidden text-[10px] font-black">{totalItems}</span>
             </div>
           </Link>
           

@@ -1,11 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { X, Home, LayoutGrid, Package, Heart, HelpCircle, Truck, RefreshCcw, User, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { Typography } from '@/components/atoms/Typography';
 import { Overlay } from '@/components/atoms/Overlay';
 import { NavItem } from '@/components/molecules/NavItem';
 import { useUser } from '@/context/UserContext';
@@ -28,15 +27,63 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onToggleSection 
 }) => {
   const { user, logout } = useUser();
+  const CategoryMobileItem = ({ category, level = 0 }: { category: any; level?: number }) => {
+    const hasChildren = category.category_children && category.category_children.length > 0;
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between">
+          <Link
+            href={`/shop/${category.handle}`}
+            onClick={onClose}
+            style={{ paddingLeft: `${level * 16}px` }}
+            className={`py-3 flex-1 flex items-center gap-3 ${level === 0 ? 'text-[11px] font-black' : 'text-[10px] font-bold text-slate-500'} uppercase tracking-widest hover:text-slate-950 transition-colors`}
+          >
+            {level === 0 && <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />}
+            {level > 0 && <span className="text-slate-200">−</span>}
+            {category.name}
+          </Link>
+          {hasChildren && (
+            <button 
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-3 text-slate-400 hover:text-slate-900 transition-colors"
+            >
+              <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-slate-900' : ''}`} />
+            </button>
+          )}
+        </div>
+        
+        <AnimatePresence>
+          {isOpen && hasChildren && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="border-l border-slate-100 ml-2.5 mt-1 space-y-1">
+                {category.category_children.map((sub: any) => (
+                  <CategoryMobileItem key={sub.id} category={sub} level={level + 1} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           <Overlay isOpen={isOpen} onClose={onClose} />
           <motion.div 
-             initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
              transition={{ type: 'spring', damping: 25, stiffness: 200, mass: 0.8 }}
-             className="fixed left-0 top-0 bottom-0 w-full sm:w-[400px] bg-white z-100 flex flex-col shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
+             className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-white z-100 flex flex-col shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
           >
             {/* Drawer Header */}
             <div className="flex justify-between items-center p-6 border-b border-slate-50">
@@ -88,42 +135,23 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.25, ease: "easeInOut" }}
-                        className="overflow-hidden pl-14 pr-4 space-y-6 pb-4"
+                        className="overflow-hidden pl-14 pr-4 space-y-4 pb-4"
                       >
+                        
+                        <Link 
+                          href="/shop" 
+                          onClick={onClose}
+                          className="py-3 mt-2 text-[11px] font-black uppercase tracking-[0.2em] text-accent hover:text-slate-950 transition-colors flex items-center gap-2 border-b border-slate-50 border-dotted"
+                        >
+                          Ver Todo El Catálogo <ChevronDown size={14} className="-rotate-90" />
+                        </Link>
 
-                        <div className="space-y-3">
-                          <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Categoría Principal</Typography>
-                          <div className="grid grid-cols-1 gap-1">
-                             {categories.map((category) => (
-                               <Link 
-                                 key={category.id} 
-                                 href={`/shop/${category.handle}`} 
-                                 onClick={onClose}
-                                 className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
-                               >
-                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                 {category.name}
-                               </Link>
-                             ))}
-                          </div>
+                        <div className="flex flex-col">
+                           {categories.map((category) => (
+                             <CategoryMobileItem key={category.id} category={category} />
+                           ))}
                         </div>
 
-                        <div className="space-y-3">
-                          <Typography variant="detail" className="text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em]">Otras Categorías</Typography>
-                          <div className="grid grid-cols-1 gap-1">
-                             {categories.map((category) => (
-                               <Link 
-                                 key={category.id} 
-                                 href={`/shop/${category.handle}`} 
-                                 onClick={onClose}
-                                 className="py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-3"
-                               >
-                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-100" />
-                                 {category.name}
-                               </Link>
-                             ))}
-                          </div>
-                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>

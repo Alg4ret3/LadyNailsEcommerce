@@ -49,7 +49,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
   const { categories, loading } = useCategories();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory);
-  const [priceRange, setPriceRange] = useState(2100000);
+  const [priceRange, setPriceRange] = useState(200000);
 
   const filteredProducts = React.useMemo(() => {
     return products.filter((p) => {
@@ -78,17 +78,17 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
       <section className="pt-32 sm:pt-44 pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
         {/* Header Section */}
         <div className="mb-16 sm:mb-20 space-y-12">
-           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
-              <div className="space-y-4">
-                 <Typography variant="detail" className="text-slate-400">{subtitle || 'Tendencias en Belleza & Cuidado'}</Typography>
-                 <Typography variant="h1" className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.85] sm:leading-[0.9] font-medium">
+           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
+              <div className="flex flex-col space-y-2 lg:space-y-4">
+                 <Typography variant="detail" className="text-slate-400 block pb-2">{subtitle || 'Tendencias en Belleza & Cuidado'}</Typography>
+                 <Typography variant="h1" className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-none sm:leading-[0.95] font-medium pt-2">
                    {title.split(' ')[0]} <br /> 
                    <span className="text-slate-200 font-light">{title.split(' ').slice(1).join(' ') || 'PARA TI'}</span>
                  </Typography>
               </div>
               
-               <div className="hidden md:flex w-full md:w-auto flex-col items-stretch sm:flex-row sm:items-center gap-3">
-                 <div className="relative w-full sm:w-80 group">
+               <div className="hidden lg:flex w-full lg:w-auto flex-col items-stretch lg:flex-row lg:items-center gap-3">
+                 <div className="relative w-full lg:w-80 group">
                    <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-950 transition-colors" />
                    <input 
                      type="text" 
@@ -99,7 +99,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                    />
                  </div>
                  <button 
-                  onClick={() => { setQuery(''); setSelectedCategory(initialCategory); setPriceRange(2100000); }}
+                  onClick={() => { setQuery(''); setSelectedCategory(initialCategory); setPriceRange(200000); }}
                   className="hidden lg:flex items-center gap-3 px-8 py-4 bg-slate-50 text-slate-400 font-bold text-[9px] uppercase tracking-widest hover:bg-slate-100 hover:text-slate-950 transition-all rounded-full border border-slate-100"
                  >
                     <SlidersHorizontal size={14} /> Ver Todo
@@ -115,7 +115,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                  <div className="flex items-center justify-between pb-6 border-b border-slate-100">
                     <Typography variant="h4" className="text-xs tracking-[0.2em] text-slate-950 font-bold uppercase">FILTROS</Typography>
                     <button 
-                      onClick={() => { setSelectedCategory(initialCategory); setPriceRange(2100000); }}
+                      onClick={() => { setSelectedCategory(initialCategory); setPriceRange(200000); }}
                       className="text-[9px] font-bold uppercase text-slate-300 hover:text-slate-950 transition-colors tracking-widest"
                     >
                       Limpiar
@@ -153,7 +153,8 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                        <input 
                          type="range" 
                          min="0" 
-                         max="2100000" 
+                         max="200000" 
+                         step="2000"
                          value={priceRange} 
                          onChange={(e) => setPriceRange(Number(e.target.value))}
                          className="w-full accent-slate-950" 
@@ -198,47 +199,49 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                     onChange={(e) => setQuery(e.target.value)}
                     className="w-full bg-white border border-slate-100 pl-12 pr-4 py-4 outline-none focus:border-slate-300 transition-all text-sm font-light placeholder:text-slate-300 rounded-xl"
                   />
-                  {query && (
-                    <button 
-                      onClick={() => setQuery('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors text-xs font-bold uppercase"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                {query.trim() !== '' && (
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-full">
-                    {filteredProducts.length > 0 ? (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
-                          {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Sin resultados — intenta otra búsqueda
-                        </span>
-                      </>
+                    {query && (
+                      <button 
+                        onClick={() => setQuery('')}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors text-xs font-bold uppercase"
+                      >
+                        ✕
+                      </button>
                     )}
-                  </div>
-                )}
+                </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 border-b border-slate-100 gap-6 sm:gap-4">
+              {/* Added: Global active filter/search feedback message. Visible if there's a problem finding items globally */}
+              {(query.trim() !== '' || filteredProducts.length === 0) && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-full w-max mt-2">
+                  {filteredProducts.length > 0 ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
+                        {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Sin resultados — intenta otra búsqueda o ajusta los filtros
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center py-6 border-b border-slate-100 gap-6 lg:gap-4">
                  <div className="flex items-center gap-4">
                     <Typography variant="detail" className="text-slate-400 normal-case whitespace-nowrap">Mostrando</Typography>
                     <Badge variant="outline" className="text-[10px] py-1 px-3 rounded-full whitespace-nowrap">{filteredProducts.length} RESULTADOS</Badge>
                  </div>
-                 <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-4 sm:gap-8">
-                    <div className="hidden sm:flex items-center gap-4 border-r border-slate-100 pr-8">
+                 <div className="w-full lg:w-auto flex items-center justify-between lg:justify-end gap-4 lg:gap-8">
+                    <div className="hidden lg:flex items-center gap-4 border-r border-slate-100 pr-8">
                        <button className="text-slate-950" aria-label="Grid view"><Grid2X2 size={20} /></button>
                        <button className="text-slate-200 hover:text-slate-400 transition-colors" aria-label="List view"><Filter size={20} /></button>
                     </div>
-                    <select className="bg-transparent font-black text-[10px] uppercase tracking-[0.2em] outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate">
+                    <select className="bg-transparent font-black text-[10px] uppercase tracking-[0.2em] outline-none cursor-pointer max-w-[150px] lg:max-w-none truncate">
                        <option>Ordenar por: Popularidad</option>
                        <option>Recientes</option>
                        <option>Precio: Menor a Mayor</option>
@@ -247,17 +250,11 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
               </div>
 
 
-              {normalizedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-1 bg-slate-100 border border-slate-100">
+              {normalizedProducts.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-1 bg-slate-100 border border-slate-100">
                    {normalizedProducts.map((p) => (
-                     <div key={p.id} className="bg-white">
-                        <ProductCard {...p} slug={p.slug} />
-                     </div>
+                      <ProductCard key={p.id} {...p} slug={p.slug} />
                    ))}
-                </div>
-              ) : (
-                <div className="py-24 text-center border border-dashed border-slate-100 rounded-3xl">
-                   <Typography variant="body" className="text-slate-400">No se encontraron productos en esta categoría.</Typography>
                 </div>
               )}
 
