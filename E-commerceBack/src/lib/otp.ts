@@ -29,7 +29,7 @@ export const OtpService = {
             }
 
             await resend.emails.send({
-                from: 'LadyNails <no-reply@visiontreepasto.com>',
+                from: 'LadyNails register <no-reply@visiontreepasto.com>',
                 to: email,
                 subject: 'Tú código de verificación para activar tu cuenta en LadyNails',
                 html: `

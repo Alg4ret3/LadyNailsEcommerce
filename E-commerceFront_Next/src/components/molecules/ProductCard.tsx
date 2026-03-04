@@ -83,7 +83,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Visual Workspace */}
       <div className="relative aspect-4/5 overflow-hidden bg-muted">
-        <Link href={`/product/${slug}`} className="absolute inset-0 z-10">
+        <Link href={`/product/${id}`} className="absolute inset-0 z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}

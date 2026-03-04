@@ -8,7 +8,10 @@ interface MedusaPrice {
 
 interface MedusaVariant {
   id: string
-  prices: MedusaPrice[]
+  calculated_price: {
+    original_amount: number
+    calculated_amount: number
+  }
 }
 
 interface MedusaCollection {
@@ -16,17 +19,25 @@ interface MedusaCollection {
   title: string
 }
 
+export interface MedusaImage {
+  id: string
+  url: string
+}
+
 export interface MedusaProduct {
   id: string
   title: string
   handle: string
+  description?: string
   thumbnail: string | null
+  images?: MedusaImage[]
   variants: MedusaVariant[]
   collection?: MedusaCollection
   metadata?: Record<string, any>
   categories?: {
     id: string
     name: string
+    handle: string
   }[]
 }
 
