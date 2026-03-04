@@ -14,7 +14,15 @@ export default function NosotrosPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-20 items-center">
            <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
               <Typography variant="detail" className="text-slate-400">Excelencia en Belleza</Typography>
-              <Typography variant="h1" className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-tight">LADYNAIL SHOP</Typography>
+              <div className="relative w-64 h-32 sm:w-96 sm:h-48 mx-auto lg:mx-0">
+                <Image 
+                  src="/assets/LogoProvicional.svg" 
+                  alt="Ladynail Shop Logo" 
+                  fill
+                  className="object-contain invert-0"
+                  priority
+                />
+              </div>
               <Typography variant="body" className="text-lg sm:text-xl font-light text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 Nacimos con la visión de transformar la experiencia del profesional de la belleza. Ladynail Shop es hoy el referente en suministro estético, trayendo las tendencias globales al mercado local con eficiencia industrial.
               </Typography>

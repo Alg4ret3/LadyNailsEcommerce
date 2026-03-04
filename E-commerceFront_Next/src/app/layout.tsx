@@ -3,12 +3,14 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/UserContext";
+import { UserProvider } from "@/context/UserContext";
+import { ToastProvider } from "@/context/ToastContext";
 import { CompareProvider } from "@/context/CompareContext";
 import { CompareDrawer } from "@/components/organisms/CompareDrawer";
 import { WhatsAppButton } from "@/components/atoms/WhatsAppButton";
 
 import { WishlistProvider } from "@/context/WishlistContext";
+import { CategoriesProvider } from "@/context/CategoriesContext";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -29,19 +31,23 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${outfit.variable} antialiased font-sans`}>
-        <ThemeProvider>
-          <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <CompareProvider>
-                  {children}
-                  <CompareDrawer />
-                  <WhatsAppButton />
-                </CompareProvider>
-              </WishlistProvider>
-            </CartProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <CategoriesProvider>
+          <ThemeProvider>
+            <UserProvider>
+              <ToastProvider>
+                <CartProvider>
+                  <WishlistProvider>
+                    <CompareProvider>
+                      {children}
+                      <CompareDrawer />
+                      <WhatsAppButton />
+                    </CompareProvider>
+                  </WishlistProvider>
+                </CartProvider>
+              </ToastProvider>
+            </UserProvider>
+          </ThemeProvider>
+        </CategoriesProvider>
       </body>
     </html>
   );

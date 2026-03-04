@@ -1,13 +1,19 @@
-'use client';
-
-import React from 'react';
 import { ShopLayout } from '@/components/templates/ShopLayout';
+import { getAllProducts } from '@/services/medusa/products';
 
-export default function ShopPage() {
+
+interface Props {
+  products: any[];
+}
+
+export default async function ShopPage() {
+  const products = await getAllProducts();
+
   return (
-    <ShopLayout 
-      title="CATÁLOGO PRODUCTOS" 
+    <ShopLayout
+      title="CATÁLOGO PRODUCTOS"
       subtitle="Tendencias en Belleza & Cuidado"
+      products={products}
     />
   );
 }
