@@ -1,21 +1,27 @@
-'use client';
-
-import React from 'react';
-import { useParams } from 'next/navigation';
 import { ShopLayout } from '@/components/templates/ShopLayout';
+import { getProductsByCategoryHandle } from '@/services/medusa/products';
 
-export default function CategoryPage() {
-  const params = useParams();
-  const categorySlug = params.category as string;
+interface Props {
+  params: Promise<{
+    category: string;
+  }>;
+}
 
-  // Format title for display
+export default async function CategoryPage({ params }: Props) {
+  const { category } = await params;
+
+  const categorySlug = decodeURIComponent(category); // 🔥 FIX
+
+  const products = await getProductsByCategoryHandle(categorySlug);
+
   const title = categorySlug.replace(/-/g, ' ').toUpperCase();
 
   return (
-    <ShopLayout 
+    <ShopLayout
       title={title}
       subtitle="Categoría Seleccionada"
       initialCategory={categorySlug}
+      products={products}
     />
   );
 }
