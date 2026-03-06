@@ -33,8 +33,6 @@ export const Navbar: React.FC = () => {
   const { getRootCategories } = useCategories();
   const rootCategories = getRootCategories();
 
-  console.log(rootCategories);
-
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
       prev.includes(section) ? prev.filter((s: string) => s !== section) : [...prev, section]
