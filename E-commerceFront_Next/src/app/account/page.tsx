@@ -90,6 +90,10 @@ export default function AccountPage() {
         await updateAddress(editingAddressId, addressForm);
         showToast('Dirección actualizada con éxito');
       } else {
+        if ((user?.addresses?.length || 0) >= 3) {
+          showToast('Solo se permiten hasta 3 direcciones guardadas', 'error');
+          return;
+        }
         await createAddress(addressForm);
         showToast('Dirección agregada con éxito');
       }
@@ -242,7 +246,7 @@ export default function AccountPage() {
                 <div className="bg-white p-8 border border-slate-200">
                   <Typography variant="h3" className="text-2xl border-b border-slate-100 pb-4 uppercase font-black tracking-tighter">Historial de Logística</Typography>
                 </div>
-                
+
                 <div className="space-y-4">
                   {ORDERS.map((order) => (
                     <div key={order.id} className="bg-white border border-slate-200 p-8 flex flex-col sm:flex-row items-center gap-8 hover:border-slate-950 transition-all group">
@@ -283,12 +287,18 @@ export default function AccountPage() {
                   {!isAddingAddress && (
                     <button
                       onClick={() => {
-                        resetAddressForm();
-                        setIsAddingAddress(true);
+                        if ((user.addresses?.length || 0) < 3) {
+                          resetAddressForm();
+                          setIsAddingAddress(true);
+                        }
                       }}
-                      className="text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white px-6 py-3 hover:bg-slate-700 transition-all ml-4 mb-4"
+                      disabled={(user.addresses?.length || 0) >= 3}
+                      className={`text-[10px] font-black uppercase tracking-widest px-6 py-3 transition-all ml-4 mb-4 ${(user.addresses?.length || 0) >= 3
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                          : 'bg-slate-900 text-white hover:bg-slate-700'
+                        }`}
                     >
-                      Agregar Nueva +
+                      {(user.addresses?.length || 0) >= 3 ? 'Límite de direcciones (3/3)' : 'Agregar Nueva +'}
                     </button>
                   )}
                 </div>
