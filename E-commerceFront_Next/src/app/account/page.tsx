@@ -12,6 +12,7 @@ import { useUser } from '@/context/UserContext';
 import { useToast } from '@/context/ToastContext';
 import { ConfirmationModal } from '@/components/molecules/ConfirmationModal';
 import { useRouter } from 'next/navigation';
+import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
 
 export default function AccountPage() {
   const { user, updateProfile, createAddress, updateAddress, deleteAddress, logout, isLoading } = useUser();
@@ -294,8 +295,8 @@ export default function AccountPage() {
                       }}
                       disabled={(user.addresses?.length || 0) >= 3}
                       className={`text-[10px] font-black uppercase tracking-widest px-6 py-3 transition-all ml-4 mb-4 ${(user.addresses?.length || 0) >= 3
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                          : 'bg-slate-900 text-white hover:bg-slate-700'
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                        : 'bg-slate-900 text-white hover:bg-slate-700'
                         }`}
                     >
                       {(user.addresses?.length || 0) >= 3 ? 'Límite de direcciones (3/3)' : 'Agregar Nueva +'}
@@ -326,17 +327,15 @@ export default function AccountPage() {
                           <Typography variant="detail" className="text-[10px]">Dirección Calle/Carrera</Typography>
                           <input type="text" required value={addressForm.street} onChange={e => setAddressForm({ ...addressForm, street: e.target.value })} className="pro-input" placeholder="Calle 123 #45-67" />
                         </div>
-                        <div className="space-y-2">
-                          <Typography variant="detail" className="text-[10px]">Ciudad / Municipio</Typography>
-                          <input type="text" required value={addressForm.city} onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} className="pro-input" />
-                        </div>
+                        <ColombiaLocationSelect
+                          departamento={addressForm.province}
+                          ciudad={addressForm.city}
+                          onDepartamentoChange={(val) => setAddressForm(prev => ({ ...prev, province: val }))}
+                          onCiudadChange={(val) => setAddressForm(prev => ({ ...prev, city: val }))}
+                        />
                         <div className="space-y-2">
                           <Typography variant="detail" className="text-[10px]">Teléfono</Typography>
                           <input type="text" required value={addressForm.phone} onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })} className="pro-input" />
-                        </div>
-                        <div className="space-y-2">
-                          <Typography variant="detail" className="text-[10px]">Departamento / Provincia</Typography>
-                          <input type="text" value={addressForm.province} onChange={e => setAddressForm({ ...addressForm, province: e.target.value })} className="pro-input" />
                         </div>
                         <div className="space-y-2">
                           <Typography variant="detail" className="text-[10px]">Código Postal (opcional)</Typography>
