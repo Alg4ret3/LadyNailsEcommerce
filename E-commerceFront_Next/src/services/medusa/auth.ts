@@ -387,7 +387,3 @@ export async function updatePasswordWithToken(data: {
         throw new Error(errorMessage);
     }
 }
-
-
-
-

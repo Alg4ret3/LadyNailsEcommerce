@@ -264,6 +264,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
 
+      // Restriction: Only allow up to 3 addresses
+      if (user && (user.addresses?.length || 0) >= 3) {
+        throw new Error('Solo se permiten hasta 3 direcciones guardadas.');
+      }
+
       await createCustomerAddress({
         address_name: data.addressName,
         first_name: data.firstName,
@@ -284,7 +289,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  }, [listAddresses]);
+  }, [listAddresses, user]);
 
   const updateAddress = React.useCallback(async (
     id: string,
@@ -403,4 +408,3 @@ export const useUser = () => {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 };
-
