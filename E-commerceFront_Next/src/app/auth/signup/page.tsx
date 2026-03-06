@@ -19,7 +19,6 @@ export default function SignupPage() {
   const [step, setStep] = React.useState(1);
   const [email, setEmail] = React.useState('');
   const [code, setCode] = React.useState('');
-  const [verificationToken, setVerificationToken] = React.useState<string | undefined>(undefined);
   const [countryCode, setCountryCode] = React.useState('+57');
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -82,9 +81,6 @@ export default function SignupPage() {
       clearError();
       const response = await verifyOtp(email, code);
       if (response && response.verified) {
-        if (response.token) {
-          setVerificationToken(response.token);
-        }
         setStep(3);
       } else {
         setError('Código inválido. Por favor, intente de nuevo.');
@@ -109,7 +105,7 @@ export default function SignupPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: `${countryCode}${formData.phone}`
-      }, verificationToken);
+      });
       router.push('/account');
     } catch (err) {
       // Error is propagated through context
@@ -261,7 +257,7 @@ export default function SignupPage() {
                     <Typography variant="detail">Confirmar Contraseña</Typography>
                     <AnimatePresence>
                       {formData.confirmPassword && (
-                        <motion.div
+                        <motion.div 
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 10 }}
@@ -296,11 +292,11 @@ export default function SignupPage() {
               </div>
 
               <div className="flex flex-col items-center gap-6">
-                <Button
-                  type="submit"
-                  label={isLoading ? "Finalizando..." : "Finalizar Registro"}
-                  className="w-full py-5"
-                  disabled={isLoading || !isFormValid}
+                <Button 
+                  type="submit" 
+                  label={isLoading ? "Finalizando..." : "Finalizar Registro"} 
+                  className="w-full py-5" 
+                  disabled={isLoading || !isFormValid} 
                 />
               </div>
             </form>

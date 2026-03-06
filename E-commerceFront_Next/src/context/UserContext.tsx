@@ -13,7 +13,6 @@ import {
   updateCustomer as updateCustomerService,
   sendOtp as sendOtpService,
   verifyOtp as verifyOtpService,
-  registerCustom,
   requestPasswordReset as requestPasswordResetService,
   updatePasswordWithToken as updatePasswordWithTokenService,
   type RegisterData,
@@ -55,9 +54,9 @@ interface UserContextType {
   isLoading: boolean;
   error: string | null;
   login: (data: LoginData) => Promise<void>;
-  register: (data: RegisterData, token?: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   sendOtp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, code: string) => Promise<{ verified: boolean; token?: string }>;
+  verifyOtp: (email: string, code: string) => Promise<{ verified: boolean }>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => Promise<void>;
   clearError: () => void;
@@ -169,35 +168,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
 
-  const register = React.useCallback(async (data: RegisterData, token?: string) => {
+  const register = React.useCallback(async (data: RegisterData) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      if (token) {
-        // Use custom registration with token
-        const response = await registerCustom({
-          ...data,
-          token
-        });
+      await registerCustomer(data);
 
-        // If we get a token back, we can log in immediately
-        if (response.token && response.customer) {
-          localStorage.setItem("auth_token", response.token);
-          setUser(customerToUser(response.customer));
-          return; // Skip explicit login
-        }
-      } else {
-        // Standard registration
-        const response = await registerCustomer(data);
-        if (response.token && response.customer) {
-          localStorage.setItem("auth_token", response.token);
-          setUser(customerToUser(response.customer));
-          return;
-        }
-      }
-
-      // Fallback: After registration, login automatically if we didn't get a token above
+      // After registration, login automatically
       await login({ email: data.email, password: data.password });
     } catch (err: Error | any) {
       setError(err.message);
@@ -425,4 +403,3 @@ export const useUser = () => {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 };
-
