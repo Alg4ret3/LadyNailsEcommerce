@@ -117,7 +117,7 @@ export async function logoutCustomer(): Promise<void> {
  */
 export async function registerCustomer(
     data: RegisterData,
-): Promise<CustomerData> {
+): Promise<{ customer: CustomerData; token: string }> {
     try {
         // Paso 1: Registrar credenciales con el auth provider
         const authResponse = await medusaFetch<{ token: string }>(
@@ -154,7 +154,10 @@ export async function registerCustomer(
             },
         );
 
-        return customerResponse.customer;
+        return {
+            customer: customerResponse.customer,
+            token
+        };
     } catch (error: any) {
         console.error("Registration error:", error);
 
@@ -242,9 +245,9 @@ export async function sendOtp(email: string): Promise<void> {
 export async function verifyOtp(
     email: string,
     code: string,
-): Promise<{ verified: boolean }> {
+): Promise<{ verified: boolean; token?: string }> {
     try {
-        return await medusaFetch<{ verified: boolean }>(
+        return await medusaFetch<{ verified: boolean; token?: string }>(
             "/store/custom-auth/verify-otp",
             {
                 method: "POST",
@@ -273,17 +276,19 @@ export async function verifyOtp(
  */
 export async function registerCustom(
     data: RegisterData & { token: string },
-): Promise<CustomerData> {
+): Promise<{ customer: CustomerData; token: string }> {
     try {
-        const response = await medusaFetch<{ customer: CustomerData }>(
+        const response = await medusaFetch<{ customer: CustomerData; token: string }>(
             "/store/custom-auth/register",
             {
                 method: "POST",
                 body: JSON.stringify({
                     token: data.token,
+                    email: data.email,
                     password: data.password,
                     first_name: data.firstName,
                     last_name: data.lastName,
+                    phone: data.phone,
                 }),
             },
         );
@@ -292,7 +297,10 @@ export async function registerCustom(
             throw new Error("No se recibió información del cliente");
         }
 
-        return response.customer;
+        return {
+            customer: response.customer,
+            token: response.token,
+        };
     } catch (error: any) {
         console.error("Custom registration error:", error);
 
