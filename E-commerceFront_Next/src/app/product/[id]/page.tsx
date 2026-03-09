@@ -207,12 +207,12 @@ export default function ProductPage() {
                   onClick={() => setIsModalOpen(true)}
                 />
 
-                <div className="flex gap-4">
+                <div className="flex gap-2 sm:gap-4">
                   <button
                     onClick={() => toggleFavorite(productForActions)}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 border transition-all uppercase text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
-                    <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
+                    <Heart size={16} fill={isFav ? 'currentColor' : 'none'} className="hidden min-[380px]:block sm:block" />
                     {isFav ? 'En Favoritos' : 'Favoritos'}
                   </button>
 
@@ -222,9 +222,9 @@ export default function ProductPage() {
                       if (isInComp) removeFromCompare(product.id);
                       else addToCompare(item);
                     }}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 border transition-all uppercase text-[10px] font-bold tracking-widest ${isInComp ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isInComp ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
-                    <ArrowLeftRight size={16} />
+                    <ArrowLeftRight size={16} className="hidden min-[380px]:block sm:block" />
                     Comparar
                   </button>
                 </div>

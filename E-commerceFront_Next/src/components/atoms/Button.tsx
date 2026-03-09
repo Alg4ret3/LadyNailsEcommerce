@@ -34,6 +34,16 @@ export const Button: React.FC<ButtonProps> = ({
   const content = label || children;
 
   if (href) {
+    const isExternal = href.startsWith('http') || href.startsWith('tel:') || href.startsWith('mailto:');
+    
+    if (isExternal) {
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className={`${baseStyles} ${variants[variant]} ${className}`}>
+          {content}
+        </a>
+      );
+    }
+
     return (
       <Link href={href} className={`${baseStyles} ${variants[variant]} ${className}`}>
         {content}

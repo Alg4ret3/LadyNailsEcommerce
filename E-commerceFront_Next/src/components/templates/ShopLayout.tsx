@@ -212,18 +212,18 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
 
               {/* Added: Global active filter/search feedback message. Visible if there's a problem finding items globally */}
               {(query.trim() !== '' || filteredProducts.length === 0) && (
-                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-full w-max mt-2">
+                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-full w-fit max-w-full mt-2">
                   {filteredProducts.length > 0 ? (
                     <>
                       <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 leading-relaxed">
                         {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
                       </span>
                     </>
                   ) : (
                     <>
                       <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-relaxed">
                         Sin resultados — intenta otra búsqueda o ajusta los filtros
                       </span>
                     </>
