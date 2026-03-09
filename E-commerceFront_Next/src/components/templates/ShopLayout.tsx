@@ -68,7 +68,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
     name: p.title,
     price: p.variants?.[0]?.prices?.[0]?.amount ?? 0,
     image: p.thumbnail || "/placeholder.jpg",
-    category: p.collection?.title || "General",
+    tags: p.tags?.map((t: any) => t.value) || [],
     slug: p.handle,
     vendor: p.vendor || "Ladynail Shop",
   }));

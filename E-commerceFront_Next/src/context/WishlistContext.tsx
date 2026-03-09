@@ -9,7 +9,7 @@ export interface FavoriteItem {
   price: number;
   image: string;
   slug: string;
-  category: string;
+  tags: string[];
   vendor?: string;
   description?: string;
   tags?: { id: string; value: string }[];

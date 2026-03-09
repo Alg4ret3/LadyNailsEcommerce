@@ -18,7 +18,7 @@ interface ProductCardProps {
   image: string;
   hoverImage?: string;
   images?: string[];
-  category: string;
+  tags?: string[];
   slug: string;
   vendor?: string;
   rating?: number;
@@ -37,7 +37,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   image,
   hoverImage,
   images = [],
-  category,
+  tags = [],
   slug,
   vendor = "Ladynail Shop",
   rating = 4.8,
@@ -45,7 +45,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   color,
   colors,
   sizes,
-  description
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
@@ -131,7 +130,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               toggleFavorite({ id, name, price: price ?? 0, image, slug, category, vendor });
+               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor });
              }}
              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${alreadyInWishlist ? 'bg-red-500 text-white' : 'bg-white/80 backdrop-blur text-slate-900 hover:bg-white'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
@@ -145,7 +144,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
            {isWholesale && (
              <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
            )}
-           <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{category}</span>
+           <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{tags[0]?? "General"}</span>
         </div>
 
         {alreadyInCompare && (
@@ -177,7 +176,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               const compareItem: CompareItem = { id, name, price: price ?? 0, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating, description };
+
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {
@@ -228,7 +228,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           price: price ?? 0,
           image,
           slug,
-          category,
+          tags,
           vendor,
           color,
           colors,
