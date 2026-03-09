@@ -24,6 +24,11 @@ export interface MedusaImage {
   url: string
 }
 
+export interface MedusaTag {
+  id: string
+  value: string
+}
+
 export interface MedusaProduct {
   id: string
   title: string
@@ -34,6 +39,7 @@ export interface MedusaProduct {
   variants: MedusaVariant[]
   collection?: MedusaCollection
   metadata?: Record<string, any>
+  tags?: MedusaTag[]
   categories?: {
     id: string
     name: string
@@ -90,7 +96,7 @@ export async function getProductsByCategoryHandle(handle: string) {
 
 export async function getProductById(id: string) {
   const data = await medusaFetch<MedusaProductResponse>(
-    `/store/products/${id}?region_id=reg_01KHMA1TDSX5N1PNXX04K3ZJGC&fields=+metadata,+variants,+variants.prices,+collection`
+    `/store/products/${id}?region_id=reg_01KHMA1TDSX5N1PNXX04K3ZJGC&fields=+metadata,*variants,*variants.prices,+collection,*tags,*categories`
   )
 
   return data.product

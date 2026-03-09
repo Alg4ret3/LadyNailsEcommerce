@@ -5,7 +5,7 @@ import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
-import { Truck, ShieldCheck, Box, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +15,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
 import { getProductById, type MedusaProduct } from '@/services/medusa';
+import { ProductReviews } from '@/components/organisms/ProductReviews';
 
 
 export default function ProductPage() {
@@ -84,8 +85,11 @@ export default function ProductPage() {
     price: price,
     image: product.thumbnail ?? galleryImages[0],
     category,
+    categories: product.categories ?? [],
     slug: product.handle,
     vendor: product.collection?.title ?? 'Ladynail Shop',
+    description: product.description ?? undefined,
+    tags: product.tags ?? [],
   };
 
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
@@ -209,7 +213,7 @@ export default function ProductPage() {
 
                 <div className="flex gap-2 sm:gap-4">
                   <button
-                    onClick={() => toggleFavorite(productForActions)}
+                    onClick={() => toggleFavorite({ ...productForActions, description: product.description ?? undefined, tags: product.tags ?? [], categories: product.categories ?? [] })}
                     className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
                     <Heart size={16} fill={isFav ? 'currentColor' : 'none'} className="hidden min-[380px]:block sm:block" />
@@ -231,14 +235,47 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-6 pt-12">
-              <div className="flex items-center gap-3"><Truck size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Envío Nacional</Typography></div>
-              <div className="flex items-center gap-3"><ShieldCheck size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Garantía Industrial</Typography></div>
-              <div className="flex items-center gap-3"><Box size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Stock en Bodega</Typography></div>
-              <div className="flex items-center gap-3"><RefreshCcw size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Devolución 30 Días</Typography></div>
-            </div>
+            {/* Tags / Ficha Técnica */}
+            {product.tags && product.tags.length > 0 && (() => {
+              const specTags = product.tags!.filter(t => t.value.includes(':'));
+              const otherTags = product.tags!.filter(t => !t.value.includes(':'));
+              return (
+                <div className="pt-8 border-t border-slate-100 space-y-4">
+                  <Typography variant="detail" className="text-slate-400 uppercase tracking-widest text-[9px] block">
+                    Ficha Técnica
+                  </Typography>
+                  {specTags.length > 0 && (
+                    <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                      {specTags.map(tag => {
+                        const colonIdx = tag.value.indexOf(':');
+                        const key = tag.value.slice(0, colonIdx).trim();
+                        const val = tag.value.slice(colonIdx + 1).trim();
+                        return (
+                          <div key={tag.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
+                            <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">{key}</span>
+                            <span className="text-slate-900 font-semibold text-right">{val}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {otherTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {otherTags.map(tag => (
+                        <span key={tag.id} className="bg-slate-100 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                          {tag.value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
+        
+        {/* Product Reviews Section */}
+        <ProductReviews productId={product.id} />
       </section>
 
       <AddToCartModal

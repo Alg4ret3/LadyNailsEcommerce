@@ -27,6 +27,7 @@ interface ProductCardProps {
   colors?: string[];
   sizes?: string[];
   productType?: string;
+  description?: string;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -43,7 +44,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isWholesale = false,
   color,
   colors,
-  sizes
+  sizes,
+  description
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
@@ -175,7 +177,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               const compareItem: CompareItem = { id, name, price: price ?? 0, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating };
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating, description };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {

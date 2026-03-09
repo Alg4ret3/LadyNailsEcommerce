@@ -8,10 +8,13 @@ export interface CompareItem {
   price: number;
   image: string;
   category: string;
+  categories?: { id: string; name: string; handle: string }[];
   slug: string;
   vendor: string;
   rating?: number;
   specs?: Record<string, string>;
+  description?: string;
+  tags?: { id: string; value: string }[];
 }
 
 import { Toast } from '@/components/atoms/Toast';

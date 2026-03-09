@@ -11,6 +11,9 @@ export interface FavoriteItem {
   slug: string;
   category: string;
   vendor?: string;
+  description?: string;
+  tags?: { id: string; value: string }[];
+  categories?: { id: string; name: string; handle: string }[];
 }
 
 interface WishlistContextType {

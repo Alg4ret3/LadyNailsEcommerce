@@ -73,28 +73,41 @@ export default function ComparePage() {
                        <Star size={14} fill="currentColor" className="text-accent border-none" />
                        <span className="text-sm font-bold text-slate-900">{item.rating || 4.8}</span>
                     </div>
+                    {item.description && (
+                      <Typography variant="body" className="text-xs text-slate-500 line-clamp-3 leading-relaxed mt-2">
+                        {item.description}
+                      </Typography>
+                    )}
                   </div>
 
-                  <div className="py-6 border-t border-slate-100">
+                  <div className="py-6 border-t border-slate-100 flex-1 flex flex-col justify-end">
                      <Typography variant="h3" className="text-2xl font-black tracking-tighter">${item.price.toLocaleString()}</Typography>
                   </div>
 
-                  {/* Specification Table */}
+                  {/* Tags / Ficha Técnica */}
                   <div className="space-y-4 pt-6 border-t border-slate-100">
                     <Typography variant="detail" className="text-slate-300 block mb-2">Especificaciones</Typography>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                         <span className="text-slate-400">Categoría</span>
-                         <span className="text-slate-900">{item.category}</span>
+                    <div className="space-y-0 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                      {/* Categoría */}
+                      <div className="flex items-center justify-between px-3 py-2 text-xs">
+                        <span className="text-slate-400 font-bold uppercase tracking-widest">Categoría</span>
+                        <span className="text-slate-900 font-semibold text-right">
+                          {item.categories?.[0]?.name ?? item.category}
+                        </span>
                       </div>
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                         <span className="text-slate-400">Garantía</span>
-                         <span className="text-slate-900">1 Año</span>
-                      </div>
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                         <span className="text-slate-400">Envío</span>
-                         <span className="text-slate-900">Nacional</span>
-                      </div>
+                      {/* Tags as key:value rows */}
+                      {item.tags && item.tags.map(tag => {
+                        const colonIdx = tag.value.indexOf(':');
+                        if (colonIdx === -1) return null;
+                        const key = tag.value.slice(0, colonIdx).trim();
+                        const val = tag.value.slice(colonIdx + 1).trim();
+                        return (
+                          <div key={tag.id} className="flex items-center justify-between px-3 py-2 text-xs">
+                            <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
+                            <span className="text-slate-900 font-semibold text-right">{val}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
