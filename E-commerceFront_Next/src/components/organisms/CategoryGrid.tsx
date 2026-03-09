@@ -3,12 +3,7 @@
 import React from 'react';
 import { Typography } from '@/components/atoms/Typography';
 import { CategoryCard } from '@/components/molecules/CategoryCard';
-
-const CATEGORIES = [
-  { name: 'Uñas y Geles', img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?q=80&w=1000', count: '1.2k SKU' },
-  { name: 'Equipos Barbería', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1000', count: '850 SKU' },
-  { name: 'Mobiliario Studio', img: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?q=80&w=1000', count: '120 SKU' },
-];
+import { HOME_CATEGORIES } from '@/constants';
 
 export const CategoryGrid: React.FC = () => {
   return (
@@ -24,7 +19,7 @@ export const CategoryGrid: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-200 bg-white">
-          {CATEGORIES.map((cat, i) => (
+          {HOME_CATEGORIES.map((cat, i) => (
             <CategoryCard key={i} {...cat} />
           ))}
         </div>

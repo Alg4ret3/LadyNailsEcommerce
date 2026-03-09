@@ -22,10 +22,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'upload.wikimedia.org',
       },
-      {
-        protocol: 'https',
-        hostname: 'ccpasto.org.co',
-      },
+
       {
         protocol: 'https',
         hostname: 'inexmoda.org.co',
@@ -41,6 +38,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'miasecret.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
       },
     ],
   },
