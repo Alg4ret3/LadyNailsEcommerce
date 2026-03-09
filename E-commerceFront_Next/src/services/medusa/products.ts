@@ -128,16 +128,8 @@ export async function getProductById(id: string) {
 }
 
 export async function getFeaturedProducts() {
-  const data = await medusaFetch<MedusaProductsResponse>(
-    "/store/products",
-    { method: "GET" },
-    {
-      limit: "100",
-      fields: "*variants,*variants.prices,*categories,*tags"
-    }
-  )
-
-  const products = data.products || []
+  
+  const products = await getAllProducts()
 
   const featuredProducts = products
     .filter((p: any) =>
