@@ -15,7 +15,7 @@ interface AddToCartModalProps {
     price: number;
     image: string;
     slug: string;
-    category: string;
+    tags: string[];
     vendor: string;
     sizes?: string[];
     color?: string;
@@ -41,7 +41,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
       image: product.image,
       quantity,
       slug: product.slug,
-      category: product.category,
+      tags: product.tags,
       vendor: product.vendor,
       size: selectedSize,
       color: selectedColor

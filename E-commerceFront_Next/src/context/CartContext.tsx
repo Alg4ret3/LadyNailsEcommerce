@@ -11,7 +11,7 @@ export interface CartItem {
   size?: string;
   color?: string;
   slug: string;
-  category: string;
+  tags: string[];
   vendor?: string;
   selectedSize?: string;
   selectedColor?: string;

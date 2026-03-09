@@ -7,7 +7,7 @@ export interface CompareItem {
   name: string;
   price: number;
   image: string;
-  category: string;
+  tags: string[];
   slug: string;
   vendor: string;
   rating?: number;
