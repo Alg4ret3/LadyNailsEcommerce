@@ -135,9 +135,8 @@ export async function getFeaturedProducts() {
 
   const featuredProducts = products
     .filter((p: any) =>
-      p.tags?.some((t: any) => t.value === "Destacados-home")
+      p.tags?.some((t: any) => t.value === "Popular")
     )
-    .slice(0, 4)
 
   return featuredProducts
 }

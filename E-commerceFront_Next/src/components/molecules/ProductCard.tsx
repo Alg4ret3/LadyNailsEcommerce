@@ -140,12 +140,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Quality/Type Badge */}
-        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
-           {isWholesale && (
-             <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
-           )}
-           <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{tags[0]?? "General"}</span>
-        </div>
+        {(() => {
+          const SYSTEM_TAGS = ['destacados-home', 'nuevo', 'new'];
+          const visibleTag = tags.find(t => !SYSTEM_TAGS.includes(t.toLowerCase()) && !t.includes(':'));
+          return (
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
+              {isWholesale && (
+                <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
+              )}
+              {visibleTag && (
+                <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{visibleTag}</span>
+              )}
+            </div>
+          );
+        })()}
 
         {alreadyInCompare && (
           <button

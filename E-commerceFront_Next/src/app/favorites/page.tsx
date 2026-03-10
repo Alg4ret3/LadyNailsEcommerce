@@ -37,7 +37,7 @@ export default function FavoritesPage() {
           <div className="space-y-6">
             <AnimatePresence mode="popLayout">
               {favorites.map((product) => {
-                const specTags = (product.tags ?? []).filter(t => t.value.includes(':'));
+                const specTags = (product.tags ?? []).filter(t => t.value?.includes(':'));
                 const category = product.categories?.[0]?.name ?? product.category;
 
                 return (
@@ -112,7 +112,7 @@ export default function FavoritesPage() {
                           </Typography>
                           <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
                             {specTags.map(tag => {
-                              const colonIdx = tag.value.indexOf(':');
+                              const colonIdx = tag.value?.indexOf(':') ?? -1;
                               const key = tag.value.slice(0, colonIdx).trim();
                               const val = tag.value.slice(colonIdx + 1).trim();
                               return (

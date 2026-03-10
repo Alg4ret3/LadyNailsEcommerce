@@ -49,7 +49,20 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
   const { categories, loading } = useCategories();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState(200000);
+
+  const brands = React.useMemo(() => {
+    const brandsSet = new Set<string>();
+    products.forEach(p => {
+      p.tags?.forEach((t: any) => {
+        if (t.value.startsWith('marca:')) {
+          brandsSet.add(t.value.replace('marca:', ''));
+        }
+      });
+    });
+    return Array.from(brandsSet).sort();
+  }, [products]);
 
   const filteredProducts = React.useMemo(() => {
     return products.filter((p) => {
@@ -59,9 +72,15 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
       const matchesPrice =
         (p.variants?.[0]?.prices?.[0]?.amount ?? 0) <= priceRange
 
-      return matchesSearch && matchesPrice
+      const matchesCategory = 
+        !selectedCategory || p.categories?.some((c: any) => c.id === selectedCategory);
+
+      const matchesBrand = 
+        !selectedBrand || p.tags?.some((t: any) => t.value === `marca:${selectedBrand}`);
+
+      return matchesSearch && matchesPrice && matchesCategory && matchesBrand
     })
-  }, [products, query, priceRange])
+  }, [products, query, priceRange, selectedCategory, selectedBrand])
 
   const normalizedProducts = filteredProducts.map((p) => ({
     id: p.id,
@@ -175,11 +194,25 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
 
                  <FilterSection title="Marcas">
                     <div className="grid grid-cols-2 gap-2">
-                       {['OPI', 'Wahl', 'Mía Secret', 'Andis', 'Loreal', 'Babyliss'].map(brand => (
-                         <button key={brand} className="px-4 py-2 border border-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:border-slate-950 hover:text-slate-950 transition-all">
-                            {brand}
-                         </button>
-                       ))}
+                       {brands.length > 0 ? (
+                         brands.map(brand => (
+                           <button 
+                             key={brand} 
+                             onClick={() => setSelectedBrand(selectedBrand === brand ? null : brand)}
+                             className={`px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-all ${
+                               selectedBrand === brand 
+                               ? 'border-slate-950 bg-slate-950 text-white' 
+                               : 'border-slate-100 text-slate-400 hover:border-slate-950 hover:text-slate-950'
+                             }`}
+                           >
+                              {brand}
+                           </button>
+                         ))
+                       ) : (
+                         <Typography variant="body" className="text-slate-400 text-[10px] col-span-2">
+                           No hay marcas disponibles
+                         </Typography>
+                       )}
                     </div>
                  </FilterSection>
               </div>
