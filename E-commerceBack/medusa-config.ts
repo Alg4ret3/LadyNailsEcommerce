@@ -16,6 +16,9 @@ module.exports = defineConfig({
   },
 
   modules: {
+    brand: {
+      resolve: "./src/modules/brand",
+    },
     auth: {
       resolve: "@medusajs/auth",
       options: {
