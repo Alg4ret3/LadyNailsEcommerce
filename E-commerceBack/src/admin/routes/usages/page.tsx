@@ -61,7 +61,7 @@ export default function UsagesPage() {
     return (
         <Container className="divide-y p-0">
             <div className="flex items-center justify-between px-6 py-4">
-                <Heading level="h1">Usages</Heading>
+                <Heading level="h1">Modos de uso</Heading>
 
                 <div className="flex gap-2">
                     <Input
@@ -129,6 +129,6 @@ export default function UsagesPage() {
 }
 
 export const config = defineRouteConfig({
-    label: "Usages",
+    label: "Modos de uso",
     icon: ListBullet,
 })

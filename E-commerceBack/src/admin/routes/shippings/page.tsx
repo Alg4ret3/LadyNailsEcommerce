@@ -61,7 +61,7 @@ export default function ShippingsPage() {
     return (
         <Container className="divide-y p-0">
             <div className="flex items-center justify-between px-6 py-4">
-                <Heading level="h1">Shippings</Heading>
+                <Heading level="h1">Envíos</Heading>
 
                 <div className="flex gap-2">
                     <Input
@@ -129,6 +129,6 @@ export default function ShippingsPage() {
 }
 
 export const config = defineRouteConfig({
-    label: "Shippings",
+    label: "Envíos",
     icon: HandTruck,
 })

@@ -65,11 +65,11 @@ export default function BrandsPage() {
 
       {/* HEADER */}
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h1">Brands</Heading>
+        <Heading level="h1">Marcas</Heading>
 
         <div className="flex gap-2">
           <Input
-            placeholder="Brand name"
+            placeholder="Nombre de la marca"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -136,6 +136,6 @@ export default function BrandsPage() {
 }
 
 export const config = defineRouteConfig({
-  label: "Brands",
+  label: "Marcas",
   icon: Tag,
 })
