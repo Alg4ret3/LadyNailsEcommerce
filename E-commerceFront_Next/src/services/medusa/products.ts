@@ -54,7 +54,7 @@ interface MedusaProductsResponse {
 }
 
 interface MedusaProductResponse {
-  product: MedusaProduct
+  products: MedusaProduct
 }
 
 export async function getAllProducts() {
@@ -65,7 +65,6 @@ export async function getAllProducts() {
     },
     {
       limit: "100",
-      fields: "*variants,*variants.prices,*categories,*tags"
     }
   )
 
@@ -101,7 +100,6 @@ export async function getProductsByCategoryHandle(handle: string) {
     { method: "GET" },
     {
       "category_id": category.id,
-      fields: "*variants,*variants.prices,*categories,*tags"
     }
   )
 
@@ -122,11 +120,12 @@ export async function getProductsByCategoryHandle(handle: string) {
 }
 
 export async function getProductById(id: string) {
-  const data = await medusaFetch<MedusaProductResponse>(
-    `/store/products/${id}?region_id=reg_01KHMA1TDSX5N1PNXX04K3ZJGC&fields=+metadata,*variants,*variants.prices,+collection,*tags,*categories`
+  const data = await medusaFetch<MedusaProductsResponse>(
+    `/store/products?id=${id}`,
+    { method: "GET" }
   )
 
-  return data.product
+  return data.products?.[0] || null
 }
 
 export async function getFeaturedProducts() {

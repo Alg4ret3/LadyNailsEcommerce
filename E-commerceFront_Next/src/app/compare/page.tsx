@@ -96,13 +96,13 @@ export default function ComparePage() {
                         </span>
                       </div>
                       {/* Tags as key:value rows */}
-                      {item.tags && item.tags.map(tag => {
-                        const colonIdx = tag.value.indexOf(':');
+                      {item.tags && item.tags.map((tag, idx) => {
+                        const colonIdx = tag.indexOf(':');
                         if (colonIdx === -1) return null;
-                        const key = tag.value.slice(0, colonIdx).trim();
-                        const val = tag.value.slice(colonIdx + 1).trim();
+                        const key = tag.slice(0, colonIdx).trim();
+                        const val = tag.slice(colonIdx + 1).trim();
                         return (
-                          <div key={tag.id} className="flex items-center justify-between px-3 py-2 text-xs">
+                          <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
                             <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
                             <span className="text-slate-900 font-semibold text-right">{val}</span>
                           </div>

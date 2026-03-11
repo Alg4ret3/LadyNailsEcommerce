@@ -28,6 +28,9 @@ module.exports = defineConfig({
     shipping: {
       resolve: "./src/modules/shipping",
     },
+    review: {
+      resolve: "./src/modules/review",
+    },
     auth: {
       resolve: "@medusajs/auth",
       options: {

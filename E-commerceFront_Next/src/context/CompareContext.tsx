@@ -13,6 +13,8 @@ export interface CompareItem {
   rating?: number;
   specs?: Record<string, string>;
   description?: string;
+  category?: string;
+  categories?: { id: string; name: string; handle: string }[];
 }
 
 import { Toast } from '@/components/atoms/Toast';

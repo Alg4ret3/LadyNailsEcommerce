@@ -34,6 +34,7 @@ export default function ProductPage() {
     async function fetchProduct() {
       try {
         const data = await getProductById(productId);
+        console.log(data);
         setProduct(data);
       } catch (error) {
         console.error("Error cargando producto", error);
@@ -63,7 +64,7 @@ export default function ProductPage() {
   );
 
   // Precio desde la primera variante
-  const price = product.variants?.[0]?.calculated_price.original_amount ?? 0;
+  const price = product.variants?.[0]?.prices?.[0].amount ?? 0;
   const formattedPrice = price.toLocaleString('es-CO');
 
   // Imágenes: usa images[] o thumbnail como fallback
@@ -89,7 +90,7 @@ export default function ProductPage() {
     slug: product.handle,
     vendor: product.collection?.title ?? 'Ladynail Shop',
     description: product.description ?? undefined,
-    tags: product.tags ?? [],
+    tags: product.tags?.map(t => t.value) ?? [],
   };
 
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
@@ -213,7 +214,7 @@ export default function ProductPage() {
 
                 <div className="flex gap-2 sm:gap-4">
                   <button
-                    onClick={() => toggleFavorite({ ...productForActions, description: product.description ?? undefined, tags: product.tags ?? [], categories: product.categories ?? [] })}
+                    onClick={() => toggleFavorite({ ...productForActions })}
                     className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
                     <Heart size={16} fill={isFav ? 'currentColor' : 'none'} className="hidden min-[380px]:block sm:block" />
