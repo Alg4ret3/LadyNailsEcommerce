@@ -3,6 +3,9 @@ import UsageModule from "../modules/usage"
 import { defineLink } from "@medusajs/framework/utils"
 
 export default defineLink(
-    ProductModule.linkable.product,
-    UsageModule.linkable.usage
+  {
+    linkable: ProductModule.linkable.product,
+    isList: true,
+  },
+  UsageModule.linkable.usage
 )

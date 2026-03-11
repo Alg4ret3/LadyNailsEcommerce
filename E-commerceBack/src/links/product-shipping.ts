@@ -3,6 +3,9 @@ import ShippingModule from "../modules/shipping"
 import { defineLink } from "@medusajs/framework/utils"
 
 export default defineLink(
-    ProductModule.linkable.product,
-    ShippingModule.linkable.shipping
+  {
+    linkable: ProductModule.linkable.product,
+    isList: true,
+  },
+  ShippingModule.linkable.shipping
 )

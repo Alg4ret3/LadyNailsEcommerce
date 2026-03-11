@@ -3,6 +3,9 @@ import WarrantyModule from "../modules/warranty"
 import { defineLink } from "@medusajs/framework/utils"
 
 export default defineLink(
-    ProductModule.linkable.product,
-    WarrantyModule.linkable.warranty
+  {
+    linkable: ProductModule.linkable.product,
+    isList: true,
+  },
+  WarrantyModule.linkable.warranty
 )
