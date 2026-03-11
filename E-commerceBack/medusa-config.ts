@@ -16,6 +16,18 @@ module.exports = defineConfig({
   },
 
   modules: {
+    brand: {
+      resolve: "./src/modules/brand",
+    },
+    warranty: {
+      resolve: "./src/modules/warranty",
+    },
+    usage: {
+      resolve: "./src/modules/usage",
+    },
+    shipping: {
+      resolve: "./src/modules/shipping",
+    },
     auth: {
       resolve: "@medusajs/auth",
       options: {
