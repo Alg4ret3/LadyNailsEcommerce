@@ -1,5 +1,7 @@
 import { medusaFetch } from "./client"
 import { getCategories, type ProductCategoriesResponse } from "./categories"
+import { AttributeData } from "./atributes"
+import { ReviewData } from "./review"
 
 interface MedusaPrice {
   amount: number
@@ -46,6 +48,12 @@ export interface MedusaProduct {
     name: string
     handle: string
   }[]
+  brand?: AttributeData
+  usage?: AttributeData
+  warranty?: AttributeData
+  shipping?: AttributeData
+  vendor?: string
+  reviews?: ReviewData[]
 }
 
 interface MedusaProductsResponse {

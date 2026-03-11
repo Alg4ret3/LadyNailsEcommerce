@@ -1,34 +1,66 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { Star } from 'lucide-react';
+import { getReviews, createReview, type ReviewData } from '@/services/medusa/review';
 
 interface ProductReviewsProps {
   productId: string;
+  initialReviews?: ReviewData[];
 }
 
-export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
+export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initialReviews }) => {
   const { user } = useUser();
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [review, setReview] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [reviewsList, setReviewsList] = useState<ReviewData[]>(initialReviews || []);
+  const [loadingReviews, setLoadingReviews] = useState(!initialReviews);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!initialReviews) {
+      const fetchReviews = async () => {
+        try {
+          const data = await getReviews(productId);
+          setReviewsList(data);
+        } catch (error) {
+          console.error('Error fetching reviews:', error);
+        } finally {
+          setLoadingReviews(false);
+        }
+      };
+      fetchReviews();
+    }
+  }, [productId, initialReviews]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) return;
     
-    // Simulate API call
-    console.log('Submitted review for', productId, { rating, review });
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setRating(0);
-      setReview('');
-    }, 3000);
+    try {
+      await createReview(productId, { 
+        rating, 
+        content: review, 
+        customer_name: user?.name || 'Anónimo' 
+      });
+      setSubmitted(true);
+      
+      // Refresh reviews list
+      const updatedReviews = await getReviews(productId);
+      setReviewsList(updatedReviews);
+
+      setTimeout(() => {
+        setSubmitted(false);
+        setRating(0);
+        setReview('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    }
   };
 
   return (
@@ -109,6 +141,58 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => 
           )}
         </div>
       )}
+      <div className="space-y-6 mt-12">
+        <Typography variant="h4" className="text-xl font-bold">
+          {reviewsList.length} {reviewsList.length === 1 ? 'Reseña' : 'Reseñas'}
+        </Typography>
+
+        {loadingReviews ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : reviewsList.length === 0 ? (
+          <Typography variant="body" className="text-slate-500 italic">
+            Aún no hay reseñas para este producto. ¡Sé el primero en calificar!
+          </Typography>
+        ) : (
+          <div className="grid gap-6">
+            {reviewsList.map((rev) => (
+              <div key={rev.id} className="bg-white border border-slate-100 p-6 rounded-xl shadow-sm">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <Typography variant="detail" className="text-slate-900 font-bold block mb-1">
+                      {rev.customer_name || 'Anónimo'}
+                    </Typography>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={14}
+                          className={s <= rev.rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {rev.created_at && (
+                    <Typography variant="detail" className="text-slate-400 text-[10px] uppercase tracking-wider">
+                      {new Date(rev.created_at).toLocaleDateString('es-CO', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </Typography>
+                  )}
+                </div>
+                {rev.content && (
+                  <Typography variant="body" className="text-slate-700 leading-relaxed uppercase text-xs">
+                    {rev.content}
+                  </Typography>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

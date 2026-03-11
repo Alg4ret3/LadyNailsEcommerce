@@ -23,11 +23,16 @@ interface ProductCardProps {
   vendor?: string;
   rating?: number;
   isWholesale?: boolean;
+  productType?: string;
+  description?: string;
+  categories?: { id: string; name: string; handle: string }[];
+  brand?: { id: string; name: string };
+  warranty?: { id: string; name: string };
+  usage?: { id: string; name: string };
+  shipping?: { id: string; name: string };
   color?: string;
   colors?: string[];
   sizes?: string[];
-  productType?: string;
-  description?: string;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -42,6 +47,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   vendor = "Ladynail Shop",
   rating = 4.8,
   isWholesale = false,
+  description,
+  categories,
+  brand,
+  warranty,
+  usage,
+  shipping,
   color,
   colors,
   sizes,
@@ -130,7 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor });
+               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping });
              }}
              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${alreadyInWishlist ? 'bg-red-500 text-white' : 'bg-white/80 backdrop-blur text-slate-900 hover:bg-white'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
@@ -185,7 +196,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                e.preventDefault();
                e.stopPropagation();
 
-               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating };
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating, description, categories, brand, warranty, usage, shipping };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {
@@ -209,7 +220,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                  <span className="text-[8px] sm:text-[10px] font-bold text-foreground">{rating}</span>
               </div>
            </div>
-           <Link href={`/product/${slug}`} className="relative z-20 block group/title">
+           <Link href={`/product/${id}`} className="relative z-20 block group/title">
               <Typography variant="h3" className="text-xs sm:text-sm font-bold text-foreground group-hover/title:text-accent transition-colors line-clamp-2 uppercase tracking-tight leading-tight">
                 {name}
               </Typography>

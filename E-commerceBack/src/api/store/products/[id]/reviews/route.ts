@@ -5,7 +5,7 @@ export async function POST(
   res: MedusaResponse
 ) {
   const { id } = req.params
-  const { rating, content } = req.body as { rating: number, content: string }
+  const { rating, content, customer_name } = req.body as { rating: number, content: string, customer_name: string }
 
   const reviewModuleService = req.scope.resolve("review")
   const link = req.scope.resolve("link")
@@ -13,7 +13,8 @@ export async function POST(
   // 1. Crear la reseña en el módulo de reviews
   const review = await reviewModuleService.createReviews({
     rating,
-    content
+    content,
+    customer_name
   })
 
   // 2. Vincular la reseña con el producto

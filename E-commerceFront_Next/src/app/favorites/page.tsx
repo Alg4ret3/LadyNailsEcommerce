@@ -105,26 +105,55 @@ export default function FavoritesPage() {
                       </div>
 
                       {/* Right: Tech Specs */}
-                      {specTags.length > 0 && (
-                        <div className="w-full sm:w-56 md:w-64 shrink-0">
-                          <Typography variant="detail" className="text-slate-300 uppercase tracking-widest text-[9px] block mb-2">
-                            Ficha Técnica
-                          </Typography>
-                          <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
-                            {specTags.map((tag, idx) => {
-                              const colonIdx = tag.indexOf(':');
-                              const key = tag.slice(0, colonIdx).trim();
-                              const val = tag.slice(colonIdx + 1).trim();
+                      <div className="w-full sm:w-56 md:w-64 shrink-0">
+                        <Typography variant="detail" className="text-slate-300 uppercase tracking-widest text-[9px] block mb-2">
+                          Ficha Técnica
+                        </Typography>
+                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                          {(() => {
+                            const specs = [
+                              { label: 'Marca', key: 'marca', value: product.brand?.name },
+                              { label: 'Garantía', key: 'garantia', value: product.warranty?.name },
+                              { label: 'Uso', key: 'uso', value: product.usage?.name },
+                              { label: 'Envío', key: 'envio', value: product.shipping?.name },
+                            ];
+
+                            return specs.map((spec, idx) => {
+                              // Try to find in tags if not in structured field
+                              let displayValue = spec.value;
+                              if (!displayValue) {
+                                const tagMatch = specTags.find(t => t.toLowerCase().startsWith(`${spec.key}:`));
+                                if (tagMatch) displayValue = tagMatch.split(':')[1].trim();
+                              }
+
+                              if (!displayValue) return null;
+
                               return (
                                 <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
-                                  <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
-                                  <span className="text-slate-900 font-semibold text-right">{val}</span>
+                                  <span className="text-slate-400 font-bold uppercase tracking-widest">{spec.label}</span>
+                                  <span className="text-slate-900 font-semibold text-right">{displayValue}</span>
                                 </div>
                               );
-                            })}
-                          </div>
+                            });
+                          })()}
+                          
+                          {/* Other spec tags */}
+                          {specTags.filter(t => {
+                            const key = t.split(':')[0].trim().toLowerCase();
+                            return !['marca', 'garantia', 'uso', 'envio'].includes(key);
+                          }).map((tag, idx) => {
+                            const colonIdx = tag.indexOf(':');
+                            const key = tag.slice(0, colonIdx).trim();
+                            const val = tag.slice(colonIdx + 1).trim();
+                            return (
+                              <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
+                                <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
+                                <span className="text-slate-900 font-semibold text-right">{val}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </motion.div>
                 );

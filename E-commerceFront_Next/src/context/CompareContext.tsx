@@ -15,6 +15,10 @@ export interface CompareItem {
   description?: string;
   category?: string;
   categories?: { id: string; name: string; handle: string }[];
+  brand?: { id: string; name: string };
+  warranty?: { id: string; name: string };
+  usage?: { id: string; name: string };
+  shipping?: { id: string; name: string };
 }
 
 import { Toast } from '@/components/atoms/Toast';

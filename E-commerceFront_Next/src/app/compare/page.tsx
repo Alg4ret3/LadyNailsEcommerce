@@ -59,14 +59,14 @@ export default function ComparePage() {
                   </button>
                 </div>
 
-                <div className="relative aspect-square mb-8 overflow-hidden bg-slate-50 rounded-2xl border border-slate-100">
+                <Link href={`/product/${item.id}`} className="block relative aspect-square mb-8 overflow-hidden bg-slate-50 rounded-2xl border border-slate-100">
                    <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                </div>
+                </Link>
 
                 <div className="flex-1 space-y-6">
                   <div className="space-y-3">
                     <Typography variant="detail" className="text-accent">{item.vendor}</Typography>
-                    <Link href={`/product/${item.slug}`}>
+                    <Link href={`/product/${item.id}`}>
                       <Typography variant="h4" className="text-lg leading-tight hover:text-accent transition-colors">{item.name}</Typography>
                     </Link>
                     <div className="flex items-center gap-1 text-slate-400">
@@ -95,8 +95,38 @@ export default function ComparePage() {
                           {item.categories?.[0]?.name ?? item.category}
                         </span>
                       </div>
-                      {/* Tags as key:value rows */}
-                      {item.tags && item.tags.map((tag, idx) => {
+                      
+                      {(() => {
+                        const specConfigs = [
+                          { label: 'Marca', key: 'marca', value: item.brand?.name },
+                          { label: 'Garantía', key: 'garantia', value: item.warranty?.name },
+                          { label: 'Uso', key: 'uso', value: item.usage?.name },
+                          { label: 'Envío', key: 'envio', value: item.shipping?.name },
+                        ];
+
+                        return specConfigs.map((spec, idx) => {
+                          let displayValue = spec.value;
+                          if (!displayValue && item.tags) {
+                            const tagMatch = item.tags.find(t => t.toLowerCase().startsWith(`${spec.key}:`));
+                            if (tagMatch) displayValue = tagMatch.split(':')[1].trim();
+                          }
+
+                          if (!displayValue) return null;
+
+                          return (
+                            <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
+                              <span className="text-slate-400 font-bold uppercase tracking-widest">{spec.label}</span>
+                              <span className="text-slate-900 font-semibold text-right">{displayValue}</span>
+                            </div>
+                          );
+                        });
+                      })()}
+
+                      {/* Tags as key:value rows for other attributes */}
+                      {item.tags && item.tags.filter(t => {
+                        const key = t.split(':')[0].trim().toLowerCase();
+                        return t.includes(':') && !['marca', 'garantia', 'uso', 'envio'].includes(key);
+                      }).map((tag, idx) => {
                         const colonIdx = tag.indexOf(':');
                         if (colonIdx === -1) return null;
                         const key = tag.slice(0, colonIdx).trim();

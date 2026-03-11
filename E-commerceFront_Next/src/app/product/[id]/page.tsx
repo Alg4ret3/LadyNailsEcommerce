@@ -91,6 +91,10 @@ export default function ProductPage() {
     vendor: product.collection?.title ?? 'Ladynail Shop',
     description: product.description ?? undefined,
     tags: product.tags?.map(t => t.value) ?? [],
+    brand: product.brand,
+    warranty: product.warranty,
+    usage: product.usage,
+    shipping: product.shipping,
   };
 
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
@@ -237,46 +241,68 @@ export default function ProductPage() {
             </div>
 
             {/* Tags / Ficha Técnica */}
-            {product.tags && product.tags.length > 0 && (() => {
-              const specTags = product.tags!.filter(t => t.value.includes(':'));
-              const otherTags = product.tags!.filter(t => !t.value.includes(':'));
-              return (
-                <div className="pt-8 border-t border-slate-100 space-y-4">
-                  <Typography variant="detail" className="text-slate-400 uppercase tracking-widest text-[9px] block">
-                    Ficha Técnica
-                  </Typography>
-                  {specTags.length > 0 && (
-                    <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
-                      {specTags.map(tag => {
-                        const colonIdx = tag.value.indexOf(':');
-                        const key = tag.value.slice(0, colonIdx).trim();
-                        const val = tag.value.slice(colonIdx + 1).trim();
-                        return (
-                          <div key={tag.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
-                            <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">{key}</span>
-                            <span className="text-slate-900 font-semibold text-right">{val}</span>
-                          </div>
-                        );
-                      })}
+            <div className="pt-8 border-t border-slate-100 space-y-4">
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest text-[9px] block">
+                Ficha Técnica
+              </Typography>
+              
+              <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                {product.brand && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Marca</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.brand.name}</span>
+                  </div>
+                )}
+                {product.warranty && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Garantía</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.warranty.name}</span>
+                  </div>
+                )}
+                {product.usage && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Uso Sugerido</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.usage.name}</span>
+                  </div>
+                )}
+                {product.shipping && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Envío</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.shipping.name}</span>
+                  </div>
+                )}
+                
+                {/* Fallback to old tag format if necessary or for other specs */}
+                {product.tags && product.tags.filter(t => t.value.includes(':') && 
+                  !['marca', 'garantia', 'uso', 'envio'].includes(t.value.split(':')[0].trim().toLowerCase())
+                ).map(tag => {
+                  const colonIdx = tag.value.indexOf(':');
+                  const key = tag.value.slice(0, colonIdx).trim();
+                  const val = tag.value.slice(colonIdx + 1).trim();
+                  return (
+                    <div key={tag.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
+                      <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">{key}</span>
+                      <span className="text-slate-900 font-semibold text-right">{val}</span>
                     </div>
-                  )}
-                  {otherTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {otherTags.map(tag => (
-                        <span key={tag.id} className="bg-slate-100 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                          {tag.value}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  );
+                })}
+              </div>
+
+              {product.tags && product.tags.filter(t => !t.value.includes(':')).length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {product.tags.filter(t => !t.value.includes(':')).map(tag => (
+                    <span key={tag.id} className="bg-slate-100 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      {tag.value}
+                    </span>
+                  ))}
                 </div>
-              );
-            })()}
+              )}
+            </div>
           </div>
         </div>
         
         {/* Product Reviews Section */}
-        <ProductReviews productId={product.id} />
+        <ProductReviews productId={product.id} initialReviews={product.reviews} />
       </section>
 
       <AddToCartModal
