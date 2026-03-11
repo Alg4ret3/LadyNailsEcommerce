@@ -11,7 +11,7 @@ export async function GET(
     entity: "product",
     fields: ["id", "brand.*"],
     filters: { id },
-  })
+  }) as { data: any[] }
 
   res.json({
     brand: data?.[0]?.brand ?? null,
@@ -31,7 +31,7 @@ export async function POST(
     entity: "product",
     fields: ["id", "brand.id"],
     filters: { id },
-  })
+  }) as { data: any[] }
 
   const product = data?.[0]
 
