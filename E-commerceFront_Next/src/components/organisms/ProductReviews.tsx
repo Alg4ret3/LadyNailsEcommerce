@@ -45,7 +45,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
       await createReview(productId, { 
         rating, 
         content: review, 
-        customer_name: user?.name || 'Anónimo' 
+        customer_name: user?.name || 'Anónimo',
+        customer_id: user?.id
       });
       setSubmitted(true);
       
