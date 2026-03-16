@@ -17,9 +17,8 @@ export async function createReview(productId: string, data: { rating: number, co
 }
 
 export async function getReviews(productId: string) {
-    const response = await medusaFetch<{ reviews: ReviewData[] }>(`/store/products/${productId}/reviews`, {
+    const response = await medusaFetch<{ reviews: ReviewData[], average_rating?: number }>(`/store/products/${productId}/reviews`, {
         method: "GET"
     });
-    return response.reviews;
+    return response;
 }
-

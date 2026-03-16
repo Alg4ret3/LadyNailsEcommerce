@@ -22,19 +22,31 @@ export default function LoginPage() {
   React.useEffect(() => {
     clearError();
   }, [clearError]);
+
+  const [redirectPath, setRedirectPath] = React.useState('/account');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect) {
+        setRedirectPath(decodeURIComponent(redirect));
+      }
+    }
+  }, []);
   // const [isLoadingState, setIsLoadingState] = React.useState(false); // Eliminado para usar el del contexto
 
   React.useEffect(() => {
     if (!isLoading && user?.isLoggedIn) {
-      router.push('/account');
+      router.push(redirectPath);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, redirectPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login({ email, password });
-      router.push('/account');
+      router.push(redirectPath);
     } catch (error) {
       // El error ya se maneja en el contexto
       console.error('Login failed', error);

@@ -62,6 +62,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [dynamicRating, setDynamicRating] = useState<number | null>(null);
+  React.useEffect(() => {
+    import('@/services/medusa/review').then(async ({ getReviews }) => {
+      try {
+        const data = await getReviews(id);
+        if (data && data.reviews && data.reviews.length > 0) {
+          setDynamicRating(data.average_rating || 0);
+        } else {
+          setDynamicRating(0);
+        }
+      } catch (e) {
+        console.error("Error fetching reviews for ProductCard", e);
+      }
+    });
+  }, [id]);
+
+  const displayRating = dynamicRating !== null ? dynamicRating : rating;
   
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -213,11 +230,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Corporate Metadata */}
       <div className="p-3 sm:p-6 flex flex-col flex-1 justify-between gap-3 sm:gap-4">
         <div className="space-y-2 sm:space-y-3">
-           <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
               <span className="text-[8px] sm:text-[10px] font-bold text-accent uppercase tracking-widest bg-muted px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap">{vendor}</span>
               <div className="flex items-center gap-0.5 sm:gap-1 text-foreground/40 flex-shrink-0">
-                 <Star size={10} fill="currentColor" className="text-accent" />
-                 <span className="text-[8px] sm:text-[10px] font-bold text-foreground">{rating}</span>
+                 <Star size={10} fill={displayRating > 0 ? "currentColor" : "none"} className={displayRating > 0 ? "text-yellow-400" : "text-slate-300"} />
+                 <span className="text-[8px] sm:text-[10px] font-bold text-foreground">{displayRating > 0 ? displayRating : 'Sin reseñas'}</span>
               </div>
            </div>
            <Link href={`/product/${id}`} className="relative z-20 block group/title">

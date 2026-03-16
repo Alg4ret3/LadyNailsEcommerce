@@ -26,7 +26,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
       const fetchReviews = async () => {
         try {
           const data = await getReviews(productId);
-          setReviewsList(data);
+          setReviewsList(data?.reviews || []);
         } catch (error) {
           console.error('Error fetching reviews:', error);
         } finally {
@@ -51,8 +51,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
       setSubmitted(true);
       
       // Refresh reviews list
-      const updatedReviews = await getReviews(productId);
-      setReviewsList(updatedReviews);
+      const updatedData = await getReviews(productId);
+      setReviewsList(updatedData?.reviews || []);
 
       setTimeout(() => {
         setSubmitted(false);
@@ -65,7 +65,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
   };
 
   return (
-    <div className="mt-16 pt-16 border-t border-slate-200">
+    <div id="reviews" className="mt-16 pt-16 border-t border-slate-200">
       <Typography variant="h3" className="text-2xl font-bold mb-6">Valoraciones del Producto</Typography>
 
       {!user?.isLoggedIn ? (
@@ -76,7 +76,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
           <div>
             <Button
               label="Iniciar Sesión"
-              href="/auth/login"
+              href={`/auth/login?redirect=${encodeURIComponent('/product/' + productId + '#reviews')}`}
               className="bg-slate-900 text-white mt-2 px-8"
             />
           </div>
