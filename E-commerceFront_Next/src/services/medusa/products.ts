@@ -8,8 +8,20 @@ interface MedusaPrice {
   currency_code: string
 }
 
+interface MedusaOptionValue {
+  id: string
+  value: string
+  option_id: string
+}
+
 interface MedusaVariant {
   id: string
+  title: string
+  sku?: string
+  inventory_quantity?: number
+  manage_inventory?: boolean
+  allow_backorder?: boolean
+  options?: MedusaOptionValue[]
   calculated_price: {
     original_amount: number
     calculated_amount: number
@@ -32,13 +44,21 @@ export interface MedusaTag {
   value: string
 }
 
+export interface MedusaOption {
+  id: string
+  title: string
+  values: MedusaOptionValue[]
+}
+
 export interface MedusaProduct {
   id: string
   title: string
   handle: string
   description?: string
+  subtitle?: string
   thumbnail: string | null
   images?: MedusaImage[]
+  options?: MedusaOption[]
   variants: MedusaVariant[]
   collection?: MedusaCollection
   metadata?: Record<string, any>
