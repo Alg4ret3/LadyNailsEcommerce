@@ -269,11 +269,36 @@ export default function CheckoutPage() {
     try {
       const cartId = localStorage.getItem('medusa_cart_id');
       if (cartId) {
-        await completeCart(cartId);
+        const response = await completeCart(cartId);
+        localStorage.removeItem('medusa_cart_id');
+        
+        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
+        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+      } else {
+        router.push('/checkout/confirmation');
       }
-      router.push('/checkout/confirmation');
     } catch (err) {
       setLocalError('El pago en Wompi fue EXITOSO, pero hubo un error generando la orden final. Se completará por verificación 24h o contacte soporte con su referencia.');
+    } finally {
+      setIsUpdatingCart(false);
+    }
+  };
+
+  const handleManualSuccess = async () => {
+    setIsUpdatingCart(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        const response = await completeCart(cartId);
+        localStorage.removeItem('medusa_cart_id');
+        
+        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
+        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+      } else {
+        router.push('/checkout/confirmation');
+      }
+    } catch (err) {
+      setLocalError('Hubo un error procesando su orden manual. Intente de nuevo o contacte soporte.');
     } finally {
       setIsUpdatingCart(false);
     }
@@ -607,7 +632,7 @@ export default function CheckoutPage() {
                   <Button
                     label={checkoutStep === 'PAYMENT' ? (isUpdatingCart ? "Registrando Orden..." : "Finalizar Compra Segura") : "Complete los Pasos Anteriores"}
                     disabled={checkoutStep !== 'PAYMENT' || !selectedPaymentProviderId || isUpdatingCart}
-                    href="/checkout/confirmation"
+                    onClick={handleManualSuccess}
                     className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' && selectedPaymentProviderId ? 'bg-white text-slate-900 hover:bg-emerald-400 shadow-[0_10px_30px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-white/20 border-white/10'}`}
                   />
                 )}

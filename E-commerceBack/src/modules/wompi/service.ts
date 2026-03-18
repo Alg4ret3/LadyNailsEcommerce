@@ -105,7 +105,40 @@ export class WompiPaymentProvider extends AbstractPaymentProvider<WompiOptions> 
   }
 
   async getPaymentStatus(input: GetPaymentStatusInput): Promise<GetPaymentStatusOutput> {
-    const status = input.data?.status as string || "PENDING"
+    const reference = input.data?.reference as string;
+    let status = (input.data?.status as string) || "PENDING";
+
+    // Proactively verify against Wompi API
+    if (reference) {
+      try {
+        const isTest = this.options_.environment === "test";
+        const env = isTest ? "sandbox" : "production";
+        const baseUrl = isTest ? "https://sandbox.wompi.co/v1" : "https://production.wompi.co/v1";
+        
+        const response = await fetch(`${baseUrl}/transactions?reference=${reference}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${this.options_.private_key}`
+          }
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json.data && json.data.length > 0) {
+            // Wompi returns an array of transactions for the reference
+            const tx = json.data[0];
+            status = tx.status;
+            if (input.data) {
+              const dataObj = input.data as Record<string, unknown>;
+              dataObj.transaction_id = tx.id;
+              dataObj.status = status;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Wompi Verification Error:", e);
+      }
+    }
 
     switch (status) {
       case "APPROVED":
