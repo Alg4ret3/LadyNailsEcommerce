@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCompare } from '@/context/CompareContext';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
@@ -8,10 +8,19 @@ import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Trash2, ArrowLeft, ShoppingBag, Star } from 'lucide-react';
+import { Trash2, ArrowLeft, Star } from 'lucide-react';
+import { ShoppingBag } from '@/components/icons';
+import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 
 export default function ComparePage() {
   const { compareItems, removeFromCompare, clearCompare } = useCompare();
+  const [selectedProductForCart, setSelectedProductForCart] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddToCartClick = (product: any) => {
+    setSelectedProductForCart(product);
+    setIsModalOpen(true);
+  };
 
   return (
     <main className="min-h-screen bg-white font-sans">
@@ -142,10 +151,12 @@ export default function ComparePage() {
                   </div>
 
                   <div className="pt-8">
-                     <Button 
-                       label="Añadir al Carrito" 
-                       className="w-full bg-slate-900 text-white hover:bg-slate-800 transition-all border-none" 
-                     />
+                     <button
+                       onClick={() => handleAddToCartClick(item)}
+                       className="w-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.15em] py-3 px-6 rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-2"
+                     >
+                       <ShoppingBag size={12} className="w-4 h-4" /> Añadir al Carrito
+                     </button>
                   </div>
                 </div>
               </div>
@@ -153,6 +164,26 @@ export default function ComparePage() {
           </div>
         )}
       </div>
+
+      {/* Add to Cart Modal */}
+      {selectedProductForCart && (
+        <AddToCartModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={{
+            id: selectedProductForCart.id,
+            name: selectedProductForCart.name,
+            price: selectedProductForCart.price,
+            image: selectedProductForCart.image || "/placeholder.jpg",
+            slug: selectedProductForCart.slug || selectedProductForCart.id,
+            tags: selectedProductForCart.tags?.map((t: any) => t.value || t) || [],
+            vendor: selectedProductForCart.vendor,
+            color: selectedProductForCart.color,
+            colors: selectedProductForCart.colors,
+            sizes: selectedProductForCart.sizes,
+          }}
+        />
+      )}
 
       <Footer />
     </main>

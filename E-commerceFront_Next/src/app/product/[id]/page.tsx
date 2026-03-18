@@ -125,7 +125,7 @@ export default function ProductPage() {
 
           {/* Images Section */}
           <div className="space-y-6">
-            <div className="relative aspect-square bg-[#f1f5f9] border border-slate-100 flex items-center justify-center overflow-hidden group">
+            <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden group">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}

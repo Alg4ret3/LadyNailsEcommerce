@@ -1,18 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { useWishlist } from '@/context/WishlistContext';
 import { Heart, ArrowRight, Trash2 } from 'lucide-react';
+import { ShoppingBag } from '@/components/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function FavoritesPage() {
   const { favorites, toggleFavorite } = useWishlist();
+  const [selectedProductForCart, setSelectedProductForCart] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddToCartClick = (product: any) => {
+    setSelectedProductForCart(product);
+    setIsModalOpen(true);
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -89,15 +98,21 @@ export default function FavoritesPage() {
                           ${product.price.toLocaleString()}
                         </Typography>
 
-                        <div className="flex gap-3 pt-2">
+                        <div className="flex flex-wrap gap-3 pt-2">
                           <Button
                             label="Ver Producto"
                             href={`/product/${product.id}`}
-                            className="bg-slate-900 text-white text-xs px-6 py-2.5"
+                            className="bg-slate-900 border border-slate-900 text-white text-xs px-6 py-2.5 hover:bg-slate-800 transition-colors"
                           />
                           <button
+                            onClick={() => handleAddToCartClick(product)}
+                            className="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.15em] py-3 px-6 rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-2"
+                          >
+                            <ShoppingBag size={12} className="w-4 h-4" /> Añadir
+                          </button>
+                          <button
                             onClick={() => toggleFavorite(product)}
-                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
+                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors ml-auto"
                           >
                             <Trash2 size={14} /> Eliminar
                           </button>
@@ -182,6 +197,26 @@ export default function FavoritesPage() {
           </div>
         )}
       </section>
+
+      {/* Add to Cart Modal */}
+      {selectedProductForCart && (
+        <AddToCartModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={{
+            id: selectedProductForCart.id,
+            name: selectedProductForCart.name,
+            price: selectedProductForCart.price,
+            image: selectedProductForCart.image || "/placeholder.jpg",
+            slug: selectedProductForCart.slug || selectedProductForCart.id,
+            tags: selectedProductForCart.tags?.map((t: any) => t.value || t) || [],
+            vendor: selectedProductForCart.vendor,
+            color: selectedProductForCart.color,
+            colors: selectedProductForCart.colors,
+            sizes: selectedProductForCart.sizes,
+          }}
+        />
+      )}
 
       <Footer />
     </main>

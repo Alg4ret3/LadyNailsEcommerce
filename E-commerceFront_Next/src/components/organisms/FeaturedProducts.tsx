@@ -22,14 +22,13 @@ interface TransformedProduct {
 
 export const FeaturedProducts: React.FC = () => {
   const [products, setProducts] = useState<TransformedProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-
+ 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const data = await getFeaturedProducts();
         console.log(data);
-
+ 
         const transformed = data.map((product: MedusaProduct) => ({
           id: product.id,
           name: product.title,
@@ -40,15 +39,13 @@ export const FeaturedProducts: React.FC = () => {
           slug: product.handle,
           rating: (product.metadata?.rating as number) || 5.0
         }));
-
+ 
         setProducts(transformed);
       } catch (error) {
         console.error('Error fetching featured products:', error);
-      } finally {
-        setLoading(false);
       }
     };
-
+ 
     fetchProducts();
   }, []);
 
@@ -67,7 +64,7 @@ export const FeaturedProducts: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          {products.map((item) => (
+          {products.slice(0, 4).map((item) => (
               <div key={item.id} className="h-full">
                 <ProductCard {...item} />
               </div>

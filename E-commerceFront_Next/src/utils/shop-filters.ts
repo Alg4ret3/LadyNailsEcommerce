@@ -19,7 +19,7 @@ export const filterProducts = (products: MedusaProduct[], state: FilterState): M
 
     const matchesCategory = 
       selectedCategories.length === 0 || 
-      p.categories?.some((c) => selectedCategories.includes(c.id));
+      p.categories?.some((c) => selectedCategories.includes(c.id) || selectedCategories.includes(c.handle));
 
     const matchesBrand = 
       selectedBrands.length === 0 || 
