@@ -89,3 +89,41 @@ export async function addItemToCart(cartId: string, variantId: string, quantity:
     throw error;
   }
 }
+
+export interface MedusaAddress {
+  first_name: string;
+  last_name: string;
+  company?: string;
+  address_1: string;
+  address_2?: string;
+  city: string;
+  country_code: string;
+  province?: string;
+  postal_code?: string;
+  phone?: string;
+}
+
+/**
+ * Actualiza la dirección del carrito.
+ * 
+ * @param cartId ID del carrito
+ * @param address Objeto de dirección de envío
+ */
+export async function updateCartAddress(cartId: string, address: MedusaAddress): Promise<CreateCartResponse> {
+  try {
+    const body = {
+      shipping_address: address,
+      billing_address: address,
+    };
+
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error al actualizar la dirección en el carrito:", error);
+    throw error;
+  }
+}

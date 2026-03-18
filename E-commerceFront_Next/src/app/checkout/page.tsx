@@ -14,6 +14,7 @@ import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
+import { updateCartAddress } from '@/services/medusa';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function CheckoutPage() {
 
   const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, PAYMENT
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(null);
+  const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
 
   // Redirect if cart is empty
   React.useEffect(() => {
@@ -109,9 +111,12 @@ export default function CheckoutPage() {
       setLocalError('Por favor, verifique todos los campos.');
       return;
     }
+    
+    setIsUpdatingCart(true);
     try {
       setLocalError('');
       clearError();
+      
       // 1. Register User
       await register({
         email,
@@ -134,16 +139,56 @@ export default function CheckoutPage() {
         postalCode: guestFormData.postalCode
       });
 
+      // 3. Sync address with Medusa Cart
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        await updateCartAddress(cartId, {
+          first_name: guestFormData.firstName,
+          last_name: guestFormData.lastName,
+          address_1: guestFormData.street,
+          city: guestFormData.city,
+          country_code: 'co',
+          province: guestFormData.province,
+          postal_code: guestFormData.postalCode,
+          phone: `${countryCode}${guestFormData.phone}`
+        });
+      }
+
       // The context update will trigger the useEffect and set the selectedAddressId
       setCheckoutStep('PAYMENT');
     } catch (err) {
       console.error('Registration error:', err);
+    } finally {
+      setIsUpdatingCart(false);
     }
   };
 
-  const handleLoggedContinue = () => {
-    if (selectedAddressId) {
-      setCheckoutStep('PAYMENT');
+  const handleLoggedContinue = async () => {
+    if (selectedAddressId && user) {
+      const addr = user.addresses.find(a => a.id === selectedAddressId);
+      if (!addr) return;
+
+      setIsUpdatingCart(true);
+      try {
+        const cartId = localStorage.getItem('medusa_cart_id');
+        if (cartId) {
+          await updateCartAddress(cartId, {
+            first_name: addr.firstName || user.firstName || "",
+            last_name: addr.lastName || user.lastName || "",
+            address_1: addr.street,
+            city: addr.city,
+            country_code: (addr.country || 'CO').toLowerCase(),
+            province: addr.province,
+            postal_code: addr.postalCode,
+            phone: addr.phone,
+          });
+        }
+        setCheckoutStep('PAYMENT');
+      } catch (err) {
+        setLocalError('Error al sincronizar la dirección con el carrito.');
+      } finally {
+        setIsUpdatingCart(false);
+      }
     } else {
       setLocalError('Por favor seleccione una dirección de entrega.');
     }
@@ -204,7 +249,12 @@ export default function CheckoutPage() {
                           <Typography variant="h4" className="text-[10px] uppercase font-black tracking-widest">Gestionar Direcciones</Typography>
                         </button>
                       </div>
-                      <Button label="Continuar al Pago" onClick={handleLoggedContinue} className="w-full py-5" />
+                      <Button 
+                        label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"} 
+                        onClick={handleLoggedContinue} 
+                        className="w-full py-5" 
+                        disabled={isUpdatingCart}
+                      />
                     </motion.div>
                   ) : (
                     /* GUEST FLOW (Step-by-step Fast Signup) */
@@ -312,7 +362,7 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className="flex flex-col items-center gap-6">
-                            <Button type="submit" label={isLoading ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || !isGuestFormValid} />
+                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || isUpdatingCart || !isGuestFormValid} />
                           </div>
                         </form>
                       )}
