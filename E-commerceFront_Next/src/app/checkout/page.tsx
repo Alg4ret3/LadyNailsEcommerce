@@ -14,7 +14,8 @@ import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
-import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption } from '@/services/medusa';
+import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption, createPaymentCollection, createPaymentSession, PaymentCollection, completeCart } from '@/services/medusa';
+import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,10 +26,12 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(null);
   const [shippingOptions, setShippingOptions] = React.useState<ShippingOption[]>([]);
   const [selectedShippingOptionId, setSelectedShippingOptionId] = React.useState<string | null>(null);
+  const [paymentCollection, setPaymentCollection] = React.useState<PaymentCollection | null>(null);
+  const [selectedPaymentProviderId, setSelectedPaymentProviderId] = React.useState<string | null>(null);
 
   const selectedShippingAmount = React.useMemo(() => {
     const option = shippingOptions.find(o => o.id === selectedShippingOptionId);
-    return option ? option.amount / 100 : 0;
+    return option ? option.amount : 0;
   }, [shippingOptions, selectedShippingOptionId]);
   const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
 
@@ -230,10 +233,47 @@ export default function CheckoutPage() {
       const cartId = localStorage.getItem('medusa_cart_id');
       if (cartId) {
         await addShippingMethodToCart(cartId, selectedShippingOptionId);
+
+        // 2. Create Payment Collection (Medusa v2)
+        const { payment_collection } = await createPaymentCollection(cartId);
+        setPaymentCollection(payment_collection);
+        
+        // If there's only one provider or we have a default, we could select it
+        // For now just move to payment step
       }
       setCheckoutStep('PAYMENT');
     } catch (err) {
-      setLocalError('Error al seleccionar el método de envío.');
+      setLocalError('Error al seleccionar el método de envío y configurar el pago.');
+    } finally {
+      setIsUpdatingCart(false);
+    }
+  };
+
+  const handlePaymentSelect = async (providerId: string) => {
+    if (!paymentCollection) return;
+    
+    setIsUpdatingCart(true);
+    try {
+      setSelectedPaymentProviderId(providerId);
+      const { payment_collection } = await createPaymentSession(paymentCollection.id, providerId);
+      setPaymentCollection(payment_collection);
+    } catch (err) {
+      setLocalError('Error al seleccionar el método de pago.');
+    } finally {
+      setIsUpdatingCart(false);
+    }
+  };
+
+  const handleWompiSuccess = async () => {
+    setIsUpdatingCart(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        await completeCart(cartId);
+      }
+      router.push('/checkout/confirmation');
+    } catch (err) {
+      setLocalError('El pago en Wompi fue EXITOSO, pero hubo un error generando la orden final. Se completará por verificación 24h o contacte soporte con su referencia.');
     } finally {
       setIsUpdatingCart(false);
     }
@@ -476,20 +516,38 @@ export default function CheckoutPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-8 border-2 border-slate-900 bg-slate-50 flex items-center gap-4 cursor-pointer group hover:bg-white transition-all">
-                  <CreditCard size={24} className="group-hover:scale-110 transition-transform" />
-                  <div className="space-y-1">
-                    <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
-                    <Typography variant="detail" className="text-[8px] text-slate-400">Pago Immediato Procesado por Wompi</Typography>
-                  </div>
+                <div className={`p-8 border-2 transition-all flex flex-col gap-6 text-left group ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
+                  <button 
+                    onClick={() => handlePaymentSelect('pp_wompi_wompi')} 
+                    className="flex items-center gap-4 w-full"
+                  >
+                    <CreditCard size={24} className={selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'text-slate-900' : 'text-slate-400'} />
+                    <div className="space-y-1 text-left">
+                      <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
+                      <Typography variant="detail" className="text-[8px] text-slate-400">Pago Inmediato Procesado por Wompi</Typography>
+                    </div>
+                  </button>
+                  {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') && (
+                    <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-2 w-full">
+                      <WompiSubmitButton
+                        paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
+                        onPaymentSuccess={handleWompiSuccess}
+                        disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="p-8 border border-slate-100 bg-slate-50 flex items-center gap-4 hover:border-slate-900 transition-all cursor-pointer group">
-                  <Truck size={24} className="group-hover:translate-x-1 transition-transform" />
+
+                <button 
+                  onClick={() => handlePaymentSelect('manual')} 
+                  className={`p-8 border-2 transition-all flex items-center gap-4 text-left group ${selectedPaymentProviderId === 'manual' ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300 h-fit'}`}
+                >
+                  <Truck size={24} className={selectedPaymentProviderId === 'manual' ? 'text-slate-900' : 'text-slate-400'} />
                   <div className="space-y-1">
                     <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
                     <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -539,12 +597,20 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4">
-                <Button
-                  label={checkoutStep === 'PAYMENT' ? "Confirmar Pago Seguro" : "Complete los Pasos Anteriores"}
-                  disabled={checkoutStep !== 'PAYMENT'}
-                  href="/checkout/confirmation"
-                  className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' ? 'bg-white text-slate-900 hover:bg-emerald-400' : 'bg-white/5 text-white/20 border-white/10'}`}
-                />
+                {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? (
+                  <Button
+                    label="Proceda con Wompi a la izquierda"
+                    disabled={true}
+                    className="w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] bg-white/5 text-white/30 border-white/10"
+                  />
+                ) : (
+                  <Button
+                    label={checkoutStep === 'PAYMENT' ? (isUpdatingCart ? "Registrando Orden..." : "Finalizar Compra Segura") : "Complete los Pasos Anteriores"}
+                    disabled={checkoutStep !== 'PAYMENT' || !selectedPaymentProviderId || isUpdatingCart}
+                    href="/checkout/confirmation"
+                    className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' && selectedPaymentProviderId ? 'bg-white text-slate-900 hover:bg-emerald-400 shadow-[0_10px_30px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-white/20 border-white/10'}`}
+                  />
+                )}
 
                 <div className="flex items-center justify-center gap-3 bg-white/5 py-4 rounded-sm">
                   <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">

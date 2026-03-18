@@ -176,3 +176,58 @@ export async function addShippingMethodToCart(cartId: string, optionId: string):
     throw error;
   }
 }
+
+export interface PaymentCollection {
+  id: string;
+  amount: number;
+  payment_sessions?: any[];
+  [key: string]: any;
+}
+
+/**
+ * Inicializa la colección de pagos para el carrito.
+ * 
+ * @param cartId ID del carrito
+ */
+export async function createPaymentCollection(cartId: string): Promise<{ payment_collection: PaymentCollection }> {
+  try {
+    const response = await medusaFetch<{ payment_collection: PaymentCollection }>(`/store/payment-collections`, {
+      method: "POST",
+      body: JSON.stringify({ cart_id: cartId }),
+    });
+    return response;
+  } catch (error) {
+    console.error("Error al crear colección de pagos:", error);
+    throw error;
+  }
+}
+
+export async function createPaymentSession(collectionId: string, providerId: string): Promise<{ payment_collection: PaymentCollection }> {
+  try {
+    const response = await medusaFetch<{ payment_collection: PaymentCollection }>(`/store/payment-collections/${collectionId}/payment-sessions`, {
+      method: "POST",
+      body: JSON.stringify({ provider_id: providerId }),
+    });
+    return response;
+  } catch (error) {
+    console.error("Error al crear sesión de pago:", error);
+    throw error;
+  }
+}
+
+/**
+ * Completa el carrito y crea la orden final.
+ * 
+ * @param cartId ID del carrito
+ */
+export async function completeCart(cartId: string): Promise<any> {
+  try {
+    const response = await medusaFetch<any>(`/store/carts/${cartId}/complete`, {
+      method: "POST",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error al completar el carrito:", error);
+    throw error;
+  }
+}

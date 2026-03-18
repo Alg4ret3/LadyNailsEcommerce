@@ -59,5 +59,23 @@ module.exports = defineConfig({
         ],
       },
     },
+
+    payment: {
+      resolve: "@medusajs/payment",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/wompi",
+            id: "wompi",
+            options: {
+              public_key: process.env.WOMPI_PUBLIC_KEY,
+              private_key: process.env.WOMPI_PRIVATE_KEY,
+              integrity_key: process.env.WOMPI_INTEGRITY_KEY,
+              environment: "test",
+            },
+          },
+        ],
+      },
+    },
   },
 });
