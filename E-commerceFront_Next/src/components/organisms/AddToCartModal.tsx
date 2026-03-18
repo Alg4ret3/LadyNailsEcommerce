@@ -78,7 +78,8 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           tags: product.tags,
           vendor: product.vendor,
           selectedSize: variant?.title,
-          size: variant?.title // For CartContext matching
+          size: variant?.title,
+          category: product.tags?.[0] || 'General' // Using first tag as category for now, or use a real field if exists
         });
       });
 

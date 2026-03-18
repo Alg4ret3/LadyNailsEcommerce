@@ -63,3 +63,29 @@ export async function associateCartToCustomer(cartId: string): Promise<CreateCar
     throw error;
   }
 }
+
+/**
+ * Añade una variante al carrito.
+ * 
+ * @param cartId ID del carrito
+ * @param variantId ID de la variante del producto
+ * @param quantity Cantidad a añadir
+ */
+export async function addItemToCart(cartId: string, variantId: string, quantity: number): Promise<CreateCartResponse> {
+  try {
+    const body = {
+      variant_id: variantId,
+      quantity,
+    };
+
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}/line-items`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    return response;
+  } catch (error) {
+    console.error(`Error al añadir variante ${variantId} al carrito:`, error);
+    throw error;
+  }
+}

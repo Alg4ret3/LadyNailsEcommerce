@@ -15,6 +15,7 @@ export interface CartItem {
   vendor?: string;
   selectedSize?: string;
   selectedColor?: string;
+  category?: string;
 }
 
 import { Toast } from '@/components/atoms/Toast';
