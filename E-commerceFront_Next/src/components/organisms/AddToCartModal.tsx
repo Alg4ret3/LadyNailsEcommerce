@@ -33,20 +33,29 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || 'Único');
   const [selectedColor, setSelectedColor] = useState(product.color || product.colors?.[0] || 'Estándar');
 
-  const handleAddToCart = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity,
-      slug: product.slug,
-      tags: product.tags,
-      vendor: product.vendor,
-      size: selectedSize,
-      color: selectedColor
-    });
-    onClose();
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToCart = async () => {
+    setIsAdding(true);
+    try {
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity,
+        slug: product.slug,
+        tags: product.tags,
+        vendor: product.vendor,
+        size: selectedSize,
+        color: selectedColor
+      });
+      onClose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
@@ -175,9 +184,10 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
               </button>
               <button
                 onClick={handleAddToCart}
-                className="flex-1 px-4 py-3 sm:py-4 bg-foreground text-background rounded-lg text-[10px] sm:text-[11px] uppercase tracking-wider hover:opacity-90 transition-all font-black"
+                disabled={isAdding}
+                className="flex-1 px-4 py-3 sm:py-4 bg-foreground text-background rounded-lg text-[10px] sm:text-[11px] uppercase tracking-wider hover:opacity-90 transition-all font-black disabled:opacity-50 flex justify-center items-center"
               >
-                Mi Carrito
+                {isAdding ? 'Añadiendo...' : 'Mi Carrito'}
               </button>
             </div>
           </motion.div>

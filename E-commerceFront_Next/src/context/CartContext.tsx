@@ -18,10 +18,11 @@ export interface CartItem {
 }
 
 import { Toast } from '@/components/atoms/Toast';
+import { createCart } from '@/services/medusa';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: CartItem) => Promise<void>;
   removeFromCart: (id: string, size?: string) => void;
   updateQuantity: (id: string, quantity: number, size?: string) => void;
   clearCart: () => void;
@@ -69,15 +70,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToast(prev => ({ ...prev, isOpen: false }));
   };
 
-  const addToCart = (item: CartItem) => {
-    setCartItems(prev => {
-      const existing = prev.find(i => i.id === item.id && i.size === item.size && i.color === item.color);
-      if (existing) {
-        return prev.map(i => i === existing ? { ...i, quantity: i.quantity + item.quantity } : i);
+  const addToCart = async (item: CartItem) => {
+    try {
+      // Create Medusa cart if not exists
+      let cartId = localStorage.getItem('medusa_cart_id');
+      if (!cartId) {
+        const data = await createCart();
+        cartId = data.cart.id;
+        localStorage.setItem('medusa_cart_id', cartId);
       }
-      return [...prev, item];
-    });
-    showToast(`${item.name} añadido al carrito.`);
+
+      setCartItems(prev => {
+        const existing = prev.find(i => i.id === item.id && i.size === item.size && i.color === item.color);
+        if (existing) {
+          return prev.map(i => i === existing ? { ...i, quantity: i.quantity + item.quantity } : i);
+        }
+        return [...prev, item];
+      });
+      showToast(`${item.name} añadido al carrito.`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showToast('Error al añadir producto al carrito en Medusa.');
+    }
   };
 
   const removeFromCart = (id: string, size?: string) => {
