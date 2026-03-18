@@ -14,15 +14,22 @@ import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
-import { updateCartAddress } from '@/services/medusa';
+import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption } from '@/services/medusa';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, totalItems, totalAmount } = useCart();
   const { user, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
 
-  const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, PAYMENT
+  const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, SHIPPING, PAYMENT
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(null);
+  const [shippingOptions, setShippingOptions] = React.useState<ShippingOption[]>([]);
+  const [selectedShippingOptionId, setSelectedShippingOptionId] = React.useState<string | null>(null);
+
+  const selectedShippingAmount = React.useMemo(() => {
+    const option = shippingOptions.find(o => o.id === selectedShippingOptionId);
+    return option ? option.amount / 100 : 0;
+  }, [shippingOptions, selectedShippingOptionId]);
   const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
 
   // Redirect if cart is empty
@@ -152,10 +159,19 @@ export default function CheckoutPage() {
           postal_code: guestFormData.postalCode,
           phone: `${countryCode}${guestFormData.phone}`
         });
+
+        // Fetch Shipping Options
+        const { shipping_options } = await getShippingOptions(cartId);
+        setShippingOptions(shipping_options);
+        
+        // Default to first option
+        if (shipping_options.length > 0) {
+          setSelectedShippingOptionId(shipping_options[0].id);
+        }
       }
 
       // The context update will trigger the useEffect and set the selectedAddressId
-      setCheckoutStep('PAYMENT');
+      setCheckoutStep('SHIPPING');
     } catch (err) {
       console.error('Registration error:', err);
     } finally {
@@ -182,8 +198,17 @@ export default function CheckoutPage() {
             postal_code: addr.postalCode,
             phone: addr.phone,
           });
+
+          // Fetch Shipping Options
+          const { shipping_options } = await getShippingOptions(cartId);
+          setShippingOptions(shipping_options);
+          
+          // Default to first option
+          if (shipping_options.length > 0) {
+            setSelectedShippingOptionId(shipping_options[0].id);
+          }
         }
-        setCheckoutStep('PAYMENT');
+        setCheckoutStep('SHIPPING');
       } catch (err) {
         setLocalError('Error al sincronizar la dirección con el carrito.');
       } finally {
@@ -191,6 +216,26 @@ export default function CheckoutPage() {
       }
     } else {
       setLocalError('Por favor seleccione una dirección de entrega.');
+    }
+  };
+
+  const handleShippingContinue = async () => {
+    if (!selectedShippingOptionId) {
+      setLocalError('Por favor seleccione un método de envío.');
+      return;
+    }
+
+    setIsUpdatingCart(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        await addShippingMethodToCart(cartId, selectedShippingOptionId);
+      }
+      setCheckoutStep('PAYMENT');
+    } catch (err) {
+      setLocalError('Error al seleccionar el método de envío.');
+    } finally {
+      setIsUpdatingCart(false);
     }
   };
 
@@ -210,7 +255,7 @@ export default function CheckoutPage() {
                   <div className={`w-10 h-10 ${checkoutStep === 'SHIP_INFO' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>1</div>
                   <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Información de Despacho</Typography>
                 </div>
-                {checkoutStep === 'PAYMENT' && (
+                {(checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') && (
                   <button onClick={() => setCheckoutStep('SHIP_INFO')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">Editar</button>
                 )}
               </div>
@@ -372,10 +417,61 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Step 2: Payment Method */}
-            <div className={`bg-white border ${checkoutStep === 'PAYMENT' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep === 'SHIP_INFO' ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Step 2: Shipping Method */}
+            <div className={`bg-white border ${checkoutStep === 'SHIPPING' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep === 'SHIP_INFO' ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 ${checkoutStep === 'SHIPPING' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>2</div>
+                  <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Envío</Typography>
+                </div>
+                {checkoutStep === 'PAYMENT' && (
+                  <button onClick={() => setCheckoutStep('SHIPPING')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">Editar</button>
+                )}
+              </div>
+
+              {checkoutStep === 'SHIPPING' && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {shippingOptions.length > 0 ? (
+                      shippingOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => setSelectedShippingOptionId(option.id)}
+                          className={`p-6 border-2 text-left transition-all space-y-2 group ${selectedShippingOptionId === option.id ? 'border-slate-900 bg-slate-50' : 'border-slate-100 hover:border-slate-300'}`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <Truck size={20} className={selectedShippingOptionId === option.id ? 'text-slate-900' : 'text-slate-400'} />
+                              <Typography variant="h4" className="text-[12px] uppercase font-black tracking-widest">{option.name}</Typography>
+                            </div>
+                            <Typography variant="h4" className="text-sm font-black">${option.amount.toLocaleString()}</Typography>
+                          </div>
+                          <Typography variant="body" className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                            {option.price_type === 'flat_rate' ? 'Tarifa Plana' : 'Cálculo Variable'}
+                          </Typography>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Typography variant="body" className="text-slate-400 italic">No hay opciones de envío disponibles para esta ubicación.</Typography>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"} 
+                    onClick={handleShippingContinue} 
+                    className="w-full py-5" 
+                    disabled={isUpdatingCart || !selectedShippingOptionId}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Step 3: Payment Method */}
+            <div className={`bg-white border ${checkoutStep === 'PAYMENT' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep !== 'PAYMENT' ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>2</div>
+                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>3</div>
                 <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Pago</Typography>
               </div>
 
@@ -428,18 +524,24 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Logística & Despacho</Typography>
-                  <Typography variant="h4" className="font-bold text-emerald-400 italic">Gratis</Typography>
+                  <Typography variant="h4" className="font-bold text-emerald-400 italic">
+                    {selectedShippingOptionId 
+                      ? `$${selectedShippingAmount.toLocaleString()}` 
+                      : 'Calculando...'}
+                  </Typography>
                 </div>
                 <div className="pt-8 border-t border-white/20 flex justify-between items-end">
                   <Typography variant="h4" className="text-sm font-black uppercase tracking-widest">Total a Pagar</Typography>
-                  <Typography variant="h1" className="text-5xl font-black tracking-tighter">${totalAmount.toLocaleString()}</Typography>
+                  <Typography variant="h1" className="text-5xl font-black tracking-tighter">
+                    ${(totalAmount + selectedShippingAmount).toLocaleString()}
+                  </Typography>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <Button
-                  label={checkoutStep === 'PAYMENT' ? "Confirmar Pago Seguro" : "Complete el Paso 1"}
-                  disabled={checkoutStep === 'SHIP_INFO'}
+                  label={checkoutStep === 'PAYMENT' ? "Confirmar Pago Seguro" : "Complete los Pasos Anteriores"}
+                  disabled={checkoutStep !== 'PAYMENT'}
                   href="/checkout/confirmation"
                   className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' ? 'bg-white text-slate-900 hover:bg-emerald-400' : 'bg-white/5 text-white/20 border-white/10'}`}
                 />

@@ -127,3 +127,52 @@ export async function updateCartAddress(cartId: string, address: MedusaAddress):
     throw error;
   }
 }
+
+export interface ShippingOption {
+  id: string;
+  name: string;
+  price_type: string;
+  amount: number;
+  [key: string]: any;
+}
+
+/**
+ * Obtiene las opciones de envío disponibles para el carrito.
+ * 
+ * @param cartId ID del carrito
+ */
+export async function getShippingOptions(cartId: string): Promise<{ shipping_options: ShippingOption[] }> {
+  try {
+    const response = await medusaFetch<{ shipping_options: ShippingOption[] }>(`/store/shipping-options`, {
+      method: "GET"
+    }, { cart_id: cartId });
+    return response;
+  } catch (error) {
+    console.error("Error al obtener opciones de envío:", error);
+    throw error;
+  }
+}
+
+/**
+ * Añade un método de envío al carrito.
+ * 
+ * @param cartId ID del carrito
+ * @param optionId ID de la opción de envío
+ */
+export async function addShippingMethodToCart(cartId: string, optionId: string): Promise<CreateCartResponse> {
+  try {
+    const body = {
+      option_id: optionId,
+    };
+
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}/shipping-methods`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error al añadir el método de envío al carrito:", error);
+    throw error;
+  }
+}
