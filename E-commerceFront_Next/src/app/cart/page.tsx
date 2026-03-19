@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
@@ -10,9 +10,43 @@ import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { addItemToCart, createCart } from '@/services/medusa';
+import { useState } from 'react';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
+  const router = useRouter();
+  const [isFinishing, setIsFinishing] = useState(false);
+
+  const handleFinalizePurchase = async () => {
+    if (cartItems.length === 0) return;
+    
+    setIsFinishing(true);
+    try {
+      let cartId = localStorage.getItem('medusa_cart_id');
+      if (!cartId) {
+        const data = await createCart();
+        cartId = data.cart.id;
+        localStorage.setItem('medusa_cart_id', cartId);
+      }
+
+      // Sincronizar cada item con Medusa
+      // Se hace en un bucle secuencial para evitar race conditions en algunos backends, 
+      // o se podría usar Promise.all si el backend de Medusa lo soporta bien sin bloqueos.
+      for (const item of cartItems) {
+        // En nuestra implementación item.id es el variantId del producto
+        await addItemToCart(cartId!, item.id, item.quantity);
+      }
+
+      router.push('/checkout');
+    } catch (error) {
+      console.error("Error al sincronizar el carrito:", error);
+      // Podrías añadir un toast aquí si fuera necesario
+    } finally {
+      setIsFinishing(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-white font-sans">
@@ -141,8 +175,8 @@ export default function CartPage() {
 
                       <div className="space-y-4">
                          <Button 
-                           label="Finalizar Compra" 
-                           href="/checkout" 
+                           label={isFinishing ? "Sincronizando..." : "Finalizar Compra"} 
+                           onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
                            className="w-full py-6 !bg-white !text-slate-950 border-none hover:bg-[#22c55e] hover:text-white transition-all text-sm" 
                          />
                          <Link 

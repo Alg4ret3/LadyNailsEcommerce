@@ -14,21 +14,34 @@ import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
+import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption, createPaymentCollection, createPaymentSession, PaymentCollection, completeCart } from '@/services/medusa';
+import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, totalItems, totalAmount } = useCart();
+  const { cartItems, totalItems, totalAmount, clearCart } = useCart();
   const { user, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
 
-  const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, PAYMENT
+  const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, SHIPPING, PAYMENT
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(null);
+  const [shippingOptions, setShippingOptions] = React.useState<ShippingOption[]>([]);
+  const [selectedShippingOptionId, setSelectedShippingOptionId] = React.useState<string | null>(null);
+  const [paymentCollection, setPaymentCollection] = React.useState<PaymentCollection | null>(null);
+  const [selectedPaymentProviderId, setSelectedPaymentProviderId] = React.useState<string | null>(null);
+  const [isProcessingOrder, setIsProcessingOrder] = React.useState(false);
 
-  // Redirect if cart is empty
+  const selectedShippingAmount = React.useMemo(() => {
+    const option = shippingOptions.find(o => o.id === selectedShippingOptionId);
+    return option ? option.amount : 0;
+  }, [shippingOptions, selectedShippingOptionId]);
+  const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
+
+  // Redirect if cart is empty and not processing
   React.useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !isProcessingOrder) {
       router.push('/cart');
     }
-  }, [cartItems, router]);
+  }, [cartItems, isProcessingOrder, router]);
 
   // Guest-to-User Flow State
   const [guestStep, setGuestStep] = React.useState(1); // 1: Email, 2: OTP, 3: Profile
@@ -109,9 +122,12 @@ export default function CheckoutPage() {
       setLocalError('Por favor, verifique todos los campos.');
       return;
     }
+    
+    setIsUpdatingCart(true);
     try {
       setLocalError('');
       clearError();
+      
       // 1. Register User
       await register({
         email,
@@ -134,24 +150,182 @@ export default function CheckoutPage() {
         postalCode: guestFormData.postalCode
       });
 
+      // 3. Sync address with Medusa Cart
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        await updateCartAddress(cartId, {
+          first_name: guestFormData.firstName,
+          last_name: guestFormData.lastName,
+          address_1: guestFormData.street,
+          city: guestFormData.city,
+          country_code: 'co',
+          province: guestFormData.province,
+          postal_code: guestFormData.postalCode,
+          phone: `${countryCode}${guestFormData.phone}`
+        });
+
+        // Fetch Shipping Options
+        const { shipping_options } = await getShippingOptions(cartId);
+        setShippingOptions(shipping_options);
+        
+        // Default to first option
+        if (shipping_options.length > 0) {
+          setSelectedShippingOptionId(shipping_options[0].id);
+        }
+      }
+
       // The context update will trigger the useEffect and set the selectedAddressId
-      setCheckoutStep('PAYMENT');
+      setCheckoutStep('SHIPPING');
     } catch (err) {
       console.error('Registration error:', err);
+    } finally {
+      setIsUpdatingCart(false);
     }
   };
 
-  const handleLoggedContinue = () => {
-    if (selectedAddressId) {
-      setCheckoutStep('PAYMENT');
+  const handleLoggedContinue = async () => {
+    if (selectedAddressId && user) {
+      const addr = user.addresses.find(a => a.id === selectedAddressId);
+      if (!addr) return;
+
+      setIsUpdatingCart(true);
+      try {
+        const cartId = localStorage.getItem('medusa_cart_id');
+        if (cartId) {
+          await updateCartAddress(cartId, {
+            first_name: addr.firstName || user.firstName || "",
+            last_name: addr.lastName || user.lastName || "",
+            address_1: addr.street,
+            city: addr.city,
+            country_code: (addr.country || 'CO').toLowerCase(),
+            province: addr.province,
+            postal_code: addr.postalCode,
+            phone: addr.phone,
+          });
+
+          // Fetch Shipping Options
+          const { shipping_options } = await getShippingOptions(cartId);
+          setShippingOptions(shipping_options);
+          
+          // Default to first option
+          if (shipping_options.length > 0) {
+            setSelectedShippingOptionId(shipping_options[0].id);
+          }
+        }
+        setCheckoutStep('SHIPPING');
+      } catch (err) {
+        setLocalError('Error al sincronizar la dirección con el carrito.');
+      } finally {
+        setIsUpdatingCart(false);
+      }
     } else {
       setLocalError('Por favor seleccione una dirección de entrega.');
     }
   };
 
+  const handleShippingContinue = async () => {
+    if (!selectedShippingOptionId) {
+      setLocalError('Por favor seleccione un método de envío.');
+      return;
+    }
+
+    setIsUpdatingCart(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        await addShippingMethodToCart(cartId, selectedShippingOptionId);
+
+        // 2. Create Payment Collection (Medusa v2)
+        const { payment_collection } = await createPaymentCollection(cartId);
+        setPaymentCollection(payment_collection);
+        
+        // If there's only one provider or we have a default, we could select it
+        // For now just move to payment step
+      }
+      setCheckoutStep('PAYMENT');
+    } catch (err) {
+      setLocalError('Error al seleccionar el método de envío y configurar el pago.');
+    } finally {
+      setIsUpdatingCart(false);
+    }
+  };
+
+  const handlePaymentSelect = async (providerId: string) => {
+    if (!paymentCollection) return;
+    
+    setIsUpdatingCart(true);
+    try {
+      setSelectedPaymentProviderId(providerId);
+      const { payment_collection } = await createPaymentSession(paymentCollection.id, providerId);
+      setPaymentCollection(payment_collection);
+    } catch (err) {
+      setLocalError('Error al seleccionar el método de pago.');
+    } finally {
+      setIsUpdatingCart(false);
+    }
+  };
+
+  const handleWompiSuccess = async () => {
+    setIsProcessingOrder(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        const response = await completeCart(cartId);
+        
+        // Wipe all trace of the cart
+        clearCart();
+        localStorage.removeItem('medusa_cart_id');
+        localStorage.removeItem('ladynail-cart');
+        
+        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
+        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+      } else {
+        router.push('/checkout/confirmation');
+      }
+    } catch (err) {
+      setLocalError('El pago en Wompi fue EXITOSO, pero hubo un error generando la orden final. Se completará por verificación 24h o contacte soporte con su referencia.');
+      setIsProcessingOrder(false);
+    }
+  };
+
+  const handleManualSuccess = async () => {
+    setIsProcessingOrder(true);
+    try {
+      const cartId = localStorage.getItem('medusa_cart_id');
+      if (cartId) {
+        const response = await completeCart(cartId);
+        
+        // Wipe all trace of the cart
+        clearCart();
+        localStorage.removeItem('medusa_cart_id');
+        localStorage.removeItem('ladynail-cart');
+        
+        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
+        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+      } else {
+        router.push('/checkout/confirmation');
+      }
+    } catch (err) {
+      setLocalError('Hubo un error procesando su orden manual. Intente de nuevo o contacte soporte.');
+      setIsProcessingOrder(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-[#f8fafc] relative">
       <Navbar />
+      
+      {/* Processing Order Overlay */}
+      {isProcessingOrder && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in">
+          <div className="text-center space-y-4 flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-slate-200 border-t-[#00C896] rounded-full animate-spin"></div>
+            <h3 className="text-xl font-bold tracking-tight text-slate-800">Cifrando y Generando su Orden...</h3>
+            <p className="text-sm font-medium text-slate-500">Por favor espere un momento, no cierre la ventana.</p>
+          </div>
+        </div>
+      )}
+
       <section className="pt-44 pb-24 px-6 max-w-[1400px] mx-auto">
         <Typography variant="h1" className="text-5xl mb-16 border-b-4 border-slate-900 pb-8 inline-block uppercase font-black">Finalizar Compra</Typography>
 
@@ -165,7 +339,7 @@ export default function CheckoutPage() {
                   <div className={`w-10 h-10 ${checkoutStep === 'SHIP_INFO' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>1</div>
                   <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Información de Despacho</Typography>
                 </div>
-                {checkoutStep === 'PAYMENT' && (
+                {(checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') && (
                   <button onClick={() => setCheckoutStep('SHIP_INFO')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">Editar</button>
                 )}
               </div>
@@ -180,7 +354,7 @@ export default function CheckoutPage() {
                 <AnimatePresence mode="wait">
                   {user ? (
                     /* LOGGED IN FLOW */
-                    <motion.div key="logged-in" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    <motion.div key="logged-in" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {user.addresses.map((addr) => (
                           <button
@@ -204,11 +378,16 @@ export default function CheckoutPage() {
                           <Typography variant="h4" className="text-[10px] uppercase font-black tracking-widest">Gestionar Direcciones</Typography>
                         </button>
                       </div>
-                      <Button label="Continuar al Pago" onClick={handleLoggedContinue} className="w-full py-5" />
+                      <Button 
+                        label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"} 
+                        onClick={handleLoggedContinue} 
+                        className="w-full py-5" 
+                        disabled={isUpdatingCart}
+                      />
                     </motion.div>
                   ) : (
                     /* GUEST FLOW (Step-by-step Fast Signup) */
-                    <motion.div key="guest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    <motion.div key="guest" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
                       {guestStep === 1 && (
                         <form onSubmit={handleGuestStep1} className="space-y-6">
                           <div className="space-y-2">
@@ -254,7 +433,7 @@ export default function CheckoutPage() {
                       )}
 
                       {guestStep === 3 && (
-                        <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+                        <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Personal Details */}
                             <div className="space-y-2">
@@ -312,7 +491,7 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className="flex flex-col items-center gap-6">
-                            <Button type="submit" label={isLoading ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || !isGuestFormValid} />
+                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || isUpdatingCart || !isGuestFormValid} />
                           </div>
                         </form>
                       )}
@@ -322,29 +501,100 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Step 2: Payment Method */}
-            <div className={`bg-white border ${checkoutStep === 'PAYMENT' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep === 'SHIP_INFO' ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Step 2: Shipping Method */}
+            <div className={`bg-white border ${checkoutStep === 'SHIPPING' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep === 'SHIP_INFO' ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 ${checkoutStep === 'SHIPPING' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>2</div>
+                  <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Envío</Typography>
+                </div>
+                {checkoutStep === 'PAYMENT' && (
+                  <button onClick={() => setCheckoutStep('SHIPPING')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">Editar</button>
+                )}
+              </div>
+
+              {checkoutStep === 'SHIPPING' && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className="grid grid-cols-1 gap-4">
+                    {shippingOptions.length > 0 ? (
+                      shippingOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => setSelectedShippingOptionId(option.id)}
+                          className={`p-6 border-2 text-left transition-all space-y-2 group ${selectedShippingOptionId === option.id ? 'border-slate-900 bg-slate-50' : 'border-slate-100 hover:border-slate-300'}`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <Truck size={20} className={selectedShippingOptionId === option.id ? 'text-slate-900' : 'text-slate-400'} />
+                              <Typography variant="h4" className="text-[12px] uppercase font-black tracking-widest">{option.name}</Typography>
+                            </div>
+                            <Typography variant="h4" className="text-sm font-black">${option.amount.toLocaleString()}</Typography>
+                          </div>
+                          <Typography variant="body" className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                            {option.price_type === 'flat_rate' ? 'Tarifa Plana' : 'Cálculo Variable'}
+                          </Typography>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Typography variant="body" className="text-slate-400 italic">No hay opciones de envío disponibles para esta ubicación.</Typography>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"} 
+                    onClick={handleShippingContinue} 
+                    className="w-full py-5" 
+                    disabled={isUpdatingCart || !selectedShippingOptionId}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Step 3: Payment Method */}
+            <div className={`bg-white border ${checkoutStep === 'PAYMENT' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep !== 'PAYMENT' ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>2</div>
+                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>3</div>
                 <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Pago</Typography>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-8 border-2 border-slate-900 bg-slate-50 flex items-center gap-4 cursor-pointer group hover:bg-white transition-all">
-                  <CreditCard size={24} className="group-hover:scale-110 transition-transform" />
-                  <div className="space-y-1">
-                    <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
-                    <Typography variant="detail" className="text-[8px] text-slate-400">Pago Immediato Procesado por Wompi</Typography>
+              {checkoutStep === 'PAYMENT' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className={`p-8 border-2 transition-all flex flex-col gap-6 text-left group ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
+                    <button 
+                      onClick={() => handlePaymentSelect('pp_wompi_wompi')} 
+                      className="flex items-center gap-4 w-full"
+                    >
+                      <CreditCard size={24} className={selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'text-slate-900' : 'text-slate-400'} />
+                      <div className="space-y-1 text-left">
+                        <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
+                        <Typography variant="detail" className="text-[8px] text-slate-400">Pago Inmediato Procesado por Wompi</Typography>
+                      </div>
+                    </button>
+                    {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') && (
+                      <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-2 duration-300 w-full">
+                        <WompiSubmitButton
+                          paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
+                          onPaymentSuccess={handleWompiSuccess}
+                          disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
+                        />
+                      </div>
+                    )}
                   </div>
+
+                  <button 
+                    onClick={() => handlePaymentSelect('manual')} 
+                    className={`p-8 border-2 transition-all flex items-center gap-4 text-left group ${selectedPaymentProviderId === 'manual' ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300 h-fit'}`}
+                  >
+                    <Truck size={24} className={selectedPaymentProviderId === 'manual' ? 'text-slate-900' : 'text-slate-400'} />
+                    <div className="space-y-1">
+                      <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
+                      <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
+                    </div>
+                  </button>
                 </div>
-                <div className="p-8 border border-slate-100 bg-slate-50 flex items-center gap-4 hover:border-slate-900 transition-all cursor-pointer group">
-                  <Truck size={24} className="group-hover:translate-x-1 transition-transform" />
-                  <div className="space-y-1">
-                    <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
-                    <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -378,21 +628,35 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Logística & Despacho</Typography>
-                  <Typography variant="h4" className="font-bold text-emerald-400 italic">Gratis</Typography>
+                  <Typography variant="h4" className="font-bold text-emerald-400 italic">
+                    {selectedShippingOptionId 
+                      ? `$${selectedShippingAmount.toLocaleString()}` 
+                      : 'Calculando...'}
+                  </Typography>
                 </div>
                 <div className="pt-8 border-t border-white/20 flex justify-between items-end">
                   <Typography variant="h4" className="text-sm font-black uppercase tracking-widest">Total a Pagar</Typography>
-                  <Typography variant="h1" className="text-5xl font-black tracking-tighter">${totalAmount.toLocaleString()}</Typography>
+                  <Typography variant="h1" className="text-5xl font-black tracking-tighter">
+                    ${(totalAmount + selectedShippingAmount).toLocaleString()}
+                  </Typography>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <Button
-                  label={checkoutStep === 'PAYMENT' ? "Confirmar Pago Seguro" : "Complete el Paso 1"}
-                  disabled={checkoutStep === 'SHIP_INFO'}
-                  href="/checkout/confirmation"
-                  className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' ? 'bg-white text-slate-900 hover:bg-emerald-400' : 'bg-white/5 text-white/20 border-white/10'}`}
-                />
+                {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? (
+                  <Button
+                    label="Proceda con Wompi a la izquierda"
+                    disabled={true}
+                    className="w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] bg-white/5 text-white/30 border-white/10"
+                  />
+                ) : (
+                  <Button
+                    label={checkoutStep === 'PAYMENT' ? (isUpdatingCart ? "Registrando Orden..." : "Finalizar Compra Segura") : "Complete los Pasos Anteriores"}
+                    disabled={checkoutStep !== 'PAYMENT' || !selectedPaymentProviderId || isUpdatingCart}
+                    onClick={handleManualSuccess}
+                    className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' && selectedPaymentProviderId ? 'bg-white text-slate-900 hover:bg-emerald-400 shadow-[0_10px_30px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-white/20 border-white/10'}`}
+                  />
+                )}
 
                 <div className="flex items-center justify-center gap-3 bg-white/5 py-4 rounded-sm">
                   <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">

@@ -107,6 +107,7 @@ export default function ProductPage() {
     warranty: product.warranty,
     usage: product.usage,
     shipping: product.shipping,
+    variants: product.variants,
   };
 
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);

@@ -33,6 +33,7 @@ interface ProductCardProps {
   color?: string;
   colors?: string[];
   sizes?: string[];
+  variants?: any[];
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -56,6 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   color,
   colors,
   sizes,
+  variants,
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
@@ -242,9 +244,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           slug,
           tags,
           vendor,
-          color,
-          colors,
-          sizes
+          variants,
         }}
       />
     </div>

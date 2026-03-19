@@ -37,7 +37,8 @@ export const FeaturedProducts: React.FC = () => {
           images: product.images?.map(img => img.url) || [],
           tags: product.tags?.map(tag => tag.value) || [],
           slug: product.handle,
-          rating: (product.metadata?.rating as number) || 5.0
+          rating: (product.metadata?.rating as number) || 5.0,
+          variants: product.variants || []
         }));
  
         setProducts(transformed);

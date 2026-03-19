@@ -137,6 +137,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
     shipping: p.shipping,
     slug: p.handle,
     vendor: p.brand?.name || p.vendor || "Ladynail Shop",
+    variants: p.variants || [],
   }));
 
   const totalPages = Math.ceil(normalizedProducts.length / PRODUCTS_PER_PAGE);
