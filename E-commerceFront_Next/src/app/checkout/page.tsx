@@ -19,7 +19,7 @@ import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, totalItems, totalAmount } = useCart();
+  const { cartItems, totalItems, totalAmount, clearCart } = useCart();
   const { user, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
 
   const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, SHIPPING, PAYMENT
@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const [selectedShippingOptionId, setSelectedShippingOptionId] = React.useState<string | null>(null);
   const [paymentCollection, setPaymentCollection] = React.useState<PaymentCollection | null>(null);
   const [selectedPaymentProviderId, setSelectedPaymentProviderId] = React.useState<string | null>(null);
+  const [isProcessingOrder, setIsProcessingOrder] = React.useState(false);
 
   const selectedShippingAmount = React.useMemo(() => {
     const option = shippingOptions.find(o => o.id === selectedShippingOptionId);
@@ -35,12 +36,12 @@ export default function CheckoutPage() {
   }, [shippingOptions, selectedShippingOptionId]);
   const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty and not processing
   React.useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !isProcessingOrder) {
       router.push('/cart');
     }
-  }, [cartItems, router]);
+  }, [cartItems, isProcessingOrder, router]);
 
   // Guest-to-User Flow State
   const [guestStep, setGuestStep] = React.useState(1); // 1: Email, 2: OTP, 3: Profile
@@ -265,12 +266,16 @@ export default function CheckoutPage() {
   };
 
   const handleWompiSuccess = async () => {
-    setIsUpdatingCart(true);
+    setIsProcessingOrder(true);
     try {
       const cartId = localStorage.getItem('medusa_cart_id');
       if (cartId) {
         const response = await completeCart(cartId);
+        
+        // Wipe all trace of the cart
+        clearCart();
         localStorage.removeItem('medusa_cart_id');
+        localStorage.removeItem('ladynail-cart');
         
         const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
         router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
@@ -279,18 +284,21 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       setLocalError('El pago en Wompi fue EXITOSO, pero hubo un error generando la orden final. Se completará por verificación 24h o contacte soporte con su referencia.');
-    } finally {
-      setIsUpdatingCart(false);
+      setIsProcessingOrder(false);
     }
   };
 
   const handleManualSuccess = async () => {
-    setIsUpdatingCart(true);
+    setIsProcessingOrder(true);
     try {
       const cartId = localStorage.getItem('medusa_cart_id');
       if (cartId) {
         const response = await completeCart(cartId);
+        
+        // Wipe all trace of the cart
+        clearCart();
         localStorage.removeItem('medusa_cart_id');
+        localStorage.removeItem('ladynail-cart');
         
         const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
         router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
@@ -299,14 +307,25 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       setLocalError('Hubo un error procesando su orden manual. Intente de nuevo o contacte soporte.');
-    } finally {
-      setIsUpdatingCart(false);
+      setIsProcessingOrder(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-[#f8fafc] relative">
       <Navbar />
+      
+      {/* Processing Order Overlay */}
+      {isProcessingOrder && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in">
+          <div className="text-center space-y-4 flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-slate-200 border-t-[#00C896] rounded-full animate-spin"></div>
+            <h3 className="text-xl font-bold tracking-tight text-slate-800">Cifrando y Generando su Orden...</h3>
+            <p className="text-sm font-medium text-slate-500">Por favor espere un momento, no cierre la ventana.</p>
+          </div>
+        </div>
+      )}
+
       <section className="pt-44 pb-24 px-6 max-w-[1400px] mx-auto">
         <Typography variant="h1" className="text-5xl mb-16 border-b-4 border-slate-900 pb-8 inline-block uppercase font-black">Finalizar Compra</Typography>
 
@@ -335,7 +354,7 @@ export default function CheckoutPage() {
                 <AnimatePresence mode="wait">
                   {user ? (
                     /* LOGGED IN FLOW */
-                    <motion.div key="logged-in" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    <motion.div key="logged-in" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {user.addresses.map((addr) => (
                           <button
@@ -368,7 +387,7 @@ export default function CheckoutPage() {
                     </motion.div>
                   ) : (
                     /* GUEST FLOW (Step-by-step Fast Signup) */
-                    <motion.div key="guest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    <motion.div key="guest" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
                       {guestStep === 1 && (
                         <form onSubmit={handleGuestStep1} className="space-y-6">
                           <div className="space-y-2">
@@ -414,7 +433,7 @@ export default function CheckoutPage() {
                       )}
 
                       {guestStep === 3 && (
-                        <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+                        <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Personal Details */}
                             <div className="space-y-2">
@@ -495,7 +514,7 @@ export default function CheckoutPage() {
               </div>
 
               {checkoutStep === 'SHIPPING' && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
                   <div className="grid grid-cols-1 gap-4">
                     {shippingOptions.length > 0 ? (
                       shippingOptions.map((option) => (
@@ -540,40 +559,42 @@ export default function CheckoutPage() {
                 <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Pago</Typography>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className={`p-8 border-2 transition-all flex flex-col gap-6 text-left group ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
+              {checkoutStep === 'PAYMENT' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className={`p-8 border-2 transition-all flex flex-col gap-6 text-left group ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
+                    <button 
+                      onClick={() => handlePaymentSelect('pp_wompi_wompi')} 
+                      className="flex items-center gap-4 w-full"
+                    >
+                      <CreditCard size={24} className={selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'text-slate-900' : 'text-slate-400'} />
+                      <div className="space-y-1 text-left">
+                        <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
+                        <Typography variant="detail" className="text-[8px] text-slate-400">Pago Inmediato Procesado por Wompi</Typography>
+                      </div>
+                    </button>
+                    {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') && (
+                      <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-2 duration-300 w-full">
+                        <WompiSubmitButton
+                          paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
+                          onPaymentSuccess={handleWompiSuccess}
+                          disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <button 
-                    onClick={() => handlePaymentSelect('pp_wompi_wompi')} 
-                    className="flex items-center gap-4 w-full"
+                    onClick={() => handlePaymentSelect('manual')} 
+                    className={`p-8 border-2 transition-all flex items-center gap-4 text-left group ${selectedPaymentProviderId === 'manual' ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300 h-fit'}`}
                   >
-                    <CreditCard size={24} className={selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'text-slate-900' : 'text-slate-400'} />
-                    <div className="space-y-1 text-left">
-                      <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
-                      <Typography variant="detail" className="text-[8px] text-slate-400">Pago Inmediato Procesado por Wompi</Typography>
+                    <Truck size={24} className={selectedPaymentProviderId === 'manual' ? 'text-slate-900' : 'text-slate-400'} />
+                    <div className="space-y-1">
+                      <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
+                      <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
                     </div>
                   </button>
-                  {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') && (
-                    <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-2 w-full">
-                      <WompiSubmitButton
-                        paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
-                        onPaymentSuccess={handleWompiSuccess}
-                        disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
-                      />
-                    </div>
-                  )}
                 </div>
-
-                <button 
-                  onClick={() => handlePaymentSelect('manual')} 
-                  className={`p-8 border-2 transition-all flex items-center gap-4 text-left group ${selectedPaymentProviderId === 'manual' ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300 h-fit'}`}
-                >
-                  <Truck size={24} className={selectedPaymentProviderId === 'manual' ? 'text-slate-900' : 'text-slate-400'} />
-                  <div className="space-y-1">
-                    <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
-                    <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
-                  </div>
-                </button>
-              </div>
+              )}
             </div>
           </div>
 

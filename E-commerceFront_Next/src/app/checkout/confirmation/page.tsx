@@ -85,7 +85,7 @@ export default function ConfirmationPage() {
 
            <div className="pt-12 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-center">
               <Button label="Seguir mis Pedidos" href="/account?tab=pedidos" variant="primary" className="px-12" />
-              <Button label="Volver al Catálogo" href="/tienda" variant="outline" className="px-12" />
+              <Button label="Volver al Catálogo" href="/shop" variant="outline" className="px-12" />
            </div>
         </div>
       </section>
