@@ -239,8 +239,11 @@ export default function CheckoutPage() {
         const { payment_collection } = await createPaymentCollection(cartId);
         setPaymentCollection(payment_collection);
         
-        // If there's only one provider or we have a default, we could select it
-        // For now just move to payment step
+        // Auto-select Wompi if available
+        const wompiSession = payment_collection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'));
+        if (wompiSession) {
+          handlePaymentSelect(wompiSession.provider_id);
+        }
       }
       setCheckoutStep('PAYMENT');
     } catch (err) {
@@ -288,28 +291,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleManualSuccess = async () => {
-    setIsProcessingOrder(true);
-    try {
-      const cartId = localStorage.getItem('medusa_cart_id');
-      if (cartId) {
-        const response = await completeCart(cartId);
-        
-        // Wipe all trace of the cart
-        clearCart();
-        localStorage.removeItem('medusa_cart_id');
-        localStorage.removeItem('ladynail-cart');
-        
-        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
-        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
-      } else {
-        router.push('/checkout/confirmation');
-      }
-    } catch (err) {
-      setLocalError('Hubo un error procesando su orden manual. Intente de nuevo o contacte soporte.');
-      setIsProcessingOrder(false);
-    }
-  };
+
 
   return (
     <main className="min-h-screen bg-[#f8fafc] relative">
@@ -560,39 +542,29 @@ export default function CheckoutPage() {
               </div>
 
               {checkoutStep === 'PAYMENT' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                  <div className={`p-8 border-2 transition-all flex flex-col gap-6 text-left group ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
-                    <button 
-                      onClick={() => handlePaymentSelect('pp_wompi_wompi')} 
-                      className="flex items-center gap-4 w-full"
-                    >
-                      <CreditCard size={24} className={selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'text-slate-900' : 'text-slate-400'} />
-                      <div className="space-y-1 text-left">
-                        <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Tarjeta Crédito / Débito</Typography>
-                        <Typography variant="detail" className="text-[8px] text-slate-400">Pago Inmediato Procesado por Wompi</Typography>
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-2xl">
+                  <div className={`p-10 border-2 transition-all flex flex-col gap-8 text-left bg-slate-50/50 rounded-xl ${selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? 'border-slate-900 ring-4 ring-slate-900/5' : 'border-slate-100'}`}>
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl">
+                        <CreditCard size={32} />
                       </div>
-                    </button>
-                    {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') && (
-                      <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-2 duration-300 w-full">
-                        <WompiSubmitButton
-                          paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
-                          onPaymentSuccess={handleWompiSuccess}
-                          disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
-                        />
+                      <div className="space-y-2">
+                        <Typography variant="h4" className="text-sm font-black uppercase tracking-widest text-slate-800">Checkout Seguro con Wompi</Typography>
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck size={14} className="text-emerald-500" />
+                          <Typography variant="detail" className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Transacciones Encriptadas y Protegidas</Typography>
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  <button 
-                    onClick={() => handlePaymentSelect('manual')} 
-                    className={`p-8 border-2 transition-all flex items-center gap-4 text-left group ${selectedPaymentProviderId === 'manual' ? 'border-slate-900 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300 h-fit'}`}
-                  >
-                    <Truck size={24} className={selectedPaymentProviderId === 'manual' ? 'text-slate-900' : 'text-slate-400'} />
-                    <div className="space-y-1">
-                      <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">Transferencia Bancaria</Typography>
-                      <Typography variant="detail" className="text-[8px] text-slate-400">Verificamos su consignación en 24h</Typography>
                     </div>
-                  </button>
+                    
+                    <div className="pt-8 border-t border-slate-200 w-full">
+                      <WompiSubmitButton
+                        paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
+                        onPaymentSuccess={handleWompiSuccess}
+                        disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -643,20 +615,16 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4">
-                {selectedPaymentProviderId && selectedPaymentProviderId.includes('wompi') ? (
-                  <Button
-                    label="Proceda con Wompi a la izquierda"
-                    disabled={true}
-                    className="w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] bg-white/5 text-white/30 border-white/10"
-                  />
-                ) : (
-                  <Button
-                    label={checkoutStep === 'PAYMENT' ? (isUpdatingCart ? "Registrando Orden..." : "Finalizar Compra Segura") : "Complete los Pasos Anteriores"}
-                    disabled={checkoutStep !== 'PAYMENT' || !selectedPaymentProviderId || isUpdatingCart}
-                    onClick={handleManualSuccess}
-                    className={`w-full py-5 text-[11px] font-black uppercase tracking-[0.2rem] transition-all ${checkoutStep === 'PAYMENT' && selectedPaymentProviderId ? 'bg-white text-slate-900 hover:bg-emerald-400 shadow-[0_10px_30px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-white/20 border-white/10'}`}
-                  />
-                )}
+                <div className="flex items-center justify-center gap-3 bg-white/5 py-6 px-4 rounded-sm border border-white/10 group hover:border-emerald-500/50 transition-colors">
+                  <div className="flex flex-col items-center gap-2">
+                    <ShieldCheck size={24} className="text-emerald-400" />
+                    <Typography variant="detail" className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Pago 100% Seguro</Typography>
+                  </div>
+                  <div className="w-px h-10 bg-white/10 mx-2"></div>
+                  <div className="text-[8px] text-white/40 uppercase font-bold leading-relaxed">
+                    Utilice el botón de pago a la izquierda para completar su pedido a través de Wompi.
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-center gap-3 bg-white/5 py-4 rounded-sm">
                   <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">
