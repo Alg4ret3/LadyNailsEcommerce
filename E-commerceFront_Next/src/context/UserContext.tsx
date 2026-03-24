@@ -15,7 +15,6 @@ import {
   verifyOtp as verifyOtpService,
   requestPasswordReset as requestPasswordResetService,
   updatePasswordWithToken as updatePasswordWithTokenService,
-  associateCartToCustomer,
   type RegisterData,
   type LoginData,
   type CustomerData
@@ -156,17 +155,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { customer, token } = await loginCustomer(data);
 
-
       localStorage.setItem("auth_token", token);
 
-      const cartId = localStorage.getItem("medusa_cart_id");
-      if (cartId) {
-        try {
-          await associateCartToCustomer(cartId);
-        } catch (e) {
-          console.error("No se pudo asociar el carrito:", e);
-        }
-      }
+      // Cart association is handled reactively by CartContext
+      // when it detects userId change from null → customer.id
 
       setUser(customerToUser(customer));
     } catch (err: Error | any) {

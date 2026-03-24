@@ -19,7 +19,7 @@ import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, totalItems, totalAmount, clearCart } = useCart();
+  const { cartItems, totalItems, totalAmount, clearCart, medusaCartId } = useCart();
   const { user, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
 
   const [checkoutStep, setCheckoutStep] = React.useState('SHIP_INFO'); // SHIP_INFO, SHIPPING, PAYMENT
@@ -151,7 +151,7 @@ export default function CheckoutPage() {
       });
 
       // 3. Sync address with Medusa Cart
-      const cartId = localStorage.getItem('medusa_cart_id');
+      const cartId = medusaCartId;
       if (cartId) {
         await updateCartAddress(cartId, {
           first_name: guestFormData.firstName,
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
 
       setIsUpdatingCart(true);
       try {
-        const cartId = localStorage.getItem('medusa_cart_id');
+        const cartId = medusaCartId;
         if (cartId) {
           await updateCartAddress(cartId, {
             first_name: addr.firstName || user.firstName || "",
@@ -231,38 +231,43 @@ export default function CheckoutPage() {
 
     setIsUpdatingCart(true);
     try {
-      const cartId = localStorage.getItem('medusa_cart_id');
+      const cartId = medusaCartId;
       if (cartId) {
         await addShippingMethodToCart(cartId, selectedShippingOptionId);
 
-        // 2. Create Payment Collection (Medusa v2)
-        const { payment_collection } = await createPaymentCollection(cartId);
-        setPaymentCollection(payment_collection);
+        const { payment_collection: new_collection } = await createPaymentCollection(cartId);
+        setPaymentCollection(new_collection);
         
-        // Auto-select Wompi if available
-        const wompiSession = payment_collection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'));
-        if (wompiSession) {
-          handlePaymentSelect(wompiSession.provider_id);
-        }
+        // Auto-select Wompi if available or initialize it
+        const wompiSession = new_collection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'));
+        const wompiProviderId = wompiSession?.provider_id || 'pp_wompi_wompi';
+        
+        // Attempt to select and initialize Wompi session (throw during flow)
+        await handlePaymentSelect(wompiProviderId, new_collection, true);
+        
+        setCheckoutStep('PAYMENT');
       }
-      setCheckoutStep('PAYMENT');
     } catch (err) {
-      setLocalError('Error al seleccionar el método de envío y configurar el pago.');
+      console.error('Checkout flow error:', err);
+      setLocalError('Hubo un problema al configurar su envío y método de pago.');
     } finally {
       setIsUpdatingCart(false);
     }
   };
 
-  const handlePaymentSelect = async (providerId: string) => {
-    if (!paymentCollection) return;
+  const handlePaymentSelect = async (providerId: string, collectionOverride?: PaymentCollection, shouldThrow: boolean = false) => {
+    const currentCollection = collectionOverride || paymentCollection;
+    if (!currentCollection) return;
     
     setIsUpdatingCart(true);
     try {
       setSelectedPaymentProviderId(providerId);
-      const { payment_collection } = await createPaymentSession(paymentCollection.id, providerId);
+      const { payment_collection } = await createPaymentSession(currentCollection.id, providerId);
       setPaymentCollection(payment_collection);
     } catch (err) {
-      setLocalError('Error al seleccionar el método de pago.');
+      console.error('Payment selection error:', err);
+      setLocalError('Error al preparar la conexión segura de pago.');
+      if (shouldThrow) throw err;
     } finally {
       setIsUpdatingCart(false);
     }
@@ -271,14 +276,12 @@ export default function CheckoutPage() {
   const handleWompiSuccess = async () => {
     setIsProcessingOrder(true);
     try {
-      const cartId = localStorage.getItem('medusa_cart_id');
+      const cartId = medusaCartId;
       if (cartId) {
         const response = await completeCart(cartId);
         
-        // Wipe all trace of the cart
+        // Wipe all trace of the cart (clearCart handles localStorage cleanup)
         clearCart();
-        localStorage.removeItem('medusa_cart_id');
-        localStorage.removeItem('ladynail-cart');
         
         const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
         router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
@@ -314,23 +317,17 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-12">
+            {(contextError || localError) && (
+              <div className="bg-red-50 text-red-600 p-6 border-l-4 border-red-500 rounded-lg animate-in fade-in slide-in-from-top-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-500 text-white p-1 rounded-full"><Plus className="rotate-45" size={12} /></div>
+                  <Typography variant="h4" className="text-xs font-black uppercase tracking-widest">{contextError || localError}</Typography>
+                </div>
+              </div>
+            )}
+
             {/* Step 1: Logistic Information */}
             <div className={`bg-white border ${checkoutStep === 'SHIP_INFO' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all`}>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 ${checkoutStep === 'SHIP_INFO' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>1</div>
-                  <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Información de Despacho</Typography>
-                </div>
-                {(checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') && (
-                  <button onClick={() => setCheckoutStep('SHIP_INFO')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">Editar</button>
-                )}
-              </div>
-
-              {(contextError || localError) && (
-                <div className="bg-red-50 text-red-500 p-4 border border-red-100 text-[10px] font-black uppercase tracking-widest text-center">
-                  {contextError || localError}
-                </div>
-              )}
 
               {checkoutStep === 'SHIP_INFO' && (
                 <AnimatePresence mode="wait">
@@ -559,7 +556,10 @@ export default function CheckoutPage() {
                     
                     <div className="pt-8 border-t border-slate-200 w-full">
                       <WompiSubmitButton
-                        paymentSessionData={paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data}
+                        paymentSessionData={
+                          paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data || 
+                          paymentCollection?.payment_sessions?.[0]?.data
+                        }
                         onPaymentSuccess={handleWompiSuccess}
                         disabled={checkoutStep !== 'PAYMENT' || isUpdatingCart}
                       />

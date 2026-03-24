@@ -57,25 +57,26 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
     });
   };
 
-  const isDisabled = disabled || !paymentSessionData;
+  const isLoadingData = !paymentSessionData && !disabled;
+  const isActuallyDisabled = disabled || (!paymentSessionData && !isLoadingData);
 
   return (
     <button
       onClick={handlePay}
-      disabled={isDisabled}
+      disabled={isActuallyDisabled || isLoadingData}
       className="wompi-pay-btn group relative w-full overflow-hidden rounded-xl px-8 py-5 font-black uppercase tracking-[0.15em] text-[12px] transition-all duration-300 ease-out disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 cursor-pointer"
       style={{
-        background: isDisabled
+        background: (isActuallyDisabled || isLoadingData)
           ? '#94a3b8'
           : 'linear-gradient(135deg, #059669 0%, #10b981 40%, #34d399 100%)',
         color: '#fff',
-        boxShadow: isDisabled
+        boxShadow: (isActuallyDisabled || isLoadingData)
           ? 'none'
           : '0 8px 32px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(0,0,0,0.08)',
       }}
     >
       {/* Shimmer effect */}
-      {!isDisabled && (
+      {!isActuallyDisabled && !isLoadingData && (
         <span
           className="pointer-events-none absolute inset-0"
           style={{
@@ -86,9 +87,18 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
       )}
 
       <span className="relative z-10 flex items-center justify-center gap-3">
-        <Lock size={16} className="transition-transform duration-300 group-hover:scale-110" />
-        <span>Pago Seguro con Wompi</span>
-        <ShieldCheck size={16} className="transition-transform duration-300 group-hover:scale-110" />
+        {isLoadingData ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>Preparando Pago Seguro...</span>
+          </>
+        ) : (
+          <>
+            <Lock size={16} className="transition-transform duration-300 group-hover:scale-110" />
+            <span>Pagar Seguro con Wompi</span>
+            <ShieldCheck size={16} className="transition-transform duration-300 group-hover:scale-110" />
+          </>
+        )}
       </span>
 
       {/* Inline keyframes */}

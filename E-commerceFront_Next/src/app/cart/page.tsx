@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
@@ -11,11 +11,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { addItemToCart, createCart } from '@/services/medusa';
+import { addItemToCart } from '@/services/medusa';
 import { useState } from 'react';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems, medusaCartId, ensureCart } = useCart();
   const router = useRouter();
   const [isFinishing, setIsFinishing] = useState(false);
 
@@ -24,25 +24,16 @@ export default function CartPage() {
     
     setIsFinishing(true);
     try {
-      let cartId = localStorage.getItem('medusa_cart_id');
-      if (!cartId) {
-        const data = await createCart();
-        cartId = data.cart.id;
-        localStorage.setItem('medusa_cart_id', cartId);
-      }
+      const cartId = await ensureCart();
 
       // Sincronizar cada item con Medusa
-      // Se hace en un bucle secuencial para evitar race conditions en algunos backends, 
-      // o se podría usar Promise.all si el backend de Medusa lo soporta bien sin bloqueos.
       for (const item of cartItems) {
-        // En nuestra implementación item.id es el variantId del producto
-        await addItemToCart(cartId!, item.id, item.quantity);
+        await addItemToCart(cartId, item.id, item.quantity);
       }
 
       router.push('/checkout');
     } catch (error) {
       console.error("Error al sincronizar el carrito:", error);
-      // Podrías añadir un toast aquí si fuera necesario
     } finally {
       setIsFinishing(false);
     }
