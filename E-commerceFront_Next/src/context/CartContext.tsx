@@ -19,7 +19,7 @@ export interface CartItem {
 }
 
 import { Toast } from '@/components/atoms/Toast';
-import { createCart } from '@/services/medusa';
+import { createCart, addItemToCart, getCart, deleteLineItem, updateLineItem } from '@/services/medusa';
 import { useUser } from '@/context/UserContext';
 import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
 
@@ -223,7 +223,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = async (item: CartItem) => {
     try {
-      await ensureCart();
+      const cartId = await ensureCart();
+
+      // Sync with Medusa: adds to existing line item if same variant
+      await addItemToCart(cartId, item.id, item.quantity);
 
       setCartItems(prev => {
         const existing = prev.find(i => i.id === item.id && i.size === item.size && i.color === item.color);
@@ -239,14 +242,47 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const removeFromCart = (id: string, size?: string) => {
-    const item = cartItems.find(i => i.id === id && i.size === size);
-    setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
-    if (item) showToast(`${item.name} eliminado del carrito.`);
+  const removeFromCart = async (id: string, size?: string) => {
+    try {
+      const item = cartItems.find(i => i.id === id && i.size === size);
+      if (!item) return;
+
+      if (medusaCartId) {
+        // Fetch cart to find the specific line_item_id
+        const { cart } = await getCart(medusaCartId);
+        const lineItem = cart.items.find((li: any) => li.variant_id === id);
+        if (lineItem) {
+          await deleteLineItem(medusaCartId, lineItem.id);
+        }
+      }
+
+      setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
+      showToast(`${item.name} eliminado del carrito.`);
+    } catch (error) {
+      console.error('Error removing from Medusa cart:', error);
+      // Fallback: still remove from local state
+      setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
+    }
   };
 
-  const updateQuantity = (id: string, quantity: number, size?: string) => {
-    setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: Math.max(1, quantity) } : i));
+  const updateQuantity = async (id: string, quantity: number, size?: string) => {
+    const newQuantity = Math.max(1, quantity);
+    
+    try {
+      if (medusaCartId) {
+        // Fetch cart to find the specific line_item_id
+        const { cart } = await getCart(medusaCartId);
+        const lineItem = cart.items.find((li: any) => li.variant_id === id);
+        if (lineItem) {
+          await updateLineItem(medusaCartId, lineItem.id, newQuantity);
+        }
+      }
+
+      setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
+    } catch (error) {
+      console.error('Error updating Medusa cart quantity:', error);
+      setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
+    }
   };
 
   const clearCart = () => {

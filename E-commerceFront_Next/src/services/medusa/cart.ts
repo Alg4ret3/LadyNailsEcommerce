@@ -14,11 +14,6 @@ export interface CreateCartResponse {
 
 /**
  * Crea un carrito en la tienda de Medusa.
- * 
- * 1. Siempre usa un body fijo con `region_id` y `sales_channel_id`.
- * 2. `medusaFetch` ya maneja dinámicamente la detección del token en localStorage:
- *    - Si el usuario está autenticado, `medusaFetch` detecta el token y envía el header `Authorization: Bearer <token>`.
- *    - Si no está autenticado, NO envía el header de Authorization.
  */
 export async function createCart(): Promise<CreateCartResponse> {
   try {
@@ -31,7 +26,6 @@ export async function createCart(): Promise<CreateCartResponse> {
       method: "POST",
       body: JSON.stringify(body),
     });
-    console.log("Carrito creado:", response.cart);
     return response;
   } catch (error) {
     console.error("Error al crear el carrito:", error);
@@ -40,23 +34,28 @@ export async function createCart(): Promise<CreateCartResponse> {
 }
 
 /**
+ * Obtiene el detalle de un carrito.
+ */
+export async function getCart(cartId: string): Promise<CreateCartResponse> {
+  try {
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}`, {
+      method: "GET",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error al obtener el carrito:", error);
+    throw error;
+  }
+}
+
+/**
  * Asocia un carrito existente al cliente autenticado.
- * 
- * Este método resuelve el escenario donde el usuario crea el carrito
- * estando no autenticado y posteriormente inicia sesión. Al enviar una petición
- * de actualización al carrito con el token Auth, Medusa lo asocia automáticamente.
- * 
- * @param cartId El ID del carrito a asociar
  */
 export async function associateCartToCustomer(cartId: string): Promise<CreateCartResponse> {
   try {
-    // Al hacer una petición de actualización (POST /store/carts/:id) enviando
-    // el token en los headers (manejado por medusaFetch), Medusa asocia el carrito
-    // al cliente dueño del token.
     const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}/customer`, {
       method: "POST",
     });
-
     return response;
   } catch (error) {
     console.error("Error al asociar el carrito al cliente:", error);
@@ -65,11 +64,7 @@ export async function associateCartToCustomer(cartId: string): Promise<CreateCar
 }
 
 /**
- * Añade una variante al carrito.
- * 
- * @param cartId ID del carrito
- * @param variantId ID de la variante del producto
- * @param quantity Cantidad a añadir
+ * Añade un item al carrito.
  */
 export async function addItemToCart(cartId: string, variantId: string, quantity: number): Promise<CreateCartResponse> {
   try {
@@ -105,9 +100,6 @@ export interface MedusaAddress {
 
 /**
  * Actualiza la dirección del carrito.
- * 
- * @param cartId ID del carrito
- * @param address Objeto de dirección de envío
  */
 export async function updateCartAddress(cartId: string, address: MedusaAddress): Promise<CreateCartResponse> {
   try {
@@ -138,8 +130,6 @@ export interface ShippingOption {
 
 /**
  * Obtiene las opciones de envío disponibles para el carrito.
- * 
- * @param cartId ID del carrito
  */
 export async function getShippingOptions(cartId: string): Promise<{ shipping_options: ShippingOption[] }> {
   try {
@@ -155,9 +145,6 @@ export async function getShippingOptions(cartId: string): Promise<{ shipping_opt
 
 /**
  * Añade un método de envío al carrito.
- * 
- * @param cartId ID del carrito
- * @param optionId ID de la opción de envío
  */
 export async function addShippingMethodToCart(cartId: string, optionId: string): Promise<CreateCartResponse> {
   try {
@@ -186,8 +173,6 @@ export interface PaymentCollection {
 
 /**
  * Inicializa la colección de pagos para el carrito.
- * 
- * @param cartId ID del carrito
  */
 export async function createPaymentCollection(cartId: string): Promise<{ payment_collection: PaymentCollection }> {
   try {
@@ -202,6 +187,9 @@ export async function createPaymentCollection(cartId: string): Promise<{ payment
   }
 }
 
+/**
+ * Crea una sesión de pago.
+ */
 export async function createPaymentSession(collectionId: string, providerId: string): Promise<{ payment_collection: PaymentCollection }> {
   try {
     const response = await medusaFetch<{ payment_collection: PaymentCollection }>(`/store/payment-collections/${collectionId}/payment-sessions`, {
@@ -216,9 +204,38 @@ export async function createPaymentSession(collectionId: string, providerId: str
 }
 
 /**
+ * Elimina un item del carrito.
+ */
+export async function deleteLineItem(cartId: string, lineId: string): Promise<CreateCartResponse> {
+  try {
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}/line-items/${lineId}`, {
+      method: "DELETE",
+    });
+    return response;
+  } catch (error) {
+    console.error(`Error al eliminar line item ${lineId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza la cantidad de un item en el carrito.
+ */
+export async function updateLineItem(cartId: string, lineId: string, quantity: number): Promise<CreateCartResponse> {
+  try {
+    const response = await medusaFetch<CreateCartResponse>(`/store/carts/${cartId}/line-items/${lineId}`, {
+      method: "POST",
+      body: JSON.stringify({ quantity }),
+    });
+    return response;
+  } catch (error) {
+    console.error(`Error al actualizar line item ${lineId}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Completa el carrito y crea la orden final.
- * 
- * @param cartId ID del carrito
  */
 export async function completeCart(cartId: string): Promise<any> {
   try {

@@ -11,7 +11,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { addItemToCart } from '@/services/medusa';
 import { useState } from 'react';
 
 export default function CartPage() {
@@ -24,16 +23,14 @@ export default function CartPage() {
     
     setIsFinishing(true);
     try {
-      const cartId = await ensureCart();
+      await ensureCart();
 
-      // Sincronizar cada item con Medusa
-      for (const item of cartItems) {
-        await addItemToCart(cartId, item.id, item.quantity);
-      }
-
+      // Ya no sincronizamos aquí porque ahora se hace en CartContext.addToCart
+      // Esto evita duplicados al navegar entre carrito y checkout.
+      
       router.push('/checkout');
     } catch (error) {
-      console.error("Error al sincronizar el carrito:", error);
+      console.error("Error al finalizar la compra:", error);
     } finally {
       setIsFinishing(false);
     }
