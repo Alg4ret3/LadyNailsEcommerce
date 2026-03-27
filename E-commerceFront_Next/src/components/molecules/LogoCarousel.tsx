@@ -4,15 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Typography } from '@/components/atoms/Typography';
-
-const PARTNERS = [
-  { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
-  { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
-  { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
-  { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
-  { name: 'Loreal', logo: 'https://logos-world.net/wp-content/uploads/2020/04/LOreal-Logo.png' },
-  { name: 'Babyliss', logo: 'https://logos-world.net/wp-content/uploads/2020/11/BaByliss-Logo.png' },
-];
+import { HOME_PARTNERS } from '@/constants';
 
 export const LogoCarousel: React.FC = () => {
   return (
@@ -22,20 +14,23 @@ export const LogoCarousel: React.FC = () => {
         <Typography variant="h3" className="text-2xl sm:text-3xl">Marcas que Confían en Nosotros</Typography>
       </div>
       
-      <div className="relative flex">
+      <div className="relative flex overflow-hidden w-full">
         <motion.div 
-          className="flex whitespace-nowrap gap-12 sm:gap-24 items-center"
-          animate={{ x: [0, -1000] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="flex whitespace-nowrap items-center w-max"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
         >
-          {[...PARTNERS, ...PARTNERS, ...PARTNERS].map((partner, i) => (
-            <div key={i} className="shrink-0 w-32 h-16 sm:w-48 sm:h-24 relative grayscale-0 opacity-100 lg:grayscale lg:opacity-30 lg:hover:grayscale-0 lg:hover:opacity-100 transition-all duration-500">
-              <Image 
-                src={partner.logo} 
-                alt={partner.name} 
-                fill 
-                className="object-contain"
-              />
+          {/* Duplicamos la lista de partners varias veces para asegurar que haya suficiente contenido para el scroll infinito, especialmente en pantallas grandes */}
+          {[...HOME_PARTNERS, ...HOME_PARTNERS, ...HOME_PARTNERS, ...HOME_PARTNERS].map((partner, i) => (
+            <div key={i} className="flex-shrink-0 mx-6 sm:mx-12">
+              <div className="w-32 h-16 sm:w-48 sm:h-24 relative grayscale-0 opacity-100 lg:grayscale lg:opacity-30 lg:hover:grayscale-0 lg:hover:opacity-100 transition-all duration-500">
+                <Image 
+                  src={partner.logo} 
+                  alt={partner.name} 
+                  fill 
+                  className="object-contain"
+                />
+              </div>
             </div>
           ))}
         </motion.div>

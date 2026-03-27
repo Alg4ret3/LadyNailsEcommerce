@@ -58,12 +58,20 @@ describe('Validation Utilities', () => {
       expect(formatPhoneInput('300-123-456789')).toBe('3001234567');
       expect(formatPhoneInput('(601) 123 4567')).toBe('6011234567');
     });
+
+    it('should return empty string if no numbers are present', () => {
+      expect(formatPhoneInput('abc-def')).toBe('');
+    });
   });
 
   describe('formatNameInput', () => {
     it('should remove non-alphabetic characters except spaces and accents', () => {
       expect(formatNameInput('Juan 123!')).toBe('Juan ');
-      expect(formatNameInput('María-José')).toBe('MaríaJosé'); // Note: - is removed by current regex
+      expect(formatNameInput('María-José')).toBe('MaríaJosé'); 
+    });
+
+    it('should handle complex names with common Spanish accents', () => {
+      expect(formatNameInput('Ángel Íñigo Úrsula')).toBe('Ángel Íñigo Úrsula');
     });
   });
 });

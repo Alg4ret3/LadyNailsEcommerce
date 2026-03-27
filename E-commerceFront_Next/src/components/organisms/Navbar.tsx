@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { ShoppingBasket, User, Search, Menu, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon } from 'lucide-react';
+import { ShoppingBasket, Menu, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
@@ -13,16 +13,14 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCategories, Category } from '@/context/CategoriesContext';
 import { useUser } from '@/context/UserContext';
+import { COMPANY_INFO, NAVBAR_CONTENT, ROUTES, WHATSAPP_CONFIG } from '@/constants';
 
 
 export const Navbar: React.FC = () => {
-  const STATIC_LINKS = [
-    { name: "Inicio", href: "/" },
-    { name: "Contáctanos", href: "/contact" },
-  ]
   const [isOpen, setIsOpen] = useState(false);
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeHoverCategory, setActiveHoverCategory] = useState<Category | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
@@ -33,8 +31,6 @@ export const Navbar: React.FC = () => {
   const { getRootCategories } = useCategories();
   const rootCategories = getRootCategories();
 
-  console.log(rootCategories);
-
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
       prev.includes(section) ? prev.filter((s: string) => s !== section) : [...prev, section]
@@ -42,44 +38,24 @@ export const Navbar: React.FC = () => {
   };
 
   const CategoryMenuItem = ({ category }: { category: Category }) => {
-    const [hovered, setHovered] = useState(false);
     const hasChildren = category.category_children && category.category_children.length > 0;
 
     return (
       <div
         className="relative"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={() => setActiveHoverCategory(category)}
       >
         <Link
           href={`/shop/${category.handle}`}
-          className="flex items-center justify-between px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all"
+          className={`flex items-center justify-between px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all ${
+            activeHoverCategory?.id === category.id 
+              ? 'text-slate-900 bg-slate-50' 
+              : 'text-slate-900/60 hover:text-slate-900 hover:bg-slate-50'
+          }`}
         >
           {category.name}
           {hasChildren && <ChevronRight size={10} strokeWidth={2.5} />}
         </Link>
-
-        <AnimatePresence>
-          {hovered && hasChildren && (
-            <motion.div
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -4 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-full top-0 min-w-[200px] bg-white border border-slate-100 shadow-xl py-2 z-50"
-            >
-              {category.category_children!.map((sub) => (
-                <Link
-                  key={sub.id}
-                  href={`/shop/${sub.handle}`}
-                  className="block px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-900/60 hover:text-slate-900 hover:bg-slate-50 transition-all"
-                >
-                  {sub.name}
-                </Link>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     );
   };
@@ -98,20 +74,37 @@ export const Navbar: React.FC = () => {
       {/* Utility Bar */}
       <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-4 lg:px-6 py-2.5 flex justify-between items-center border-b border-slate-100 overflow-hidden whitespace-nowrap">
         <div className="flex gap-4 lg:gap-6 shrink-0">
-          <span className="flex items-center gap-2 font-medium"><Truck size={10} strokeWidth={2} /> Envíos a toda Colombia</span>
+          <a 
+            href={`${WHATSAPP_CONFIG.baseUrl}/${WHATSAPP_CONFIG.defaultNumber}?text=${encodeURIComponent(WHATSAPP_CONFIG.shippingMessage)}`} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-2 font-medium hover:text-slate-950 transition-colors"
+          >
+            <Truck size={10} strokeWidth={2} /> 
+            {NAVBAR_CONTENT.shippingMessage}
+          </a>
         </div>
         <div className="flex items-center gap-4 lg:gap-6 shrink-0">
-          <a href="tel:+570000000" className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"><Phone size={10} strokeWidth={2} /> <span className="hidden lg:inline">Atención al Cliente</span><span className="lg:hidden">Soporte</span></a>
+          <a 
+            href={`${WHATSAPP_CONFIG.baseUrl}/${WHATSAPP_CONFIG.defaultNumber}?text=${encodeURIComponent(WHATSAPP_CONFIG.supportMessage)}`} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-2 hover:text-slate-950 transition-colors font-medium"
+          >
+            <Phone size={10} strokeWidth={2} /> 
+            <span className="hidden lg:inline">{NAVBAR_CONTENT.supportMessage}</span>
+            <span className="lg:hidden">{NAVBAR_CONTENT.supportMessageMobile}</span>
+          </a>
         </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6 h-16 lg:h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center group py-2">
+        <Link href={ROUTES.home} className="flex items-center group py-2">
           <div className="relative w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
             <Image 
-              src="/assets/LogoProvicional.svg" 
-              alt="Ladynail Shop Logo" 
+              src={COMPANY_INFO.logo.src} 
+              alt={COMPANY_INFO.logo.alt} 
               fill
               className="object-contain group-hover:scale-105 transition-transform"
               priority
@@ -121,17 +114,20 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-8">
-          <NavItem name="Inicio" href="/" />
+          <NavItem name="Inicio" href={ROUTES.home} />
 
           {/* Catálogo dinámico */}
           <div
             onMouseEnter={() => setActiveDropdown("catalogo")}
-            onMouseLeave={() => setActiveDropdown(null)}
+            onMouseLeave={() => {
+              setActiveDropdown(null);
+              setActiveHoverCategory(null);
+            }}
             className="relative"
           >
             <NavItem
               name="Catálogo"
-              href="/shop"
+              href={ROUTES.shop}
               hasSubcategories
               active={activeDropdown === "catalogo"}
             />
@@ -142,30 +138,55 @@ export const Navbar: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 min-w-[220px] bg-white border border-slate-100 shadow-2xl py-4 z-50"
+                  className="absolute top-full left-0 flex bg-white border border-slate-100 shadow-2xl z-50 rounded-b-xl overflow-hidden"
+                  onMouseLeave={() => setActiveHoverCategory(null)}
                 >
-                  <Typography
-                    variant="detail"
-                    className="px-6 mb-3 block text-[9px] text-slate-400 uppercase tracking-widest"
-                  >
-                    Categorías
-                  </Typography>
+                  {/* Left Column: Categories List (Scrollable) */}
+                  <div className="w-[280px] py-4 max-h-[65vh] overflow-y-auto overflow-x-hidden custom-scrollbar border-r border-slate-100 bg-white">
+                    <Typography
+                      variant="detail"
+                      className="px-6 mb-3 block text-[9px] text-slate-400 uppercase tracking-widest"
+                    >
+                      Categorías
+                    </Typography>
 
-                  {rootCategories.map((category) => (
-                    <CategoryMenuItem key={category.id} category={category} />
-                  ))}
+                    {rootCategories.map((category) => (
+                      <CategoryMenuItem key={category.id} category={category} />
+                    ))}
+                  </div>
+
+                  {/* Right Column: Actived Subcategories List (Scrollable) */}
+                  {activeHoverCategory && activeHoverCategory.category_children && activeHoverCategory.category_children.length > 0 && (
+                    <div className="w-[280px] py-4 max-h-[65vh] overflow-y-auto overflow-x-hidden custom-scrollbar bg-slate-50">
+                      <Typography
+                        variant="detail"
+                        className="px-6 mb-3 block text-[9px] text-slate-400 uppercase tracking-widest truncate"
+                      >
+                        {activeHoverCategory.name}
+                      </Typography>
+                      {activeHoverCategory.category_children.map((sub) => (
+                        <Link
+                          key={sub.id}
+                          href={`/shop/${sub.handle}`}
+                          className="block px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 hover:bg-white hover:shadow-sm transition-all rounded-lg mx-3 mb-1"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <NavItem name="Contacto" href="/contact" />
+          <NavItem name="Contacto" href={ROUTES.contact} />
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 lg:gap-6">
 
           
-          <Link href="/favorites" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group">
+          <Link href={ROUTES.favorites} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group">
             <Heart size={18} strokeWidth={2.5} className="group-hover:text-red-500 transition-colors" />
             {totalFavorites > 0 && (
               <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-red-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">
@@ -200,7 +221,7 @@ export const Navbar: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                       <Link 
-                        href="/account" 
+                        href={ROUTES.account} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
@@ -208,7 +229,7 @@ export const Navbar: React.FC = () => {
                         <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mi Perfil</span>
                       </Link>
                       <Link 
-                        href="/account" 
+                        href={ROUTES.account} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
@@ -231,12 +252,12 @@ export const Navbar: React.FC = () => {
               </AnimatePresence>
             </div>
           ) : (
-            <Link href="/auth/login" className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block">
+            <Link href={ROUTES.login} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block">
               <UserIcon size={18} strokeWidth={2.5} />
             </Link>
           )}
 
-          <Link href="/cart" className="flex items-center gap-2 px-3 lg:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
+          <Link href={ROUTES.cart} className="flex items-center gap-2 px-3 lg:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
             <div className="flex items-center gap-2 lg:gap-3">
               <ShoppingBasket size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
               <div className="hidden lg:flex flex-col items-start leading-none">

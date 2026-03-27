@@ -155,8 +155,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { customer, token } = await loginCustomer(data);
 
-
       localStorage.setItem("auth_token", token);
+
+      // Cart association is handled reactively by CartContext
+      // when it detects userId change from null → customer.id
 
       setUser(customerToUser(customer));
     } catch (err: Error | any) {
@@ -264,6 +266,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
 
+      // Restriction: Only allow up to 3 addresses
+      if (user && (user.addresses?.length || 0) >= 3) {
+        throw new Error('Solo se permiten hasta 3 direcciones guardadas.');
+      }
+
       await createCustomerAddress({
         address_name: data.addressName,
         first_name: data.firstName,
@@ -284,7 +291,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  }, [listAddresses]);
+  }, [listAddresses, user]);
 
   const updateAddress = React.useCallback(async (
     id: string,
@@ -403,4 +410,3 @@ export const useUser = () => {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 };
-

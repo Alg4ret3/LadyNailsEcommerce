@@ -10,9 +10,31 @@ import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems, medusaCartId, ensureCart } = useCart();
+  const router = useRouter();
+  const [isFinishing, setIsFinishing] = useState(false);
+
+  const handleFinalizePurchase = async () => {
+    if (cartItems.length === 0) return;
+    
+    setIsFinishing(true);
+    try {
+      await ensureCart();
+
+      // Ya no sincronizamos aquí porque ahora se hace en CartContext.addToCart
+      // Esto evita duplicados al navegar entre carrito y checkout.
+      
+      router.push('/checkout');
+    } catch (error) {
+      console.error("Error al finalizar la compra:", error);
+    } finally {
+      setIsFinishing(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-white font-sans">
@@ -141,8 +163,8 @@ export default function CartPage() {
 
                       <div className="space-y-4">
                          <Button 
-                           label="Finalizar Compra" 
-                           href="/checkout" 
+                           label={isFinishing ? "Sincronizando..." : "Finalizar Compra"} 
+                           onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
                            className="w-full py-6 !bg-white !text-slate-950 border-none hover:bg-[#22c55e] hover:text-white transition-all text-sm" 
                          />
                          <Link 

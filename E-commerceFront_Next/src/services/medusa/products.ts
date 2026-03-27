@@ -1,17 +1,32 @@
 import { medusaFetch } from "./client"
-import { getCategories } from "./categories"
+import { getCategories, type ProductCategoriesResponse } from "./categories"
+import { AttributeData } from "./atributes"
+import { ReviewData } from "./review"
 
 interface MedusaPrice {
   amount: number
   currency_code: string
 }
 
+interface MedusaOptionValue {
+  id: string
+  value: string
+  option_id: string
+}
+
 interface MedusaVariant {
   id: string
+  title: string
+  sku?: string
+  inventory_quantity?: number
+  manage_inventory?: boolean
+  allow_backorder?: boolean
+  options?: MedusaOptionValue[]
   calculated_price: {
     original_amount: number
     calculated_amount: number
   }
+  prices: MedusaPrice[]
 }
 
 interface MedusaCollection {
@@ -24,21 +39,41 @@ export interface MedusaImage {
   url: string
 }
 
+export interface MedusaTag {
+  id: string
+  value: string
+}
+
+export interface MedusaOption {
+  id: string
+  title: string
+  values: MedusaOptionValue[]
+}
+
 export interface MedusaProduct {
   id: string
   title: string
   handle: string
   description?: string
+  subtitle?: string
   thumbnail: string | null
   images?: MedusaImage[]
+  options?: MedusaOption[]
   variants: MedusaVariant[]
   collection?: MedusaCollection
   metadata?: Record<string, any>
+  tags?: MedusaTag[]
   categories?: {
     id: string
     name: string
     handle: string
   }[]
+  brand?: AttributeData
+  usage?: AttributeData
+  warranty?: AttributeData
+  shipping?: AttributeData
+  vendor?: string
+  reviews?: ReviewData[]
 }
 
 interface MedusaProductsResponse {
@@ -47,7 +82,7 @@ interface MedusaProductsResponse {
 }
 
 interface MedusaProductResponse {
-  product: any
+  products: MedusaProduct
 }
 
 export async function getAllProducts() {
@@ -58,15 +93,27 @@ export async function getAllProducts() {
     },
     {
       limit: "100",
-      fields: "*variants,*variants.prices,*categories"
     }
   )
 
-  return data.products
+  const products = data.products || []
+
+  // Ordenar: productos con tags primero
+  const sortedProducts = products.sort((a, b) => {
+    const aHasTags = (a.tags?.length ?? 0) > 0
+    const bHasTags = (b.tags?.length ?? 0) > 0
+
+    if (aHasTags && !bHasTags) return -1
+    if (!aHasTags && bHasTags) return 1
+
+    return 0
+  })
+
+  return sortedProducts
 }
 
 export async function getProductsByCategoryHandle(handle: string) {
-  const categoryRes = await medusaFetch<any>(
+  const categoryRes = await medusaFetch<ProductCategoriesResponse>(
     "/store/product-categories",
     { method: "GET" },
     { handle }
@@ -76,22 +123,47 @@ export async function getProductsByCategoryHandle(handle: string) {
 
   if (!category) return [] // ✅ importante
 
-  const productsRes = await medusaFetch<any>(
+  const productsRes = await medusaFetch<MedusaProductsResponse>(
     "/store/products",
     { method: "GET" },
     {
       "category_id": category.id,
-      fields: "*variants,*variants.prices,*categories"
     }
   )
 
-  return productsRes.products ?? []
+  const products = productsRes.products || []
+
+  // Ordenar: productos con tags primero
+  const sortedProducts = products.sort((a, b) => {
+    const aHasTags = (a.tags?.length ?? 0) > 0
+    const bHasTags = (b.tags?.length ?? 0) > 0
+
+    if (aHasTags && !bHasTags) return -1
+    if (!aHasTags && bHasTags) return 1
+
+    return 0
+  })
+
+  return sortedProducts
 }
 
 export async function getProductById(id: string) {
-  const data = await medusaFetch<MedusaProductResponse>(
-    `/store/products/${id}?region_id=reg_01KHMA1TDSX5N1PNXX04K3ZJGC&fields=+metadata,+variants,+variants.prices,+collection`
+  const data = await medusaFetch<MedusaProductsResponse>(
+    `/store/products?id=${id}`,
+    { method: "GET" }
   )
 
-  return data.product
+  return data.products?.[0] || null
+}
+
+export async function getFeaturedProducts() {
+  
+  const products = await getAllProducts()
+
+  const featuredProducts = products
+    .filter((p: any) =>
+      p.tags?.some((t: any) => t.value === "Popular")
+    )
+
+  return featuredProducts
 }

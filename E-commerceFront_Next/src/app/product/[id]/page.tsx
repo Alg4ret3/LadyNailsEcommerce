@@ -5,7 +5,7 @@ import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
-import { Truck, ShieldCheck, Box, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +15,9 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
 import { getProductById, type MedusaProduct } from '@/services/medusa';
+import { ProductReviews } from '@/components/organisms/ProductReviews';
+import { getReviews, type ReviewData } from '@/services/medusa/review';
+import { Star } from 'lucide-react';
 
 
 export default function ProductPage() {
@@ -22,6 +25,8 @@ export default function ProductPage() {
   const productId = params.id as string;
 
   const [product, setProduct] = useState<MedusaProduct | null>(null);
+  const [reviewsList, setReviewsList] = useState<ReviewData[]>([]);
+  const [dynamicRating, setDynamicRating] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,7 +38,16 @@ export default function ProductPage() {
     async function fetchProduct() {
       try {
         const data = await getProductById(productId);
+        console.log(data);
         setProduct(data);
+        
+        try {
+          const revs = await getReviews(productId);
+          setReviewsList(revs?.reviews || []);
+          setDynamicRating(revs?.average_rating || 0);
+        } catch (e) {
+          console.error("Error cargando reviews", e);
+        }
       } catch (error) {
         console.error("Error cargando producto", error);
       } finally {
@@ -62,7 +76,7 @@ export default function ProductPage() {
   );
 
   // Precio desde la primera variante
-  const price = product.variants?.[0]?.calculated_price.original_amount ?? 0;
+  const price = product.variants?.[0]?.prices?.[0].amount ?? 0;
   const formattedPrice = price.toLocaleString('es-CO');
 
   // Imágenes: usa images[] o thumbnail como fallback
@@ -84,12 +98,24 @@ export default function ProductPage() {
     price: price,
     image: product.thumbnail ?? galleryImages[0],
     category,
+    categories: product.categories ?? [],
     slug: product.handle,
     vendor: product.collection?.title ?? 'Ladynail Shop',
+    description: product.description ?? undefined,
+    tags: product.tags?.map(t => t.value) ?? [],
+    brand: product.brand,
+    warranty: product.warranty,
+    usage: product.usage,
+    shipping: product.shipping,
+    variants: product.variants,
   };
 
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
   const prevImage = () => setCurrentIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
+
+  // Usa rating del backend
+  const averageRating = dynamicRating;
+  const displayRating = averageRating > 0 ? averageRating.toFixed(1) : '0.0';
 
 
   return (
@@ -100,7 +126,7 @@ export default function ProductPage() {
 
           {/* Images Section */}
           <div className="space-y-6">
-            <div className="relative aspect-square bg-[#f1f5f9] border border-slate-100 flex items-center justify-center overflow-hidden group">
+            <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden group">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
@@ -180,6 +206,20 @@ export default function ProductPage() {
               <Typography variant="h1" className="text-3xl sm:text-6xl uppercase tracking-tighter leading-tight sm:leading-none">
                 {product.title}
               </Typography>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={16}
+                      className={s <= Math.round(averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}
+                    />
+                  ))}
+                </div>
+                <Typography variant="detail" className="text-slate-500 font-bold text-sm">
+                  {reviewsList.length > 0 ? `${displayRating} (${reviewsList.length} reseñas)` : 'Sin reseñas'}
+                </Typography>
+              </div>
               <div className="flex items-center gap-4 py-2 border-y border-slate-100">
                 <Typography variant="h3" className="text-2xl sm:text-3xl font-black">
                   ${formattedPrice}
@@ -207,12 +247,12 @@ export default function ProductPage() {
                   onClick={() => setIsModalOpen(true)}
                 />
 
-                <div className="flex gap-4">
+                <div className="flex gap-2 sm:gap-4">
                   <button
-                    onClick={() => toggleFavorite(productForActions)}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 border transition-all uppercase text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
+                    onClick={() => toggleFavorite({ ...productForActions })}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isFav ? 'bg-red-500 border-red-500 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
-                    <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
+                    <Heart size={16} fill={isFav ? 'currentColor' : 'none'} className="hidden min-[380px]:block sm:block" />
                     {isFav ? 'En Favoritos' : 'Favoritos'}
                   </button>
 
@@ -222,23 +262,78 @@ export default function ProductPage() {
                       if (isInComp) removeFromCompare(product.id);
                       else addToCompare(item);
                     }}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 border transition-all uppercase text-[10px] font-bold tracking-widest ${isInComp ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-8 py-5 border transition-all uppercase text-[9px] sm:text-[10px] font-bold tracking-widest ${isInComp ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-900 hover:border-slate-950'}`}
                   >
-                    <ArrowLeftRight size={16} />
+                    <ArrowLeftRight size={16} className="hidden min-[380px]:block sm:block" />
                     Comparar
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:gap-6 pt-12">
-              <div className="flex items-center gap-3"><Truck size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Envío Nacional</Typography></div>
-              <div className="flex items-center gap-3"><ShieldCheck size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Garantía Industrial</Typography></div>
-              <div className="flex items-center gap-3"><Box size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Stock en Bodega</Typography></div>
-              <div className="flex items-center gap-3"><RefreshCcw size={18} className="text-slate-400" /><Typography variant="small" className="text-[10px] sm:text-xs">Devolución 30 Días</Typography></div>
+            {/* Tags / Ficha Técnica */}
+            <div className="pt-8 border-t border-slate-100 space-y-4">
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest text-[9px] block">
+                Ficha Técnica
+              </Typography>
+              
+              <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                {product.brand && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Marca</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.brand.name}</span>
+                  </div>
+                )}
+                {product.warranty && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Garantía</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.warranty.name}</span>
+                  </div>
+                )}
+                {product.usage && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Uso Sugerido</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.usage.name}</span>
+                  </div>
+                )}
+                {product.shipping && (
+                  <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">Envío</span>
+                    <span className="text-slate-900 font-semibold text-right">{product.shipping.name}</span>
+                  </div>
+                )}
+                
+                {/* Fallback to old tag format if necessary or for other specs */}
+                {product.tags && product.tags.filter(t => t.value.includes(':') && 
+                  !['marca', 'garantia', 'uso', 'envio'].includes(t.value.split(':')[0].trim().toLowerCase())
+                ).map(tag => {
+                  const colonIdx = tag.value.indexOf(':');
+                  const key = tag.value.slice(0, colonIdx).trim();
+                  const val = tag.value.slice(colonIdx + 1).trim();
+                  return (
+                    <div key={tag.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
+                      <span className="text-slate-400 font-bold uppercase tracking-widest capitalize">{key}</span>
+                      <span className="text-slate-900 font-semibold text-right">{val}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {product.tags && product.tags.filter(t => !t.value.includes(':')).length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {product.tags.filter(t => !t.value.includes(':')).map(tag => (
+                    <span key={tag.id} className="bg-slate-100 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      {tag.value}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
+        
+        {/* Product Reviews Section */}
+        <ProductReviews productId={product.id} initialReviews={reviewsList.length > 0 ? reviewsList : product.reviews} />
       </section>
 
       <AddToCartModal

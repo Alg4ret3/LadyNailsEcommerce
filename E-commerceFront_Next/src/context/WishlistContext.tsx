@@ -9,8 +9,15 @@ export interface FavoriteItem {
   price: number;
   image: string;
   slug: string;
-  category: string;
+  tags?: string[];
   vendor?: string;
+  description?: string;
+  category?: string;
+  categories?: { id: string; name: string; handle: string }[];
+  brand?: { id: string; name: string };
+  warranty?: { id: string; name: string };
+  usage?: { id: string; name: string };
+  shipping?: { id: string; name: string };
 }
 
 interface WishlistContextType {

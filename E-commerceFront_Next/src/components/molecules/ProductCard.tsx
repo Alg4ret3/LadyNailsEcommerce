@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Star, ArrowLeftRight, XIcon as X, Heart } from '@/components/icons';
+import { ShoppingBag, ArrowLeftRight, XIcon as X, Heart } from '@/components/icons';
 import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
 import type { CompareItem } from '@/context/CompareContext';
@@ -18,15 +18,22 @@ interface ProductCardProps {
   image: string;
   hoverImage?: string;
   images?: string[];
-  category: string;
+  tags?: string[];
   slug: string;
   vendor?: string;
   rating?: number;
   isWholesale?: boolean;
+  productType?: string;
+  description?: string;
+  categories?: { id: string; name: string; handle: string }[];
+  brand?: { id: string; name: string };
+  warranty?: { id: string; name: string };
+  usage?: { id: string; name: string };
+  shipping?: { id: string; name: string };
   color?: string;
   colors?: string[];
   sizes?: string[];
-  productType?: string;
+  variants?: any[];
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -36,21 +43,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   image,
   hoverImage,
   images = [],
-  category,
+  tags = [],
   slug,
   vendor = "Ladynail Shop",
   rating = 4.8,
   isWholesale = false,
+  description,
+  categories,
+  brand,
+  warranty,
+  usage,
+  shipping,
   color,
   colors,
-  sizes
+  sizes,
+  variants,
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -80,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       }}
     >
       {/* Visual Workspace */}
-      <div className="relative aspect-4/5 overflow-hidden bg-muted">
+      <div className="relative aspect-4/5 overflow-hidden bg-white">
         <Link href={`/product/${id}`} className="absolute inset-0 z-10">
           <AnimatePresence mode="wait">
             <motion.div
@@ -103,7 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 src={gallery[currentIndex]} 
                 alt={name} 
                 fill 
-                className="object-cover transition-transform duration-[2s] group-hover:scale-105 select-none pointer-events-none"
+                className="object-contain transition-transform duration-[2s] group-hover:scale-105 select-none pointer-events-none"
               />
             </motion.div>
           </AnimatePresence>
@@ -129,9 +143,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               toggleFavorite({ id, name, price: price ?? 0, image, slug, category, vendor });
+               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping });
              }}
-             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${alreadyInWishlist ? 'bg-red-500 text-white' : 'bg-white/80 backdrop-blur text-slate-900 hover:bg-white'}`}
+             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
            >
              <Heart size={16} fill={alreadyInWishlist ? 'currentColor' : 'none'} className={alreadyInWishlist ? 'scale-110' : ''} />
@@ -139,12 +153,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Quality/Type Badge */}
-        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
-           {isWholesale && (
-             <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
-           )}
-           <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{category}</span>
-        </div>
+        {(() => {
+          const SYSTEM_TAGS = ['destacados-home', 'nuevo', 'new'];
+          const visibleTag = tags.find(t => !SYSTEM_TAGS.includes(t.toLowerCase()) && !t.includes(':'));
+          return (
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
+              {isWholesale && (
+                <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
+              )}
+              {visibleTag && (
+                <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{visibleTag}</span>
+              )}
+            </div>
+          );
+        })()}
 
         {alreadyInCompare && (
           <button
@@ -171,18 +193,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
            >
              <ShoppingBag size={12} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Añadir</span>
            </button>
-           <button
+            <button
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               const compareItem: CompareItem = { id, name, price: price ?? 0, image, category, slug, vendor: vendor ?? 'Ladynail Shop', rating };
+
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating, description, categories, brand, warranty, usage, shipping };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {
                  addToCompare(compareItem);
                }
              }}
-             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all ${alreadyInCompare ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white text-slate-900 hover:bg-slate-50'}`}
+             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all border ${alreadyInCompare ? 'bg-red-500 border-red-600 text-white hover:bg-red-600' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
            >
              <ArrowLeftRight size={12} className="sm:w-4 sm:h-4" />
            </button>
@@ -192,22 +215,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Corporate Metadata */}
       <div className="p-3 sm:p-6 flex flex-col flex-1 justify-between gap-3 sm:gap-4">
         <div className="space-y-2 sm:space-y-3">
-           <div className="flex items-center justify-between gap-2">
-              <span className="text-[8px] sm:text-[10px] font-bold text-accent uppercase tracking-widest bg-muted px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap">{vendor}</span>
-              <div className="flex items-center gap-0.5 sm:gap-1 text-foreground/40 flex-shrink-0">
-                 <Star size={10} fill="currentColor" className="text-accent" />
-                 <span className="text-[8px] sm:text-[10px] font-bold text-foreground">{rating}</span>
-              </div>
-           </div>
-           <Link href={`/product/${slug}`} className="relative z-20 block group/title">
-              <Typography variant="h3" className="text-xs sm:text-sm font-bold text-foreground group-hover/title:text-accent transition-colors line-clamp-2 uppercase tracking-tight leading-tight">
+           <Link href={`/product/${id}`} className="relative z-20 block group/title">
+              <Typography variant="body" className="text-[8px] sm:text-[9px] font-black text-black! opacity-100 group-hover/title:text-accent transition-all line-clamp-1 uppercase tracking-tighter leading-none subpixel-antialiased [text-shadow:0_0_1px_rgba(0,0,0,0.1)]">
                 {name}
               </Typography>
            </Link>
         </div>
         
         <div className="pt-2 sm:pt-4 border-t border-border flex items-center justify-between gap-2">
-          <Typography variant="h3" className="text-base sm:text-lg font-black text-foreground tracking-tighter">
+          <Typography variant="body" className="text-xs sm:text-sm font-black text-black! opacity-100 tracking-tighter subpixel-antialiased">
             ${(price ?? 0).toLocaleString()}
           </Typography>
           <div className="text-[7px] sm:text-[9px] text-foreground/40 font-bold uppercase tracking-widest whitespace-nowrap">
@@ -226,11 +242,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           price: price ?? 0,
           image,
           slug,
-          category,
+          tags,
           vendor,
-          color,
-          colors,
-          sizes
+          variants,
         }}
       />
     </div>

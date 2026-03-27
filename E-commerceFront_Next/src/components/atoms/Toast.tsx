@@ -24,10 +24,10 @@ export const Toast: React.FC<ToastProps> = ({ message, isOpen, onClose, type = '
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: 20, x: '-50%' }}
-          animate={{ opacity: 1, y: 0, x: '-50%' }}
-          exit={{ opacity: 0, y: 20, x: '-50%', scale: 0.98 }}
-          className="fixed bottom-10 left-1/2 z-[1000] flex items-center gap-4 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-xl shadow-2xl min-w-[320px] max-w-md border border-white/5 overflow-hidden"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 100, scale: 0.98 }}
+          className="fixed top-24 right-4 sm:right-10 z-[1000] flex items-center gap-4 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-xl shadow-2xl min-w-[320px] max-w-md border border-white/5 overflow-hidden"
         >
           {/* Subtle Progress Indicator */}
           <motion.div 
