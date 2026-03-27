@@ -13,6 +13,7 @@ import { useToast } from '@/context/ToastContext';
 import { ConfirmationModal } from '@/components/molecules/ConfirmationModal';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
+import { listCustomerOrders } from '@/services/medusa';
 
 export default function AccountPage() {
   const { user, updateProfile, createAddress, updateAddress, deleteAddress, logout, isLoading } = useUser();
@@ -68,11 +69,83 @@ export default function AccountPage() {
     { id: 'direcciones', icon: <MapPin size={20} />, label: 'Libreta de Direcciones' },
   ];
 
-  const ORDERS = [
-    { id: 'GA-2026-X991', date: '24 Feb, 2026', total: 450000, status: 'En Bodega', icon: <Package size={18} className="text-slate-400" /> },
-    { id: 'GA-2026-X884', date: '12 Feb, 2026', total: 1250000, status: 'Entregado', icon: <Truck size={18} className="text-emerald-500" /> },
-    { id: 'GA-2026-X772', date: '05 Feb, 2026', total: 320000, status: 'Cancelado', icon: <Clock size={18} className="text-red-400" /> },
-  ];
+  const [orders, setOrders] = React.useState<any[]>([]);
+  const [isOrdersLoading, setIsOrdersLoading] = React.useState(false);
+
+  const fetchOrders = React.useCallback(async () => {
+    setIsOrdersLoading(true);
+    try {
+      const response = await listCustomerOrders();
+      const sortedOrders = (response.orders || []).sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setOrders(sortedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      showToast('No se pudieron cargar tus pedidos', 'error');
+    } finally {
+      setIsOrdersLoading(false);
+    }
+  }, [showToast]);
+
+  React.useEffect(() => {
+    if (user && activeTab === 'pedidos') {
+      fetchOrders();
+    }
+  }, [user, activeTab, fetchOrders]);
+
+  const getOrderDisplayStatus = (order: any) => {
+    const { fulfillment_status, payment_status, status } = order;
+
+    // 1. Cancelado manda sobre todo
+    if (status === 'canceled') {
+      return {
+        label: 'Cancelado',
+        icon: <Clock size={18} className="text-red-400" />
+      };
+    }
+
+    // 2. Pago pendiente
+    if (payment_status !== 'captured') {
+      return {
+        label: 'Pendiente de pago',
+        icon: <Clock size={18} className="text-yellow-500" />
+      };
+    }
+
+    // 3. Lógica logística (LA IMPORTANTE)
+    switch (fulfillment_status) {
+      case 'not_fulfilled':
+        return {
+          label: 'Preparando pedido',
+          icon: <Package size={18} className="text-blue-400" />
+        };
+
+      case 'fulfilled':
+        return {
+          label: 'Listo para envío',
+          icon: <Package size={18} className="text-indigo-400" />
+        };
+
+      case 'shipped':
+        return {
+          label: 'En camino',
+          icon: <Truck size={18} className="text-orange-500" />
+        };
+
+      case 'delivered':
+        return {
+          label: 'Entregado',
+          icon: <Truck size={18} className="text-emerald-500" />
+        };
+
+      default:
+        return {
+          label: 'Procesando',
+          icon: <Package size={18} className="text-slate-400" />
+        };
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,34 +322,53 @@ export default function AccountPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {ORDERS.map((order) => (
-                    <div key={order.id} className="bg-white border border-slate-200 p-8 flex flex-col sm:flex-row items-center gap-8 hover:border-slate-950 transition-all group">
-                      <div className="w-16 h-16 bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                        {order.icon}
-                      </div>
-                      <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-8 w-full">
-                        <div className="space-y-1">
-                          <Typography variant="detail" className="text-[10px] text-slate-400">ID Orden</Typography>
-                          <Typography variant="h4" className="text-xs font-black">{order.id}</Typography>
-                        </div>
-                        <div className="space-y-1">
-                          <Typography variant="detail" className="text-[10px] text-slate-400">Fecha</Typography>
-                          <Typography variant="h4" className="text-xs font-black">{order.date}</Typography>
-                        </div>
-                        <div className="space-y-1">
-                          <Typography variant="detail" className="text-[10px] text-slate-400">Total</Typography>
-                          <Typography variant="h4" className="text-xs font-black">${order.total.toLocaleString()}</Typography>
-                        </div>
-                        <div className="space-y-1">
-                          <Typography variant="detail" className="text-[10px] text-slate-400">Estado</Typography>
-                          <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">{order.status}</Typography>
-                        </div>
-                      </div>
-                      <button className="p-4 hover:bg-slate-900 hover:text-white transition-all border border-slate-100">
-                        <ChevronRight size={18} />
-                      </button>
+                  {isOrdersLoading ? (
+                    <div className="bg-white border border-slate-200 p-20 text-center space-y-4">
+                      <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent animate-spin mx-auto rounded-full"></div>
+                      <Typography variant="body" className="text-slate-400 font-medium font-black uppercase tracking-widest text-[10px]">Cargando Pedidos...</Typography>
                     </div>
-                  ))}
+                  ) : orders.length > 0 ? (
+                    orders.map((order) => {
+                      const { label, icon } = getOrderDisplayStatus(order);
+                      return (
+                        <Link 
+                          href={`/account/orders/${order.id}`}
+                          key={order.id} 
+                          className="bg-white border border-slate-200 p-8 flex flex-col sm:flex-row items-center gap-8 hover:border-slate-950 transition-all group"
+                        >
+                          <div className="w-16 h-16 bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                            {icon}
+                          </div>
+                          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-8 w-full text-left">
+                            <div className="space-y-1">
+                              <Typography variant="detail" className="text-[10px] text-slate-400">ID Orden</Typography>
+                              <Typography variant="h4" className="text-xs font-black">#{order.display_id}</Typography>
+                            </div>
+                            <div className="space-y-1">
+                              <Typography variant="detail" className="text-[10px] text-slate-400">Fecha</Typography>
+                              <Typography variant="h4" className="text-xs font-black">{new Date(order.created_at).toLocaleDateString()}</Typography>
+                            </div>
+                            <div className="space-y-1">
+                              <Typography variant="detail" className="text-[10px] text-slate-400">Total</Typography>
+                              <Typography variant="h4" className="text-xs font-black">${order.total.toLocaleString()}</Typography>
+                            </div>
+                            <div className="space-y-1">
+                              <Typography variant="detail" className="text-[10px] text-slate-400">Estado</Typography>
+                              <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest">{label}</Typography>
+                            </div>
+                          </div>
+                          <div className="p-4 hover:bg-slate-900 hover:text-white transition-all border border-slate-100">
+                            <ChevronRight size={18} />
+                          </div>
+                        </Link>
+                      );
+                    })
+                  ) : (
+                    <div className="bg-white border border-slate-200 p-20 text-center space-y-4">
+                      <Package size={48} className="mx-auto text-slate-200" />
+                      <Typography variant="body" className="text-slate-400 font-medium">No tienes pedidos realizados aún.</Typography>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

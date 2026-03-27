@@ -11,3 +11,15 @@ export async function getOrder(orderId: string): Promise<any> {
     throw error;
   }
 }
+
+export async function listCustomerOrders(): Promise<any> {
+  try {
+    const response = await medusaFetch<any>(`/store/orders`, {
+      method: "GET",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error al obtener los pedidos del usuario:", error);
+    throw error;
+  }
+}
