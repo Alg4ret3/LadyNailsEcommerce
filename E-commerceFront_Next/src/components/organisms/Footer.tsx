@@ -41,6 +41,7 @@ export const Footer: React.FC = () => {
              <Link href={ROUTES.faq} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">FAQ / Ayuda</Link>
              <Link href={ROUTES.shipping} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Política Envíos</Link>
              <Link href={ROUTES.returns} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Devoluciones</Link>
+             <Link href={ROUTES.reviews} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Reseñas</Link>
           </div>
         </div>
 

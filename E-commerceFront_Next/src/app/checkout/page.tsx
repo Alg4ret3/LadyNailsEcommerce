@@ -411,7 +411,7 @@ export default function CheckoutPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] relative">
+    <main className="min-h-screen bg-white relative">
       <Navbar />
       
       {/* Processing Order Overlay */}

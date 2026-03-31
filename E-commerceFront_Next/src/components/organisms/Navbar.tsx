@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { ShoppingBasket, Menu, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon } from 'lucide-react';
+import { ShoppingBasket, Menu, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
@@ -221,7 +221,7 @@ export const Navbar: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                       <Link 
-                        href={ROUTES.account} 
+                        href={ROUTES.profile} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
@@ -229,12 +229,20 @@ export const Navbar: React.FC = () => {
                         <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mi Perfil</span>
                       </Link>
                       <Link 
-                        href={ROUTES.account} 
+                        href={ROUTES.orders} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
                         <Package size={16} />
                         <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Pedidos</span>
+                      </Link>
+                      <Link 
+                        href={ROUTES.addresses} 
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                      >
+                        <MapPin size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Direcciones</span>
                       </Link>
                       <button 
                         onClick={() => {

@@ -10,7 +10,7 @@ import { HERO_CONTENT, ROUTES } from '@/constants';
 export const HeroSection: React.FC = () => {
   return (
     <section className="relative min-h-screen lg:min-h-[90vh] flex items-center pt-32 sm:pt-40 pb-20 overflow-hidden bg-slate-950">
-      <div className="absolute inset-0 opacity-40 lg:grayscale pointer-events-none">
+      <div className="absolute inset-0 opacity-40 pointer-events-none">
         <Image 
           src={HERO_CONTENT.backgroundImage} 
           alt="Elite Professional Barber & Beauty Tools" fill className="object-cover" 
@@ -50,23 +50,11 @@ export const HeroSection: React.FC = () => {
                 {HERO_CONTENT.description}
              </Typography>
              <div className="flex justify-center pt-8">
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                    boxShadow: ["0 0 0 0px rgba(255,255,255,0)", "0 0 0 10px rgba(255,255,255,0.1)", "0 0 0 0px rgba(255,255,255,0)"]
-                  }}
-                  transition={{ 
-                    duration: 2.5, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
-                >
-                  <Button 
-                    label={HERO_CONTENT.buttonLabel}
-                    href={ROUTES.shop}
-                    className="w-full sm:w-auto !bg-white !text-slate-950 border-white hover:!bg-slate-100 px-12 py-5 sm:py-6 text-xs sm:text-sm font-semibold tracking-widest transition-all hover:scale-105 rounded-none ring-offset-4 ring-offset-slate-950 hover:ring-1 hover:ring-white" 
-                  />
-                </motion.div>
+                <Button 
+                  label={HERO_CONTENT.buttonLabel}
+                  href={ROUTES.shop}
+                  className="w-full sm:w-auto !bg-white !text-slate-950 border-white hover:!bg-white px-12 py-5 sm:py-6 text-xs sm:text-sm font-semibold tracking-widest transition-all hover:scale-95 rounded-none" 
+                />
              </div>
           </motion.div>
         </div>

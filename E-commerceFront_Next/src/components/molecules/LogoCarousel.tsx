@@ -23,7 +23,7 @@ export const LogoCarousel: React.FC = () => {
           {/* Duplicamos la lista de partners varias veces para asegurar que haya suficiente contenido para el scroll infinito, especialmente en pantallas grandes */}
           {[...HOME_PARTNERS, ...HOME_PARTNERS, ...HOME_PARTNERS, ...HOME_PARTNERS].map((partner, i) => (
             <div key={i} className="flex-shrink-0 mx-6 sm:mx-12">
-              <div className="w-32 h-16 sm:w-48 sm:h-24 relative grayscale-0 opacity-100 lg:grayscale lg:opacity-30 lg:hover:grayscale-0 lg:hover:opacity-100 transition-all duration-500">
+              <div className="w-32 h-16 sm:w-48 sm:h-24 relative opacity-100 transition-all duration-500">
                 <Image 
                   src={partner.logo} 
                   alt={partner.name} 

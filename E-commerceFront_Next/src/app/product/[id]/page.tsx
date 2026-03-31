@@ -58,7 +58,7 @@ export default function ProductPage() {
   }, [productId]);
 
   if (loading) return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <div className="pt-44 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
@@ -67,7 +67,7 @@ export default function ProductPage() {
   );
 
   if (!product) return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <div className="pt-44 text-center">
         <Typography variant="h3">Producto no encontrado</Typography>
@@ -122,7 +122,7 @@ export default function ProductPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-32 sm:pt-44 pb-24 px-4 sm:px-6 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 bg-white border border-slate-200 p-4 sm:p-16">

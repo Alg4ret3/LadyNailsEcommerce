@@ -8,7 +8,7 @@ import { COOKIES_CONTENT } from '@/constants';
 
 export default function CookiesPage() {
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-44 pb-32 px-6 max-w-[1400px] mx-auto">
         <div className="bg-white border border-slate-200 p-8 sm:p-20 shadow-sm max-w-4xl mx-auto space-y-16">

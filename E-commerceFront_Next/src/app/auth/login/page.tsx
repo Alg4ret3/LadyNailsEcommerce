@@ -62,7 +62,7 @@ export default function LoginPage() {
           {/* Visual Brand Side */}
           <div className="hidden lg:block relative bg-slate-950 p-16 text-white space-y-12">
             <div className="absolute inset-0 opacity-40">
-              <Image src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?q=80&w=1000" fill className="object-cover grayscale" alt="Login Visual" />
+              <Image src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?q=80&w=1000" fill className="object-cover" alt="Login Visual" />
             </div>
             <div className="relative z-10 space-y-8">
               <Typography variant="detail" className="text-slate-500">Acceso</Typography>

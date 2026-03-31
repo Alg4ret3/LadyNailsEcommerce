@@ -530,7 +530,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
                     : 'bg-red-50/30 border-red-100 shadow-[0_0_20px_rgba(239,68,68,0.05)]'
                   }`}>
                     <div className="relative">
-                      <span className={`flex h-2 w-2 rounded-full ${normalizedProducts.length > 0 ? 'bg-indigo-500' : 'bg-red-500'}`} />
+                      <span className={`flex h-2 w-2 rounded-full ${normalizedProducts.length > 0 ? 'bg-slate-900' : 'bg-red-500'}`} />
                       {normalizedProducts.length === 0 && (
                         <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" />
                       )}
@@ -573,7 +573,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
 
 
               {paginatedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 bg-slate-100 border border-slate-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 bg-white border border-slate-100">
                    {paginatedProducts.map((p) => (
                       <ProductCard key={p.id} {...p} slug={p.slug} />
                    ))}
@@ -648,7 +648,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
           <SlidersHorizontal size={16} className="text-white/60 group-hover:text-white transition-colors" />
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Filtros</span>
           { (selectedCategories.length > 0 || selectedBrands.length > 0 || query) && (
-            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
           )}
         </motion.button>
       </div>

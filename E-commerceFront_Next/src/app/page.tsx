@@ -9,6 +9,8 @@ import { FeaturedProducts } from '@/components/organisms/FeaturedProducts';
 import { AcademySection } from '@/components/organisms/AcademySection';
 import { TrustSection } from '@/components/organisms/TrustSection';
 import { LogoCarousel } from '@/components/molecules/LogoCarousel';
+import { WallOfLove } from '@/components/organisms/WallOfLove';
+import { ReviewBanner } from '@/components/molecules/ReviewBanner';
 import { ACADEMY_LOCATIONS } from '@/constants';
 
 
@@ -23,6 +25,8 @@ export default function Home() {
       <AcademySection locations={ACADEMY_LOCATIONS} />
       <LogoCarousel />
       <TrustSection />
+      <ReviewBanner />
+      <WallOfLove />
     </MainLayout>
   );
 }

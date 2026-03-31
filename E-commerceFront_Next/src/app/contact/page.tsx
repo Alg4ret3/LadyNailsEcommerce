@@ -58,7 +58,7 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-32 sm:pt-44 pb-16 sm:pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
         <div className="mb-12 sm:mb-20">

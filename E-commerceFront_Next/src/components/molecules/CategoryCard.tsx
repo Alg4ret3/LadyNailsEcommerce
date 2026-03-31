@@ -20,7 +20,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({ name, img, count, hr
         src={img} 
         fill 
         alt={name} 
-        className="object-cover lg:grayscale lg:group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" 
+        className="object-cover transition-all duration-700 group-hover:scale-105" 
       />
       <div className="absolute inset-0 bg-slate-900/60 transition-opacity" />
       <div className="absolute inset-0 p-12 flex flex-col justify-between">

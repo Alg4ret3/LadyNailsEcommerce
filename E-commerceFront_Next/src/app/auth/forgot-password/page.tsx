@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-44 pb-32 px-6 flex items-center justify-center">
         <div className="max-w-md w-full bg-white border border-slate-200 p-8 sm:p-12 space-y-12 shadow-xl">

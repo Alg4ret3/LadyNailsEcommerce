@@ -39,7 +39,7 @@ export default function NosotrosPage() {
            <div className="relative aspect-4/5 bg-slate-100 border border-slate-200">
               <Image 
                  src={ABOUT_US_CONTENT.hero.image} 
-                 alt="Our Facility" fill className="object-cover grayscale" 
+                 alt="Our Facility" fill className="object-cover" 
               />
            </div>
         </div>

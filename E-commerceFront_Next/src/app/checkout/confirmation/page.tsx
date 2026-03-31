@@ -50,7 +50,7 @@ export default function ConfirmationPage() {
                <Loader2 className="animate-spin text-slate-300" size={32} />
              </div>
            ) : orderData ? (
-             <div className="bg-[#f8fafc] border border-slate-200 p-8 grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+             <div className="bg-white border border-slate-200 p-8 grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                 <div className="space-y-2">
                    <Typography variant="detail">Orden de Referencia</Typography>
                    <Typography variant="h4" className="text-lg">#{orderData.display_id || orderData.id.split('_')[1]}</Typography>
@@ -61,7 +61,7 @@ export default function ConfirmationPage() {
                 </div>
              </div>
            ) : (
-             <div className="bg-[#f8fafc] border border-slate-200 p-8 text-center">
+             <div className="bg-white border border-slate-200 p-8 text-center">
                 <Typography variant="body" className="text-slate-500">
                   La orden fue procesada pero no pudimos recuperar la referencia automáticamente. Puede ver el detalle en su correo o cuenta.
                 </Typography>
