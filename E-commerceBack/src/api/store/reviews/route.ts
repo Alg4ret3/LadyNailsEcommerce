@@ -55,7 +55,7 @@ export async function POST(
     if (customer_id) {
       const { data } = await query.graph({
         entity: "review",
-        fields: ["id", "customer_id"],
+        fields: ["id"],
         filters: { customer_id: customer_id },
       }) as { data: any[] }
 
@@ -67,26 +67,29 @@ export async function POST(
     let review;
 
     if (existingReviewId) {
+      // If customer already has a review, update it and reset status to pending
       review = await reviewModuleService.updateReviews({
         id: existingReviewId,
         rating,
         content,
         customer_name,
-        // When updated, maybe it goes back to pending? Or stays the same. We let the module default or leave it.
+        status: "pending"
       })
     } else {
+      // Create new review as pending (default status in model)
       review = await reviewModuleService.createReviews({
         rating,
         content,
         customer_name,
-        customer_id
-        // status is "pending" by default based on model definition
+        customer_id,
+        status: "pending"
       })
     }
 
     res.json({ review })
   } catch (error: any) {
-    console.error("Error creating review:", error.message)
+    console.error("Error handling review upsert:", error.message)
     res.status(500).json({ error: error.message })
   }
 }
+
