@@ -151,52 +151,77 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 
               {hasVariants ? (
                 <div className="space-y-3">
-                  {product.variants!.map((variant) => (
-                    <div key={variant.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/30 transition-colors">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground uppercase tracking-tight">{variant.title}</span>
-                        <span className="text-[10px] text-foreground/50 tracking-wide">${(variant.prices?.[0]?.amount || product.price).toLocaleString()}</span>
+                  {product.variants!.map((variant) => {
+                    const stockQuantity = variant?.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0;
+                    const isOutOfStock = stockQuantity <= 0;
+
+                    return (
+                      <div key={variant.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/30 transition-colors">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-foreground uppercase tracking-tight">{variant.title}</span>
+                          <span className="text-[10px] text-foreground/50 tracking-wide">${(variant.prices?.[0]?.amount || product.price).toLocaleString()}</span>
+                          {isOutOfStock ? (
+                            <span className="text-[10px] text-red-500 font-black uppercase mt-1 tracking-wider">Agotado</span>
+                          ) : (
+                            <span className="text-[9px] text-foreground/40 font-bold uppercase mt-1">Disp: {stockQuantity}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center border border-border rounded-lg bg-background">
+                          <button
+                            onClick={() => updateVariantQuantity(variant.id, quantities[variant.id] - 1)}
+                            disabled={isOutOfStock || (quantities[variant.id] || 0) <= 0}
+                            className={`px-2 py-1.5 hover:bg-muted transition-colors ${(quantities[variant.id] || 0) <= 0 || isOutOfStock ? 'opacity-20 pointer-events-none' : ''}`}
+                          >
+                            <Minus size={14} className="text-foreground" />
+                          </button>
+                          <span className={`px-3 py-1.5 text-xs font-bold min-w-[32px] text-center ${isOutOfStock ? 'text-foreground/30' : 'text-foreground'}`}>
+                            {isOutOfStock ? 0 : (quantities[variant.id] || 0)}
+                          </span>
+                          <button
+                            onClick={() => updateVariantQuantity(variant.id, Math.min(stockQuantity, (quantities[variant.id] || 0) + 1))}
+                            disabled={isOutOfStock || (quantities[variant.id] || 0) >= stockQuantity}
+                            className={`px-2 py-1.5 hover:bg-muted transition-colors ${isOutOfStock || (quantities[variant.id] || 0) >= stockQuantity ? 'opacity-20 pointer-events-none' : ''}`}
+                          >
+                            <Plus size={14} className="text-foreground" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center border border-border rounded-lg bg-background">
-                        <button
-                          onClick={() => updateVariantQuantity(variant.id, quantities[variant.id] - 1)}
-                          className={`px-2 py-1.5 hover:bg-muted transition-colors ${quantities[variant.id] === 0 ? 'opacity-20 pointer-events-none' : ''}`}
-                        >
-                          <Minus size={14} className="text-foreground" />
-                        </button>
-                        <span className="px-3 py-1.5 text-xs font-bold text-foreground min-w-[32px] text-center">
-                          {quantities[variant.id]}
-                        </span>
-                        <button
-                          onClick={() => updateVariantQuantity(variant.id, quantities[variant.id] + 1)}
-                          className="px-2 py-1.5 hover:bg-muted transition-colors"
-                        >
-                          <Plus size={14} className="text-foreground" />
-                        </button>
-                      </div>
+                    );
+                  })}
+                </div>
+              ) : (() => {
+                const stockQuantity = product.variants?.[0]?.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0;
+                const isOutOfStock = stockQuantity <= 0;
+
+                return (
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center border border-border rounded-lg w-fit">
+                      <button
+                        onClick={() => updateVariantQuantity(product.id, quantities[product.id] - 1)}
+                        className={`px-3 py-2 sm:py-3 hover:bg-muted transition-colors ${(quantities[product.id] || 0) <= 1 || isOutOfStock ? 'opacity-20 pointer-events-none' : ''}`}
+                        disabled={(quantities[product.id] || 0) <= 1 || isOutOfStock}
+                      >
+                        <Minus size={16} className="text-foreground" />
+                      </button>
+                      <span className={`px-4 py-2 sm:py-3 text-base font-bold min-w-[48px] text-center ${isOutOfStock ? 'text-foreground/30' : 'text-foreground'}`}>
+                        {isOutOfStock ? 0 : (quantities[product.id] || 1)}
+                      </span>
+                      <button
+                        onClick={() => updateVariantQuantity(product.id, Math.min(stockQuantity, (quantities[product.id] || 0) + 1))}
+                        className={`px-3 py-2 sm:py-3 hover:bg-muted transition-colors ${isOutOfStock || (quantities[product.id] || 0) >= stockQuantity ? 'opacity-20 pointer-events-none' : ''}`}
+                        disabled={isOutOfStock || (quantities[product.id] || 0) >= stockQuantity}
+                      >
+                        <Plus size={16} className="text-foreground" />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center border border-border rounded-lg w-fit">
-                  <button
-                    onClick={() => updateVariantQuantity(product.id, quantities[product.id] - 1)}
-                    className="px-3 py-2 sm:py-3 hover:bg-muted transition-colors"
-                    disabled={quantities[product.id] <= 1}
-                  >
-                    <Minus size={16} className="text-foreground" />
-                  </button>
-                  <span className="px-4 py-2 sm:py-3 text-base font-bold text-foreground">
-                    {quantities[product.id]}
-                  </span>
-                  <button
-                    onClick={() => updateVariantQuantity(product.id, quantities[product.id] + 1)}
-                    className="px-3 py-2 sm:py-3 hover:bg-muted transition-colors"
-                  >
-                    <Plus size={16} className="text-foreground" />
-                  </button>
-                </div>
-              )}
+                    {isOutOfStock ? (
+                      <span className="text-xs sm:text-sm text-red-500 font-black uppercase tracking-wider">Agotado</span>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs text-foreground/40 font-bold uppercase">Disponible: {stockQuantity}</span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer Summary */}

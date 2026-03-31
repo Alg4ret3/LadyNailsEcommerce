@@ -113,6 +113,9 @@ export default function ProductPage() {
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
   const prevImage = () => setCurrentIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
 
+  const totalStock = product.variants?.reduce((sum, v: any) => sum + (v.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0), 0) ?? 0;
+  const isOutOfStock = totalStock <= 0;
+
   // Usa rating del backend
   const averageRating = dynamicRating;
   const displayRating = averageRating > 0 ? averageRating.toFixed(1) : '0.0';
@@ -224,9 +227,15 @@ export default function ProductPage() {
                 <Typography variant="h3" className="text-2xl sm:text-3xl font-black">
                   ${formattedPrice}
                 </Typography>
-                <span className="text-[10px] sm:text-xs bg-slate-900 text-white px-3 py-1 font-bold tracking-widest uppercase">
-                  STOCK DISPONIBLE
-                </span>
+                {isOutOfStock ? (
+                  <span className="text-[10px] sm:text-xs bg-red-500 text-white px-3 py-1 font-black tracking-widest uppercase shadow-sm">
+                    AGOTADO
+                  </span>
+                ) : (
+                  <span className="text-[10px] sm:text-xs bg-slate-900 text-white px-3 py-1 font-bold tracking-widest uppercase shadow-sm">
+                    {totalStock > 0 ? `DISPONIBLE (${totalStock})` : 'STOCK DISPONIBLE'}
+                  </span>
+                )}
               </div>
               <Typography variant="detail" className="text-slate-400 text-[10px]">
                 SKU: {sku}
@@ -242,9 +251,10 @@ export default function ProductPage() {
             <div className="space-y-8 pt-8 border-t border-slate-100">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <Button
-                  label="Añadir al Carrito"
-                  className="flex-1 py-5 text-[11px] sm:text-xs tracking-[0.3em]"
-                  onClick={() => setIsModalOpen(true)}
+                  label={isOutOfStock ? "Producto Agotado" : "Añadir al Carrito"}
+                  className={`flex-1 py-5 text-[11px] sm:text-xs tracking-[0.3em] ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}
+                  onClick={() => !isOutOfStock && setIsModalOpen(true)}
+                  disabled={isOutOfStock}
                 />
 
                 <div className="flex gap-2 sm:gap-4">
