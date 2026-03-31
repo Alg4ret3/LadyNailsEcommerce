@@ -30,8 +30,7 @@ export async function GET(
       "brand.*",
       "usage.*",
       "warranty.*",
-      "shipping.*",
-      "reviews.*"
+      "shipping.*"
     ],
     filters,
   })
