@@ -64,13 +64,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
   }, []);
 
   useEffect(() => {
-    if (initialProducts.length === 0) {
-      getAllProducts().then(allProducts => {
-        setProducts(allProducts);
-        setLoading(false);
-      });
+    // Only fetch if we don't have products AND no initial products were provided
+    if (initialProducts.length === 0 && products.length === 0) {
+      setLoading(true);
+      getAllProducts()
+        .then(allProducts => {
+          setProducts(allProducts);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-  }, [initialProducts]);
+  }, []); // Only run once on mount or when context provides initialProducts (stable)
 
   const brands = useMemo(() => {
     const brandsSet = new Set<string>();
