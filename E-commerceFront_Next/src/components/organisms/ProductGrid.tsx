@@ -25,7 +25,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
   const currentPathCategory = useMemo(() => {
     const parts = pathname.split('/');
     if (parts.length > 2 && parts[1] === 'shop' && parts[2] !== '') {
-       return parts[2];
+       try {
+         return decodeURIComponent(parts[2]);
+       } catch (e) {
+         return parts[2];
+       }
     }
     return null;
   }, [pathname]);

@@ -36,6 +36,33 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
   const [loading, setLoading] = useState(initialProducts.length === 0);
   const [filters, setFiltersState] = useState<FilterState>(DEFAULT_FILTERS);
 
+  // Sync initial state from URL on mount (Frontend Only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+       const pathname = window.location.pathname;
+       const params = new URLSearchParams(window.location.search);
+       
+       const parts = pathname.split('/');
+       let pathCategory = null;
+       if (parts.length > 2 && parts[1] === 'shop' && parts[2] !== '') {
+          try { pathCategory = decodeURIComponent(parts[2]); } catch (e) {}
+       }
+
+       const q = params.get('q') || '';
+       const cats = params.get('categories')?.split(',') || [];
+       if (pathCategory && !cats.includes(pathCategory)) {
+          cats.push(pathCategory);
+       }
+       const brs = params.get('brands')?.split(',') || [];
+       
+       setFiltersState({
+         query: q,
+         selectedCategories: cats,
+         selectedBrands: brs
+       });
+    }
+  }, []);
+
   useEffect(() => {
     if (initialProducts.length === 0) {
       getAllProducts().then(allProducts => {

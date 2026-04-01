@@ -10,9 +10,14 @@ interface Props {
 
 export default async function CategoryPage({ params }: Props) {
   const { category } = await params;
-  const categorySlug = decodeURIComponent(category);
-  const products = await getProductsByCategoryHandle(categorySlug);
   
+  // Decoding the category slug because dynamic route params might be encoded
+  const categorySlug = decodeURIComponent(category);
+
+  // Server-side fetch of initial products for this category
+  const products = await getProductsByCategoryHandle(categorySlug);
+
+  // Dynamic title based on category slug
   const title = categorySlug.replace(/-/g, ' ').toUpperCase();
 
   return (
