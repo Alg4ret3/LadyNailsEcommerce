@@ -2,6 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MotionLink = motion(Link as any);
+
 interface ButtonProps {
   label?: string;
   children?: React.ReactNode;
@@ -63,14 +66,13 @@ export const Button: React.FC<ButtonProps> = ({
     }
 
     return (
-      <Link href={href} passHref legacyBehavior>
-        <motion.a 
-          className={`${baseStyles} ${variants[variant]} ${className}`}
-          {...motionProps}
-        >
-          {content}
-        </motion.a>
-      </Link>
+      <MotionLink 
+        href={href}
+        className={`${baseStyles} ${variants[variant]} ${className}`}
+        {...motionProps}
+      >
+        {content}
+      </MotionLink>
     );
   }
 

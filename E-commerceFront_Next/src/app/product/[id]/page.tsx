@@ -15,9 +15,6 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
 import { getProductById, type MedusaProduct } from '@/services/medusa';
-import { ProductReviews } from '@/components/organisms/ProductReviews';
-import { getReviews, type ReviewData } from '@/services/medusa/review';
-import { Star } from 'lucide-react';
 
 
 export default function ProductPage() {
@@ -25,8 +22,6 @@ export default function ProductPage() {
   const productId = params.id as string;
 
   const [product, setProduct] = useState<MedusaProduct | null>(null);
-  const [reviewsList, setReviewsList] = useState<ReviewData[]>([]);
-  const [dynamicRating, setDynamicRating] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -40,14 +35,6 @@ export default function ProductPage() {
         const data = await getProductById(productId);
         console.log(data);
         setProduct(data);
-        
-        try {
-          const revs = await getReviews(productId);
-          setReviewsList(revs?.reviews || []);
-          setDynamicRating(revs?.average_rating || 0);
-        } catch (e) {
-          console.error("Error cargando reviews", e);
-        }
       } catch (error) {
         console.error("Error cargando producto", error);
       } finally {
@@ -115,10 +102,6 @@ export default function ProductPage() {
 
   const totalStock = product.variants?.reduce((sum, v: any) => sum + (v.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0), 0) ?? 0;
   const isOutOfStock = totalStock <= 0;
-
-  // Usa rating del backend
-  const averageRating = dynamicRating;
-  const displayRating = averageRating > 0 ? averageRating.toFixed(1) : '0.0';
 
 
   return (
@@ -209,21 +192,7 @@ export default function ProductPage() {
               <Typography variant="h1" className="text-3xl sm:text-6xl uppercase tracking-tighter leading-tight sm:leading-none">
                 {product.title}
               </Typography>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      size={16}
-                      className={s <= Math.round(averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}
-                    />
-                  ))}
-                </div>
-                <Typography variant="detail" className="text-slate-500 font-bold text-sm">
-                  {reviewsList.length > 0 ? `${displayRating} (${reviewsList.length} reseñas)` : 'Sin reseñas'}
-                </Typography>
-              </div>
-              <div className="flex items-center gap-4 py-2 border-y border-slate-100">
+              <div className="flex items-center gap-4 py-4 border-y border-slate-100">
                 <Typography variant="h3" className="text-2xl sm:text-3xl font-black">
                   ${formattedPrice}
                 </Typography>
@@ -341,9 +310,6 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
-        
-        {/* Product Reviews Section */}
-        <ProductReviews productId={product.id} initialReviews={reviewsList.length > 0 ? reviewsList : product.reviews} />
       </section>
 
       <AddToCartModal

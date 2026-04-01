@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowLeftRight, XIcon as X, Heart } from '@/components/icons';
 import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -34,6 +33,7 @@ interface ProductCardProps {
   colors?: string[];
   sizes?: string[];
   variants?: any[];
+  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -58,15 +58,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   colors,
   sizes,
   variants,
+  priority = false,
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const currentSrc = gallery[currentIndex];
+  const imageIsReady = loadedSrc === currentSrc;
 
   const nextImage = (e?: React.MouseEvent) => {
     if (e) {
@@ -95,32 +100,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Visual Workspace */}
       <div className="relative aspect-4/5 overflow-hidden bg-white">
+        {/* Skeleton shimmer only while image is loading */}
+        {!imageIsReady && (
+          <div className="absolute inset-0 bg-linear-to-r from-slate-50 via-white to-slate-50 animate-pulse z-0" />
+        )}
         <Link href={`/product/${id}`} className="absolute inset-0 z-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="w-full h-full touch-none"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                const swipeThreshold = 50;
-                if (info.offset.x > swipeThreshold) prevImage();
-                else if (info.offset.x < -swipeThreshold) nextImage();
-              }}
-            >
-              <Image 
-                src={gallery[currentIndex]} 
-                alt={name} 
-                fill 
-                className="object-contain transition-transform duration-[2s] group-hover:scale-105 select-none pointer-events-none"
-              />
-            </motion.div>
-          </AnimatePresence>
+          <div
+            className="w-full h-full touch-none"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              (e.currentTarget as HTMLDivElement).dataset.startX = String(touch.clientX);
+            }}
+            onTouchEnd={(e) => {
+              const startX = Number((e.currentTarget as HTMLDivElement).dataset.startX || 0);
+              const endX = e.changedTouches[0].clientX;
+              const diff = startX - endX;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) nextImage();
+                else prevImage();
+              }
+            }}
+          >
+            <Image 
+              src={gallery[currentIndex]} 
+              alt={name} 
+              fill 
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={priority && currentIndex === 0}
+              onLoad={() => setLoadedSrc(currentSrc)}
+              className={`object-contain group-hover:scale-105 transition-all duration-500 select-none pointer-events-none ${
+                imageIsReady ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          </div>
           
           {/* Pagination Indicators (only if more than 1 image) */}
           {gallery.length > 1 && (

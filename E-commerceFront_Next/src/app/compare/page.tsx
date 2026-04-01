@@ -54,9 +54,9 @@ export default function ComparePage() {
             <Button label="Ir al Catálogo" href="/shop" className="bg-slate-900 text-white px-12" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 bg-slate-100 border border-slate-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 bg-white">
             {compareItems.map((item) => (
-              <div key={item.id} className="bg-white p-6 flex flex-col group relative border border-slate-100/50">
+              <div key={item.id} className="bg-white p-6 flex flex-col group relative border border-slate-100 rounded-3xl">
                 {/* Action Header */}
                 <div className="flex justify-end mb-4">
                   <button 
@@ -68,7 +68,7 @@ export default function ComparePage() {
                   </button>
                 </div>
 
-                <Link href={`/product/${item.id}`} className="block relative aspect-square mb-8 overflow-hidden bg-slate-50 rounded-2xl border border-slate-100">
+                <Link href={`/product/${item.id}`} className="block relative aspect-square mb-8 overflow-hidden bg-white rounded-2xl border border-slate-100">
                    <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                 </Link>
 
