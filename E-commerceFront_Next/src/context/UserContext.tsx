@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCurrentUser, CURRENT_USER_QUERY_KEY } from '@/hooks/useCurrentUser';
+import { useCurrentUser, useCustomerAddresses, CURRENT_USER_QUERY_KEY } from '@/hooks/useCurrentUser';
 import {
   registerCustomer,
   loginCustomer,
@@ -126,8 +126,16 @@ function customerToUser(customer: CustomerData): User {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
 
-  // ── Sesión actual via TanStack Query (reemplaza el useEffect de checkSession) ──
+  // ── Sesión actual via TanStack Query ──
   const { data: currentCustomer, isLoading: isSessionLoading } = useCurrentUser();
+
+  // ── Direcciones via TanStack Query Mutations ──
+  const { 
+    createAddress: createAddressMutation, 
+    updateAddress: updateAddressMutation, 
+    deleteAddress: deleteAddressMutation,
+    isPending: isAddressPending 
+  } = useCustomerAddresses();
 
   // Derivamos el user desde la query — sin estado local duplicado
   const user: User | null = currentCustomer ? customerToUser(currentCustomer) : null;
@@ -135,8 +143,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // isLoading combina: sesión inicial cargando O mutación en curso
-  const combinedLoading = isSessionLoading || isLoading;
+  // isLoading combina: sesión inicial cargando O mutaciones en curso
+  const combinedLoading = isSessionLoading || isLoading || isAddressPending;
+
 
   const login = React.useCallback(async (data: LoginData) => {
     try {
@@ -236,23 +245,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [queryClient]);
 
-  const listAddresses = React.useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await listCustomerAddresses();
-      // Invalidamos para que TanStack refetchee el customer con direcciones actualizadas
-      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
-    } catch (err: Error | any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [queryClient]);
-
   const createAddress = React.useCallback(async (data: CreateAddressInput) => {
     try {
-      setIsLoading(true);
       setError(null);
 
       // Restriction: Only allow up to 3 addresses
@@ -260,7 +254,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Solo se permiten hasta 3 direcciones guardadas.');
       }
 
-      await createCustomerAddress({
+      await createAddressMutation({
         address_name: data.addressName,
         first_name: data.firstName,
         last_name: data.lastName,
@@ -271,69 +265,58 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         postal_code: data.postalCode,
         phone: data.phone,
       });
-
-      await listAddresses(); // 🔥 sincronización real
-
+      // La invalidación en el hook se encarga de refrescar el usuario automaticamente
     } catch (err: Error | any) {
       setError(err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
-  }, [listAddresses, user]);
+  }, [createAddressMutation, user]);
 
   const updateAddress = React.useCallback(async (
     id: string,
     data: CreateAddressInput
   ) => {
     try {
-      setIsLoading(true);
       setError(null);
 
-      await updateCustomerAddress(id, {
-        address_name: data.addressName,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        address_1: data.street,
-        city: data.city,
-        country_code: data.country.toLowerCase(),
-        province: data.province,
-        postal_code: data.postalCode,
-        phone: data.phone,
+      await updateAddressMutation({
+        id,
+        data: {
+          address_name: data.addressName,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          address_1: data.street,
+          city: data.city,
+          country_code: data.country.toLowerCase(),
+          province: data.province,
+          postal_code: data.postalCode,
+          phone: data.phone,
+        }
       });
-
-      // 🔥 sincronizamos
-      await listAddresses();
-
     } catch (err: Error | any) {
       setError(err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
-  }, [listAddresses]);
+  }, [updateAddressMutation]);
+
+  const deleteAddress = React.useCallback(async (addressId: string) => {
+    try {
+      setError(null);
+      await deleteAddressMutation(addressId);
+    } catch (err: Error | any) {
+      setError(err.message);
+      throw err;
+    }
+  }, [deleteAddressMutation]);
+
+  // listAddresses stays for legacy compatibility if called, but now it just invalidates
+  const listAddresses = React.useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+  }, [queryClient]);
 
   const clearError = React.useCallback(() => {
     setError(null);
   }, []);
-
-  const deleteAddress = React.useCallback(async (addressId: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      await deleteCustomerAddress(addressId);
-
-      // 🔥 Opción profesional: refrescar desde backend
-      await listAddresses();
-
-    } catch (err: Error | any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [listAddresses]);
 
   const requestPasswordReset = React.useCallback(async (email: string) => {
     try {
