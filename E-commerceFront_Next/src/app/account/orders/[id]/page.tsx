@@ -4,7 +4,7 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Typography } from '@/components/atoms/Typography';
 import { Package, Truck, Clock, ArrowLeft, MapPin, CreditCard, ExternalLink, CheckCircle2, AlertCircle, Star } from 'lucide-react';
-import { getOrder } from '@/services/medusa/order';
+import { useOrderDetails, Order } from '@/hooks/useOrders';
 import Image from 'next/image';
 import { WHATSAPP_CONFIG } from '@/constants';
 import { createPlatformReview } from '@/services/medusa/review';
@@ -139,7 +139,7 @@ const FULFILLMENT_STEPS: FulfillmentStep[] = [
   }
 ];
 
-function getActiveStepIndex(order: any): number {
+function getActiveStepIndex(order: Order): number {
   if (order.status === 'canceled') return -1;
   if (order.payment_status !== 'captured') return 0;
   switch (order.fulfillment_status) {
@@ -151,7 +151,7 @@ function getActiveStepIndex(order: any): number {
   }
 }
 
-function FulfillmentProgressChart({ order }: { order: any }) {
+function FulfillmentProgressChart({ order }: { order: Order }) {
   const activeIndex = getActiveStepIndex(order);
   const isCanceled = order.status === 'canceled';
 
@@ -354,9 +354,13 @@ function TrackingBanner({ trackingNumber, trackingUrl }: { trackingNumber: strin
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [order, setOrder] = React.useState<any>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  
+  const { 
+    order, 
+    isLoading, 
+    isError, 
+    error: queryError 
+  } = useOrderDetails(id as string);
 
   // Estados para el formulario de reseña incrustado
   const [rating, setRating] = React.useState(0);
@@ -366,7 +370,7 @@ export default function OrderDetailPage() {
   const [reviewSubmitted, setReviewSubmitted] = React.useState(false);
 
   const handleSubmitReview = async () => {
-    if (rating === 0) return;
+    if (!order || rating === 0) return;
     try {
       setIsSubmittingReview(true);
       await createPlatformReview({
@@ -383,26 +387,7 @@ export default function OrderDetailPage() {
     }
   };
 
-  React.useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getOrder(id as string);
-        setOrder(response.order);
-      } catch (err: any) {
-        console.error('Error fetching order:', err);
-        setError('No pudimos encontrar el detalle de este pedido.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) fetchOrder();
-  }, [id]);
-
-  // ELIMINADO: handleDownloadInvoice por desuso
-
-  const getOrderStatusInfo = (order: any) => {
+  const getOrderStatusInfo = (order: Order) => {
     const { fulfillment_status, payment_status, status } = order;
 
     if (status === 'canceled') {
@@ -433,14 +418,14 @@ export default function OrderDetailPage() {
   }
 
   // ── Error ──
-  if (error || !order) {
+  if (isError || !order) {
     return (
       <div className="w-full bg-white p-10 text-center space-y-6">
         <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto border border-red-100 mb-6">
           <AlertCircle size={24} className="text-red-500" />
         </div>
         <Typography variant="h2" className="text-2xl font-black uppercase tracking-tighter">Ocurrió un error</Typography>
-        <Typography variant="body" className="text-gray-500 text-sm max-w-sm mx-auto">{error || 'El ID proporcionado no pertenece a un pedido válido.'}</Typography>
+        <Typography variant="body" className="text-gray-500 text-sm max-w-sm mx-auto">No pudimos encontrar el detalle de este pedido.</Typography>
         <button onClick={() => router.push('/account/orders')} className="mt-8 px-6 py-3 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors mx-auto block">
           Volver a Mis Pedidos
         </button>

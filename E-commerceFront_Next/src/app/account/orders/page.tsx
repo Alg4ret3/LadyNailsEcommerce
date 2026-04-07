@@ -1,44 +1,27 @@
 'use client';
 
 import React from 'react';
-import { Package, Truck, Clock, ChevronRight, Search } from 'lucide-react';
+import { Package, Truck, Clock, ChevronRight, Search, AlertCircle } from 'lucide-react';
 import { Typography } from '@/components/atoms/Typography';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/context/ToastContext';
-import { listCustomerOrders } from '@/services/medusa';
+import { useCustomerOrders, Order } from '@/hooks/useOrders';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function OrdersPage() {
   const { user } = useUser();
-  const [orders, setOrders] = React.useState<any[]>([]);
-  const [isOrdersLoading, setIsOrdersLoading] = React.useState(true);
-  const [searchTerm, setSearchTerm] = React.useState('');
   const { showToast } = useToast();
-
-  const fetchOrders = React.useCallback(async () => {
-    setIsOrdersLoading(true);
-    try {
-      const response = await listCustomerOrders();
-      const sortedOrders = (response.orders || []).sort((a: any, b: any) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setOrders(sortedOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      showToast('No se pudieron cargar tus pedidos', 'error');
-    } finally {
-      setIsOrdersLoading(false);
-    }
-  }, [showToast]);
+  const { orders, isLoading: isOrdersLoading, isError } = useCustomerOrders();
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   React.useEffect(() => {
-    if (user) {
-      fetchOrders();
+    if (isError) {
+      showToast('No se pudieron cargar tus pedidos', 'error');
     }
-  }, [user, fetchOrders]);
+  }, [isError, showToast]);
 
-  const getOrderDisplayStatus = (order: any) => {
+  const getOrderDisplayStatus = (order: Order) => {
     const { fulfillment_status, payment_status, status } = order;
 
     if (status === 'canceled') {
@@ -90,7 +73,7 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(
-    (order) => order.display_id?.toString().includes(searchTerm)
+    (order: Order) => order.display_id?.toString().includes(searchTerm)
   );
 
   if (!user) return null;
@@ -129,8 +112,28 @@ export default function OrdersPage() {
               Cargando Historial...
             </Typography>
           </div>
+        ) : isError ? (
+          <div className="col-span-full bg-white border border-red-100 p-24 text-center space-y-6 rounded-none">
+            <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto border border-red-100">
+               <AlertCircle size={24} className="text-red-500" />
+            </div>
+            <div className="space-y-2">
+              <Typography variant="h4" className="text-sm sm:text-base font-black uppercase tracking-tight text-red-600">
+                Error al cargar pedidos
+              </Typography>
+              <Typography variant="body" className="text-[10px] sm:text-xs text-red-400 font-medium max-w-sm mx-auto">
+                No pudimos conectar con el servidor para obtener tu historial.
+              </Typography>
+            </div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="inline-block px-8 py-3 bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md"
+            >
+              Reintentar
+            </button>
+          </div>
         ) : filteredOrders.length > 0 ? (
-          filteredOrders.map((order) => {
+          filteredOrders.map((order: Order) => {
             const { label, icon, colorClass } = getOrderDisplayStatus(order);
             const firstItem = order.items?.[0];
             const extraCount = order.items ? order.items.length - 1 : 0;

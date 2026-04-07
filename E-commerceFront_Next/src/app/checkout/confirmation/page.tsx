@@ -6,31 +6,20 @@ import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { CheckCircle2, Package, Truck, Calendar, Loader2 } from 'lucide-react';
-import { getOrder } from '@/services/medusa/order';
+import { useOrderDetails } from '@/hooks/useOrders';
 
 export default function ConfirmationPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [orderData, setOrderData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('order_id');
     if (id) {
       setOrderId(id);
-      getOrder(id)
-        .then((res) => {
-          setOrderData(res.order);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error("No se pudo cargar la orden", err);
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
     }
   }, []);
+
+  const { order: orderData, isLoading } = useOrderDetails(orderId as string);
 
   return (
     <main className="min-h-screen bg-white">
