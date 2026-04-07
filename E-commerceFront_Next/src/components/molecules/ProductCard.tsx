@@ -9,6 +9,9 @@ import { Typography } from '@/components/atoms/Typography';
 import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
+import { productKeys } from '@/hooks/useProducts';
+import { getProductById } from '@/services/medusa/products';
 
 interface ProductCardProps {
   id: string;
@@ -62,6 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
+  const queryClient = useQueryClient();
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,12 +77,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const currentSrc = gallery[currentIndex];
   const imageIsReady = loadedSrc === currentSrc;
 
+  const handlePrefetch = () => {
+    queryClient.prefetchQuery({
+      queryKey: productKeys.detail(id),
+      queryFn: () => getProductById(id),
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
   const nextImage = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    setCurrentIndex((prev) => (prev + 1) % gallery.length);
+    setCurrentIndex((prev: any) => (prev + 1) % gallery.length);
   };
 
   const prevImage = (e?: React.MouseEvent) => {
@@ -86,13 +98,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    setCurrentIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+    setCurrentIndex((prev: any) => (prev - 1 + gallery.length) % gallery.length);
   };
 
   return (
     <div 
       className="group bg-white border border-border rounded-2xl sm:rounded-3xl overflow-hidden hover:shadow-[0_20px_50px_rgba(42,37,32,0.12)] transition-all duration-500 flex flex-col h-full font-sans"
-      onMouseEnter={() => {}}
+      onMouseEnter={handlePrefetch}
       onMouseLeave={() => {
         // Optional: Reset to first image on leave
         // setCurrentIndex(0);
