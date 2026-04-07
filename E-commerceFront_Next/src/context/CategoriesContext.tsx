@@ -1,15 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from "react"
-import { getCategories } from "@/services/medusa/categories"
+import React, { createContext, useContext } from "react"
+import { useCategories as useCategoriesQuery, type Category } from "@/hooks/useCategories"
 
-export interface Category {
-  id: string
-  name: string
-  handle: string
-  parent_category_id: string | null
-  category_children?: Category[]
-}
+export type { Category }
 
 interface CategoriesContextType {
   categories: Category[]
@@ -30,41 +24,14 @@ export const CategoriesProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const { product_categories } = await getCategories()
-
-        // La API devuelve raíces (con children) Y los hijos sueltos
-        // Solo necesitamos las raíces — ya traen sus hijos en category_children
-        const onlyRoots = product_categories.filter(
-          c => c.parent_category_id === null
-        )
-
-        setCategories(onlyRoots)
-      } catch (error) {
-        console.error("Error cargando categorías", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCategories()
-  }, [])
-
-  const getCategoryByHandle = (handle: string) =>
-    categories.find((c) => c.handle === handle)
-
-  const getRootCategories = () => categories
+  const { categories, isLoading, getCategoryByHandle, getRootCategories } =
+    useCategoriesQuery()
 
   return (
     <CategoriesContext.Provider
       value={{
         categories,
-        loading,
+        loading: isLoading,
         getCategoryByHandle,
         getRootCategories,
       }}
@@ -75,3 +42,4 @@ export const CategoriesProvider = ({
 }
 
 export const useCategories = () => useContext(CategoriesContext)
+

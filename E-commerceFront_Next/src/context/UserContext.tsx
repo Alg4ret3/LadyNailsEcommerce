@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCurrentUser, CURRENT_USER_QUERY_KEY } from '@/hooks/useCurrentUser';
 import {
   registerCustomer,
   loginCustomer,
   logoutCustomer,
-  getCurrentCustomer,
   createCustomerAddress,
   listCustomerAddresses,
   deleteCustomerAddress,
@@ -123,51 +124,38 @@ function customerToUser(customer: CustomerData): User {
 }
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // ── Sesión actual via TanStack Query (reemplaza el useEffect de checkSession) ──
+  const { data: currentCustomer, isLoading: isSessionLoading } = useCurrentUser();
+
+  // Derivamos el user desde la query — sin estado local duplicado
+  const user: User | null = currentCustomer ? customerToUser(currentCustomer) : null;
+
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        setIsLoading(true);
-        const customer = await getCurrentCustomer();
-
-        if (customer) {
-          setUser(customerToUser(customer));
-        }
-      } catch (err) {
-        console.error('Session check failed:', err);
-        // Don't set error for session check failures
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSession();
-  }, []);
+  // isLoading combina: sesión inicial cargando O mutación en curso
+  const combinedLoading = isSessionLoading || isLoading;
 
   const login = React.useCallback(async (data: LoginData) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const { customer, token } = await loginCustomer(data);
+      const { token } = await loginCustomer(data);
 
       localStorage.setItem("auth_token", token);
 
-      // Cart association is handled reactively by CartContext
-      // when it detects userId change from null → customer.id
-
-      setUser(customerToUser(customer));
+      // Invalida la query para que TanStack refetchee el customer actualizado
+      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
     } catch (err: Error | any) {
       setError(err.message || "Error desconocido");
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
 
   const register = React.useCallback(async (data: RegisterData) => {
@@ -220,11 +208,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
 
       localStorage.removeItem("auth_token");
-      setUser(null);
+      // Limpiamos el caché del usuario — la UI reacciona automáticamente
+      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, null);
+      queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const updateProfile = React.useCallback(async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => {
     try {
@@ -236,30 +226,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.lastName) updateData.last_name = data.lastName;
       if (data.phone !== undefined) updateData.phone = data.phone;
 
-      const customer = await updateCustomerService(updateData);
-      setUser(customerToUser(customer));
+      await updateCustomerService(updateData);
+      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
     } catch (err: Error | any) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const listAddresses = React.useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await listCustomerAddresses();
-      if (response.customer) {
-        setUser(customerToUser(response.customer));
-      }
+      // Invalidamos para que TanStack refetchee el customer con direcciones actualizadas
+      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
     } catch (err: Error | any) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const createAddress = React.useCallback(async (data: CreateAddressInput) => {
     try {
@@ -384,7 +373,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <UserContext.Provider value={{
       user,
-      isLoading,
+      isLoading: combinedLoading,
       error,
       login,
       register,
