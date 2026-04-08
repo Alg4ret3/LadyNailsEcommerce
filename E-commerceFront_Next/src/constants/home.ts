@@ -5,7 +5,8 @@ export const HERO_CONTENT = {
   subtitle: "BELLEZA Y BARBERÍA SIN LÍMITES",
   description: "El suministro industrial definitivo para artistas del estilo. Herramientas y geles de grado profesional para salones y barberías que no aceptan menos que la perfección.",
   buttonLabel: "VER CATÁLOGO COMPLETO",
-  backgroundImage: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=2000"
+  backgroundImage: "https://res.cloudinary.com/dqky6oqrd/image/upload/w_1500,h_1500,c_fit/f_auto,q_auto/v1775580903/jnfuo0azdsjehnlwhiww.webp"
+
 };
 
 export const ACADEMY_LOCATIONS = [
@@ -46,16 +47,28 @@ export const ACADEMY_LOCATIONS = [
 ];
 
 export const HOME_CATEGORIES = [
-  { name: 'Uñas y Geles', img: 'https://raw.githubusercontent.com/Alg4ret3/EstaticosLadyNails/main/Home/Categorias/U%C3%B1as.webp', count: '1.2k SKU' },
-  { name: 'Equipos Barbería', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1000', count: '850 SKU' },
-  { name: 'Mobiliario Studio', img: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?q=80&w=1000', count: '120 SKU' },
+  { name: 'Uñas y Geles', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580687/efnvpygjngh8ckqs5lxt.webp', count: '1.2k SKU' },
+
+  { name: 'Barberia', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580893/gqsgpkw2xnjbcg4e1amz.jpg', count: '850k SKU' },
+  { name: 'Maquillaje', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580891/gphgnidiphejo2daumep.jpg', count: '120 SKU' },
 ];
 
 
 export const HOME_PARTNERS = [
-  { name: 'Bioaqua', logo: 'https://raw.githubusercontent.com/Alg4ret3/EstaticosLadyNails/main/Home/Logos/LogoBIoaqua.svg' },
-  { name: 'Hola Señorita', logo: 'https://raw.githubusercontent.com/Alg4ret3/EstaticosLadyNails/main/Home/Logos/LogoHolaSe%C3%B1orita.svg' },
-  { name: 'Kemei', logo: 'https://raw.githubusercontent.com/Alg4ret3/EstaticosLadyNails/main/Home/Logos/LogoKemei.svg' },
-  { name: 'Lattafa', logo: 'https://raw.githubusercontent.com/Alg4ret3/EstaticosLadyNails/main/Home/Logos/LogoLattafa.svg' },
+  { 
+    name: 'Bioaqua', 
+    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/vnrhdnivfw4fiirbvdrh.svg' 
+  },
+  { 
+    name: 'Hola Señorita', 
+    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/ojmyfcxmtnktodbhmjqa.svg' 
+  },
+  { 
+    name: 'Kemei', 
+    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/z4qaqrdr8xjx2v6bqvh5.svg' 
+  },
+  { 
+    name: 'Lattafa', 
+    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/ov4pq65ndj266owapddy.svg' 
+  },
 ];
-

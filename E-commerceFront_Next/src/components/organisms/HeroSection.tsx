@@ -9,7 +9,7 @@ import { HERO_CONTENT, ROUTES } from '@/constants';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative min-h-screen lg:min-h-[90vh] flex items-center pt-32 sm:pt-40 pb-20 overflow-hidden bg-slate-950">
+    <section aria-label="Sección Principal" className="relative min-h-screen lg:min-h-[90vh] flex items-center pt-32 sm:pt-40 pb-20 overflow-hidden bg-slate-950">
       <div className="absolute inset-0 opacity-40 pointer-events-none">
         <Image 
           src={HERO_CONTENT.backgroundImage} 

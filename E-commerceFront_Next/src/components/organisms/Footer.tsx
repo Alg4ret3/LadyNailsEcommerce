@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
                />
              </div>
            </div>
-           <Typography variant="body" className="max-w-xs text-slate-400">
+           <Typography variant="body" className="max-w-xs text-white/90">
              {COMPANY_INFO.description}
            </Typography>
            <div className="flex gap-4">

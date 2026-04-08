@@ -54,7 +54,7 @@ export const WallOfLove: React.FC = () => {
   }, [reviews]);
 
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6 overflow-hidden" id="wall-of-love">
+    <section aria-label="Testimonios de Clientes" className="py-24 sm:py-32 px-4 sm:px-6 overflow-hidden" id="wall-of-love">
       <div className="max-w-[1400px] mx-auto">
         
         {/* Statistics Header */}

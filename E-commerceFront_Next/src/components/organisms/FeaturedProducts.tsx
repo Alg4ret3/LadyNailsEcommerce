@@ -51,7 +51,7 @@ export const FeaturedProducts: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-32 sm:py-48 bg-white border-t border-slate-100">
+    <section aria-label="Productos Destacados" className="py-32 sm:py-48 bg-white border-t border-slate-100">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 sm:mb-20 gap-8">
           <div className="space-y-4">

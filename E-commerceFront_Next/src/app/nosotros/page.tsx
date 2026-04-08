@@ -1,139 +1,159 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
-import Image from 'next/image';
+import { Button } from '@/components/atoms/Button';
 import { motion, type Variants } from 'framer-motion';
-import { ABOUT_US_CONTENT, COMPANY_INFO } from '@/constants';
 
 export default function NosotrosPage() {
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
-      transition: { 
-        staggerChildren: 0.08,
-        delayChildren: 0.1
-      }
+      transition: { staggerChildren: 0.1, delayChildren: 0.05 }
     }
   };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.5, 
-        ease: [0.16, 1, 0.3, 1]
-      }
-    }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
 
   return (
-    <main className="min-h-screen bg-white selection:bg-black selection:text-white overflow-x-hidden">
+    <main className="min-h-screen bg-white text-slate-950 font-sans selection:bg-slate-900 selection:text-white overflow-x-hidden">
       <Navbar />
       
-      {/* Corporate Hero: Focus on Statement */}
-      <section className="relative pt-44 pb-20 px-6 max-w-[1400px] mx-auto overflow-hidden">
-        <motion.div 
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-          className="space-y-16"
-        >
-          {/* Top Label & Logo Placement */}
-          <motion.div variants={itemVariants} className="flex justify-between items-end border-b border-black/10 pb-8">
-             <div className="space-y-4">
-                <Typography variant="detail" className="tracking-[0.6em] text-black/40">EST. 2000 — CORPORATE IDENTITY</Typography>
-                <Typography variant="h1" className="text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.1] sm:leading-none uppercase">
-                   Nuestra <span className="font-bold">Estructura</span>
-                </Typography>
-             </div>
-             <div className="hidden lg:block relative w-32 h-16 opacity-10">
-                <Image src={COMPANY_INFO.logo.src} alt="Brand Watermark" fill className="object-contain" />
-             </div>
+      {/* Hero / Header */}
+      <section aria-label="Introducción" className="pt-40 pb-20 px-6 max-w-[1000px] mx-auto text-center">
+        <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-6">
+          <motion.div variants={itemVariants}>
+            <Typography variant="h1" className="text-5xl md:text-7xl font-light tracking-tighter uppercase">
+              Nuestra <span className="font-bold">Esencia</span>
+            </Typography>
           </motion.div>
-
-          {/* Core Vision Statement */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <motion.div variants={itemVariants} className="lg:col-span-8">
-               <Typography variant="h2" className="text-4xl md:text-5xl font-light leading-tight tracking-tight text-black/80 max-w-4xl">
-                  {ABOUT_US_CONTENT.hero.description}
-               </Typography>
-            </motion.div>
-            <motion.div variants={itemVariants} className="lg:col-span-4 flex flex-col justify-end">
-               <div className="space-y-8 pl-0 lg:pl-12 border-l-none lg:border-l border-black/10">
-                  {ABOUT_US_CONTENT.stats.map((stat, i) => (
-                    <div key={i} className="space-y-0.5">
-                       <Typography variant="h3" className="text-5xl font-bold tracking-tighter">{stat.value}</Typography>
-                       <Typography variant="small" className="text-black/40 tracking-[0.2em]">{stat.label}</Typography>
-                    </div>
-                  ))}
-               </div>
-            </motion.div>
-          </div>
+          <motion.div variants={itemVariants}>
+            <Typography variant="body" className="text-xl text-slate-500 font-light max-w-2xl mx-auto">
+              Más que un proveedor, somos el socio estratégico de los profesionales de la belleza.
+            </Typography>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Strategic Pillars - Structured Card Grid */}
-      <section className="py-24 px-6 bg-neutral-50 border-y border-black/5">
-        <div className="max-w-[1400px] mx-auto">
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-3 gap-0 border-x border-t border-black/10"
-          >
-            {[
-              { ...ABOUT_US_CONTENT.mission, id: "01" },
-              { ...ABOUT_US_CONTENT.vision, id: "02" },
-              { ...ABOUT_US_CONTENT.values, id: "03" }
-            ].map((item, i) => (
-              <motion.div 
-                key={i}
-                variants={itemVariants}
-                className="p-8 md:p-12 space-y-10 border-b md:border-r border-black/10 last:border-r-none bg-white hover:bg-neutral-50 transition-colors duration-500"
-              >
-                <div className="flex justify-between items-start">
-                   <Typography variant="detail" className="text-black/20 text-xs">{item.id}</Typography>
-                   <div className="w-1.5 h-1.5 rounded-full bg-black/40" />
-                </div>
-                <div className="space-y-6">
-                   <Typography variant="h3" className="text-2xl font-bold uppercase tracking-wide">{item.title}</Typography>
-                   <Typography variant="body" className="text-base text-black/50 leading-relaxed font-light">
-                      {item.description}
-                   </Typography>
-                </div>
-              </motion.div>
-            ))}
+      {/* 1. Historia de la marca */}
+      <section aria-label="Historia de la empresa" className="py-20 px-6 max-w-[1000px] mx-auto border-t border-slate-100">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={containerVariants} className="flex flex-col text-center space-y-8">
+          <motion.div variants={itemVariants} className="space-y-6">
+            <Typography variant="detail" className="tracking-widest uppercase text-slate-400 font-bold text-xs">01. Nuestra Historia</Typography>
+            <Typography variant="h2" className="text-3xl md:text-5xl font-light tracking-tight">El origen de nuestra visión</Typography>
+            <Typography variant="body" className="text-slate-600 leading-relaxed text-lg max-w-3xl mx-auto">
+              Nacimos con una visión clara: transformar la experiencia del profesional de la belleza en Colombia. Desde el año 2000, identificamos que el talento local necesitaba herramientas de talla mundial para competir.
+            </Typography>
+            <Typography variant="body" className="text-slate-600 leading-relaxed text-lg max-w-3xl mx-auto">
+              Lo que comenzó como un pequeño punto de distribución es hoy el e-commerce y centro logístico líder, conectando productos de primera línea con artistas que exigen perfección, innovación y eficiencia en su día a día. Hacia el futuro, nos proyectamos como el eje de abastecimiento más rápido de Latinoamérica.
+            </Typography>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* 2. Misión y valores */}
+      <section aria-label="Propósito, Misión y Valores" className="py-24 px-6 bg-slate-950 text-white">
+        <div className="max-w-[1400px] mx-auto space-y-16">
+          <div className="space-y-4">
+            <Typography variant="detail" className="tracking-widest uppercase text-white/50 font-bold text-xs">02. Nuestro Propósito</Typography>
+            <Typography variant="h2" className="text-3xl md:text-5xl font-light tracking-tight">Misión y Valores</Typography>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 border-t border-white/10 pt-16">
+            <div className="space-y-4">
+              <Typography variant="h3" className="text-2xl font-bold">Innovación Constante</Typography>
+              <Typography variant="body" className="text-white/70 leading-relaxed">Mantenemos nuestro catálogo actualizado con las últimas tendencias e investigaciones globales, asegurando ventajas competitivas en cada compra.</Typography>
+            </div>
+            <div className="space-y-4">
+              <Typography variant="h3" className="text-2xl font-bold">Calidad Intransigente</Typography>
+              <Typography variant="body" className="text-white/70 leading-relaxed">Solo distribuimos marcas y formulaciones que aprueban los más rigurosos estándares de durabilidad y desempeño profesional en salón.</Typography>
+            </div>
+            <div className="space-y-4">
+              <Typography variant="h3" className="text-2xl font-bold">Crecimiento Mutuo</Typography>
+              <Typography variant="body" className="text-white/70 leading-relaxed">Tu éxito es el nuestro. Proveemos herramientas, asesoramiento y un servicio al cliente humano diseñado integralmente para elevar tus estándares.</Typography>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Compromiso con el cliente & 4. Impacto Social */}
+      <section aria-label="Compromiso e Impacto Social" className="py-24 px-6 max-w-[1400px] mx-auto">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          {/* Compromiso */}
+          <motion.div variants={itemVariants} className="bg-slate-50 border border-slate-100 p-10 sm:p-16 space-y-8">
+            <Typography variant="detail" className="tracking-widest uppercase text-slate-400 font-bold text-xs">03. Estándar de Excelencia</Typography>
+            <Typography variant="h3" className="text-3xl font-light">Compromiso con el profesional</Typography>
+            <ul className="space-y-6 text-slate-600 mt-8">
+              <li className="flex items-start gap-4">
+                <span className="font-bold text-slate-900 mt-1">✓</span>
+                <span className="text-lg"><strong className="text-slate-900 font-medium">Rapidez Logística:</strong> Despachamos en tiempo récord para que tu negocio nunca interrumpa operaciones por falta de insumos o herramientas.</span>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="font-bold text-slate-900 mt-1">✓</span>
+                <span className="text-lg"><strong className="text-slate-900 font-medium">Garantía Directa:</strong> Respaldo total en el 100% de nuestras marcas y cobertura ágil en equipos tecnológicos.</span>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="font-bold text-slate-900 mt-1">✓</span>
+                <span className="text-lg"><strong className="text-slate-900 font-medium">Soporte Dedicado:</strong> Atención personalizada y experta para resolver tus dudas técnicas y acompañarte en el proceso logístico.</span>
+              </li>
+            </ul>
+          </motion.div>
+          
+          {/* Impacto */}
+          <motion.div variants={itemVariants} className="bg-slate-50 border border-slate-100 p-10 sm:p-16 space-y-6 flex flex-col justify-center">
+            <Typography variant="detail" className="tracking-widest uppercase text-slate-400 font-bold text-xs">04. Responsabilidad</Typography>
+            <Typography variant="h3" className="text-3xl font-light">Impacto y Comunidad</Typography>
+            <Typography variant="body" className="text-slate-600 leading-relaxed text-lg">
+              Creemos firmemente en el desarrollo sostenible y la educación. Apoyamos el emprendimiento, logrando capacitar y guiar a las nuevas generaciones de profesionales a través de espacios formativos.
+            </Typography>
+            <Typography variant="body" className="text-slate-600 leading-relaxed text-lg">
+              De igual modo, estamos comprometidos con el medio ambiente, optimizando rutas para reducir nuestra huella de carbono y proyectando una transición responsable hacia la sostenibilidad operativa.
+            </Typography>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* 5. Datos de Confianza */}
+      <section aria-label="Datos de confianza y trayectoria" className="py-24 border-y border-slate-100">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants} className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
+            <motion.div variants={itemVariants} className="space-y-3">
+              <Typography variant="h2" className="text-5xl md:text-7xl font-light tracking-tighter text-slate-950">+24</Typography>
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest font-bold text-[10px]">Años de Experiencia</Typography>
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-3">
+              <Typography variant="h2" className="text-5xl md:text-7xl font-light tracking-tighter text-slate-950">+15k</Typography>
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest font-bold text-[10px]">Clientes Satisfechos</Typography>
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-3">
+              <Typography variant="h2" className="text-5xl md:text-7xl font-light tracking-tighter text-slate-950">100%</Typography>
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest font-bold text-[10px]">Calidad Certificada</Typography>
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-3">
+              <Typography variant="h2" className="text-5xl md:text-7xl font-light tracking-tighter text-slate-950">+300</Typography>
+              <Typography variant="detail" className="text-slate-400 uppercase tracking-widest font-bold text-[10px]">Envíos Diarios</Typography>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Industrial Heritage Section */}
-      <section className="py-40 px-6 max-w-[1400px] mx-auto text-center">
-         <motion.div
-           initial={{ opacity: 0 }}
-           whileInView={{ opacity: 1 }}
-           viewport={{ once: true }}
-           className="space-y-12"
-         >
-            <div className="inline-block px-8 py-3 border border-black/10 text-[10px] font-black uppercase tracking-[0.4em]">
-               Compromiso de Excelencia
-            </div>
-            <Typography variant="h2" className="text-3xl sm:text-5xl md:text-6xl font-extralight tracking-tighter leading-[1.2] sm:leading-[1.1] max-w-5xl mx-auto">
-               Lideramos la distribución técnica en Nariño con <span className="font-bold">visión de expansión nacional.</span>
-            </Typography>
-            <div className="flex justify-center items-center gap-4 text-black/20 pt-8">
-               <div className="w-20 h-px bg-current" />
-               <div className="w-2 h-2 rotate-45 border border-current" />
-               <div className="w-20 h-px bg-current" />
-            </div>
-         </motion.div>
+      {/* 6. Llamado a la acción */}
+      <section aria-label="Explorar productos" className="py-32 px-6 max-w-[800px] mx-auto text-center space-y-10">
+        <Typography variant="h2" className="text-4xl md:text-5xl font-light tracking-tight">Eleva tu arte hoy mismo</Typography>
+        <Typography variant="body" className="text-slate-500 text-xl font-light">
+          Descubre nuestro enorme catálogo de suministros profesionales y únete a la comunidad de élite.
+        </Typography>
+        <div className="flex justify-center pt-6">
+          <Link href="/shop" className="w-full sm:w-auto">
+             <Button label="Ver Catálogo" className="w-full px-12 py-5 text-sm uppercase tracking-widest" />
+          </Link>
+        </div>
       </section>
 
       <Footer />

@@ -7,7 +7,7 @@ import { StatCard } from '@/components/molecules/StatCard';
 
 export const TrustSection: React.FC = () => {
   return (
-    <section className="py-32 bg-white">
+    <section aria-label="Datos de confianza y trayectoria" className="py-32 bg-white">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
            <div className="lg:col-span-7 space-y-10 sm:space-y-12">

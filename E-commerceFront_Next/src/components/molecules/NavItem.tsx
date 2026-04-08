@@ -49,12 +49,12 @@ export const NavItem: React.FC<NavItemProps> = ({
     >
       <Link 
         href={href} 
-        className={`text-[10px] font-medium uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5 ${active ? 'text-slate-950' : 'text-slate-400 hover:text-slate-950'}`}
+        className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5 ${active ? 'text-slate-950' : 'text-slate-400 hover:text-slate-950'}`}
       >
         {name}
         {hasSubcategories && (
           <ChevronDown 
-            size={10} 
+            size={12} 
             className={`transition-transform duration-300 ${active ? 'rotate-180' : ''}`} 
           />
         )}

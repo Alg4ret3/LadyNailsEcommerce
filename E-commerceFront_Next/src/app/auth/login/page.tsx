@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Navbar } from '@/components/organisms/Navbar';
-import { Footer } from '@/components/organisms/Footer';
-import { Typography } from '@/components/atoms/Typography';
-import { Button } from '@/components/atoms/Button';
-import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React from "react";
+import { Navbar } from "@/components/organisms/Navbar";
+import { Footer } from "@/components/organisms/Footer";
+import { Typography } from "@/components/atoms/Typography";
+import { Button } from "@/components/atoms/Button";
+import { ShieldCheck, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
-import { useUser } from '@/context/UserContext';
-import { useRouter } from 'next/navigation';
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const { login, user, isLoading, error, clearError } = useUser();
   const router = useRouter();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
 
   React.useEffect(() => {
     clearError();
   }, [clearError]);
 
-  const [redirectPath, setRedirectPath] = React.useState('/account');
+  const [redirectPath, setRedirectPath] = React.useState("/account");
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const redirect = params.get('redirect');
+      const redirect = params.get("redirect");
       if (redirect) {
         setRedirectPath(decodeURIComponent(redirect));
       }
@@ -49,7 +49,7 @@ export default function LoginPage() {
       router.push(redirectPath);
     } catch (error) {
       // El error ya se maneja en el contexto
-      console.error('Login failed', error);
+      console.error("Login failed", error);
     }
   };
 
@@ -61,19 +61,40 @@ export default function LoginPage() {
         <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 bg-white border border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.05)] overflow-hidden rounded-3xl">
           {/* Visual Brand Side */}
           <div className="hidden lg:block relative bg-slate-950 p-16 text-white space-y-12">
-            <div className="absolute inset-0 opacity-40">
-              <Image src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?q=80&w=1000" fill className="object-cover" alt="Login Visual" />
+            <div className="absolute inset-0 opacity-40 transition-all">
+              <Image
+                src="https://res.cloudinary.com/dqky6oqrd/image/upload/w_1600,h_900,c_fill,f_auto,q_auto/v1775582390/rdohll6ztxp9bgcykhjq.jpg"
+                fill
+                className="object-cover saturate-80 grayscale-[20%]"
+                alt="Login Visual"
+              />
             </div>
-            <div className="relative z-10 space-y-8">
-              <Typography variant="detail" className="text-slate-500">Acceso</Typography>
-              <Typography variant="h2" className="text-5xl text-white tracking-tighter leading-none">TU ESPACIO <br /> PROFESIONAL</Typography>
+            <div className="relative z-10 space-y-8 drop-shadow-md">
+              <Typography
+                variant="detail"
+                className="text-white/80 font-bold tracking-widest"
+              >
+                Acceso
+              </Typography>
+              <Typography
+                variant="h2"
+                className="text-5xl text-white font-black tracking-tighter leading-none"
+              >
+                TU ESPACIO <br /> PROFESIONAL
+              </Typography>
               <div className="pt-24 space-y-6">
-                <div className="flex items-center gap-4 text-white/40">
+                <div className="flex items-center gap-4 text-white/90">
                   <ShieldCheck size={16} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Seguridad Garantizada</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white">
+                    Seguridad Garantizada
+                  </span>
                 </div>
-                <Typography variant="body" className="text-white/40 text-xs font-light max-w-xs leading-relaxed">
-                  Bienvenido a Ladynail Shop. Gestione sus pedidos, direcciones y perfil en un solo lugar.
+                <Typography
+                  variant="body"
+                  className="text-white/80 text-xs font-light max-w-xs leading-relaxed"
+                >
+                  Bienvenido a Ladynail Shop. Gestione sus pedidos, direcciones
+                  y perfil en un solo lugar.
                 </Typography>
               </div>
             </div>
@@ -82,11 +103,18 @@ export default function LoginPage() {
           {/* Form Side */}
           <div className="p-8 sm:p-12 md:p-16 space-y-12 bg-white flex flex-col justify-center">
             <div className="space-y-3">
-              <Typography variant="h3" className="text-3xl text-slate-950">BIENVENIDO</Typography>
-              <Typography variant="body" className="text-slate-400 text-sm">Ingrese sus credenciales para continuar.</Typography>
+              <Typography variant="h3" className="text-3xl text-slate-950">
+                BIENVENIDO
+              </Typography>
+              <Typography variant="body" className="text-slate-400 text-sm">
+                Ingrese sus credenciales para continuar.
+              </Typography>
               {error && (
                 <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
-                  <Typography variant="small" className="text-red-600 text-[10px] font-bold uppercase tracking-wider">
+                  <Typography
+                    variant="small"
+                    className="text-red-600 text-[10px] font-bold uppercase tracking-wider"
+                  >
                     {error}
                   </Typography>
                 </div>
@@ -96,7 +124,12 @@ export default function LoginPage() {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Typography variant="detail" className="text-[10px] text-slate-400">Email</Typography>
+                  <Typography
+                    variant="detail"
+                    className="text-[10px] text-slate-400"
+                  >
+                    Email
+                  </Typography>
                   <input
                     type="email"
                     required
@@ -108,8 +141,18 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
-                    <Typography variant="detail" className="text-[10px] text-slate-400">Contraseña</Typography>
-                    <Link href="/auth/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors opacity-40">¿Olvidó su clave?</Link>
+                    <Typography
+                      variant="detail"
+                      className="text-[10px] text-slate-400"
+                    >
+                      Contraseña
+                    </Typography>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors opacity-40"
+                    >
+                      ¿Olvidó su clave?
+                    </Link>
                   </div>
                   <div className="relative group">
                     <input
@@ -127,16 +170,36 @@ export default function LoginPage() {
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
-                    <Link href="/auth/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors">¿Olvidó su clave?</Link>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors"
+                    >
+                      ¿Olvidó su clave?
+                    </Link>
                   </div>
                 </div>
               </div>
 
               <div className="pt-6 space-y-4">
-                <Button type="submit" label={isLoading ? "Ingresando..." : "Iniciar Sesión"} className="w-full py-5" disabled={isLoading} />
+                <Button
+                  type="submit"
+                  label={isLoading ? "Ingresando..." : "Iniciar Sesión"}
+                  className="w-full py-5"
+                  disabled={isLoading}
+                />
                 <div className="pt-8 border-t border-slate-50 text-center space-y-4">
-                  <Typography variant="small" className="text-slate-400 text-[10px]">¿No tiene una cuenta?</Typography>
-                  <Link href="/auth/signup" className="block text-center text-[10px] font-black uppercase tracking-widest text-slate-950 hover:underline">Registrarse Aquí</Link>
+                  <Typography
+                    variant="small"
+                    className="text-slate-400 text-[10px]"
+                  >
+                    ¿No tiene una cuenta?
+                  </Typography>
+                  <Link
+                    href="/auth/signup"
+                    className="block text-center text-[10px] font-black uppercase tracking-widest text-slate-950 hover:underline"
+                  >
+                    Registrarse Aquí
+                  </Link>
                 </div>
               </div>
             </form>

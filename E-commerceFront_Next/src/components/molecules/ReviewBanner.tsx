@@ -8,7 +8,7 @@ import { Typography } from '@/components/atoms/Typography';
 
 export const ReviewBanner: React.FC = () => {
   return (
-    <section className="bg-slate-950 border-y border-white/5 py-4 relative overflow-hidden group">
+    <section aria-label="Reseñas Rápidas" className="bg-slate-950 border-y border-white/5 py-4 relative overflow-hidden group">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent)] pointer-events-none" />
       
       <div className="max-w-[1200px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 relative z-10">

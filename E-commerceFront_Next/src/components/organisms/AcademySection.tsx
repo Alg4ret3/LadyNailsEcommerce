@@ -43,7 +43,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
   };
 
   return (
-    <section className="py-32 bg-slate-950 text-white overflow-hidden relative" id="academy">
+    <section aria-label="Academia Lady Nails" className="py-32 bg-slate-950 text-white overflow-hidden relative" id="academy">
       <AnimatePresence mode="wait">
         <motion.div
           key={location.id}

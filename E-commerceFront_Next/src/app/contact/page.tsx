@@ -28,6 +28,7 @@ export default function ContactPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
   };
 
   const handleBlur = (field: keyof ContactFormData) => {
@@ -118,6 +119,11 @@ export default function ContactPage() {
                            {errors.name}
                          </p>
                        )}
+                       {touched.name && !errors.name && formData.name.length > 0 && (
+                         <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                           ✓ Nombre válido
+                         </p>
+                       )}
                     </div>
                     <div className="space-y-2">
                        <Typography variant="detail">Correo Electrónico</Typography>
@@ -174,6 +180,11 @@ export default function ContactPage() {
                     {touched.message && errors.message && (
                       <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1">
                         {errors.message}
+                      </p>
+                    )}
+                    {touched.message && !errors.message && formData.message.length > 0 && (
+                      <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                        ✓ Mensaje válido
                       </p>
                     )}
                  </div>
