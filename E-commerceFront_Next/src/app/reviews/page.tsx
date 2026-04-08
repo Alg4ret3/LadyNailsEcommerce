@@ -100,15 +100,15 @@ export default function ReviewsPage() {
         }
         setIsEditing(false);
         setShowForm(false);
-    } catch (err: any) {
-        console.error("Error guardando review", err);
-        // Checking message since status might be missing from Error object in medusaFetch
-        if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
-          showToast('Has alcanzado el límite máximo de 3 reseñas por usuario.', 'error');
-        } else {
-          showToast('Hubo un error al guardar tu reseña', 'error');
-        }
-    }
+      } catch (err: any) {
+         if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
+            showToast('Has alcanzado el límite máximo de 3 reseñas por usuario.', 'error');
+            return; 
+         }
+
+         console.error("Error guardando review", err);
+         showToast('Hubo un error al guardar tu reseña', 'error');
+      }
   };
 
   const handleDelete = () => {
