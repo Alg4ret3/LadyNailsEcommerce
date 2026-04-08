@@ -114,7 +114,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative aspect-4/5 overflow-hidden bg-white">
         {/* Skeleton shimmer only while image is loading */}
         {!imageIsReady && (
-          <div className="absolute inset-0 bg-linear-to-r from-slate-50 via-white to-slate-50 animate-pulse z-0" />
+          <div className="absolute inset-0 bg-linear-to-r from-zinc-50 via-white to-zinc-50 animate-pulse z-0" />
         )}
         <Link href={`/product/${id}`} className="absolute inset-0 z-10">
           <div
@@ -169,7 +169,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                e.stopPropagation();
                toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping });
              }}
-             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
+             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-zinc-100 text-zinc-900 hover:bg-zinc-50'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
            >
              <Heart size={16} fill={alreadyInWishlist ? 'currentColor' : 'none'} className={alreadyInWishlist ? 'scale-110' : ''} />
@@ -183,10 +183,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           return (
             <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
               {isWholesale && (
-                <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
+                <span className="bg-zinc-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
               )}
               {visibleTag && (
-                <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{visibleTag}</span>
+                <span className="bg-white/90 backdrop-blur text-zinc-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-zinc-100">{visibleTag}</span>
               )}
             </div>
           );
@@ -213,7 +213,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                e.stopPropagation();
                setIsModalOpen(true);
              }}
-             className="flex-1 bg-slate-900 text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-1 sm:gap-2"
+             className="flex-1 bg-black text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl hover:bg-neutral-800 transition-all flex items-center justify-center gap-1 sm:gap-2"
            >
              <ShoppingBag size={12} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Añadir</span>
            </button>
@@ -229,7 +229,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                  addToCompare(compareItem);
                }
              }}
-             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all border ${alreadyInCompare ? 'bg-red-500 border-red-600 text-white hover:bg-red-600' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
+             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all border ${alreadyInCompare ? 'bg-red-500 border-red-600 text-white hover:bg-red-600' : 'bg-white border-zinc-100 text-zinc-900 hover:bg-zinc-50'}`}
            >
              <ArrowLeftRight size={12} className="sm:w-4 sm:h-4" />
            </button>

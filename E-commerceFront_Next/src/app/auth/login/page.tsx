@@ -103,17 +103,17 @@ export default function LoginPage() {
           {/* Form Side */}
           <div className="p-8 sm:p-12 md:p-16 space-y-12 bg-white flex flex-col justify-center">
             <div className="space-y-3">
-              <Typography variant="h3" className="text-3xl text-slate-950">
+              <Typography variant="h3" className="text-3xl text-black font-black uppercase tracking-tighter">
                 BIENVENIDO
               </Typography>
-              <Typography variant="body" className="text-slate-400 text-sm">
+              <Typography variant="body" className="text-neutral-400 text-sm font-medium">
                 Ingrese sus credenciales para continuar.
               </Typography>
               {error && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
+                <div className="p-3 bg-red-50 border border-red-100">
                   <Typography
                     variant="small"
-                    className="text-red-600 text-[10px] font-bold uppercase tracking-wider"
+                    className="text-red-600 text-[10px] font-black uppercase tracking-widest"
                   >
                     {error}
                   </Typography>
@@ -121,21 +121,21 @@ export default function LoginPage() {
               )}
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="space-y-4">
+            <form className="space-y-8" onSubmit={handleSubmit}>
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Typography
                     variant="detail"
-                    className="text-[10px] text-slate-400"
+                    className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400"
                   >
-                    Email
+                    Email Corporativo
                   </Typography>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 px-6 py-4 outline-none focus:bg-white focus:border-slate-950 transition-all text-sm font-medium"
+                    className="w-full bg-neutral-50 border border-neutral-100 px-6 py-5 outline-none focus:bg-white focus:border-black transition-all text-sm font-bold uppercase tracking-tight placeholder:text-neutral-200"
                     placeholder="admin@empresa.com"
                   />
                 </div>
@@ -143,62 +143,56 @@ export default function LoginPage() {
                   <div className="flex justify-between items-end">
                     <Typography
                       variant="detail"
-                      className="text-[10px] text-slate-400"
+                      className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400"
                     >
                       Contraseña
                     </Typography>
                     <Link
                       href="/auth/forgot-password"
-                      className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors opacity-40"
+                      className="text-[9px] font-black uppercase tracking-widest text-neutral-300 hover:text-black transition-colors"
                     >
                       ¿Olvidó su clave?
                     </Link>
                   </div>
-                  <div className="relative group">
+                  <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 px-6 py-4 outline-none focus:bg-white focus:border-slate-950 transition-all text-sm font-medium pr-12"
+                      className="w-full bg-neutral-50 border border-neutral-100 px-6 py-5 outline-none focus:bg-white focus:border-black transition-all text-sm font-bold pr-14 placeholder:text-neutral-200"
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-950 transition-colors z-10 p-1"
+                      className="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-neutral-400 hover:text-black transition-colors z-10"
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                     </button>
-                    <Link
-                      href="/auth/forgot-password"
-                      className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-950 transition-colors"
-                    >
-                      ¿Olvidó su clave?
-                    </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 space-y-4">
+              <div className="pt-6 space-y-6">
                 <Button
                   type="submit"
-                  label={isLoading ? "Ingresando..." : "Iniciar Sesión"}
-                  className="w-full py-5"
+                  label={isLoading ? "AUTENTICANDO..." : "INICIAR SESIÓN"}
+                  className="w-full py-6 bg-black text-white hover:bg-neutral-800 transition-all font-black text-[10px] tracking-[0.3em]"
                   disabled={isLoading}
                 />
-                <div className="pt-8 border-t border-slate-50 text-center space-y-4">
+                <div className="pt-10 border-t border-neutral-100 text-center space-y-6">
                   <Typography
                     variant="small"
-                    className="text-slate-400 text-[10px]"
+                    className="text-neutral-400 text-[9px] font-black uppercase tracking-widest"
                   >
-                    ¿No tiene una cuenta?
+                    ¿AÚN NO TIENE UNA CUENTA?
                   </Typography>
                   <Link
                     href="/auth/signup"
-                    className="block text-center text-[10px] font-black uppercase tracking-widest text-slate-950 hover:underline"
+                    className="inline-block text-center text-[10px] font-black uppercase tracking-[0.2em] text-black border-b-2 border-black pb-1 hover:opacity-50 transition-opacity"
                   >
-                    Registrarse Aquí
+                    CREAR CUENTA PROFESIONAL
                   </Link>
                 </div>
               </div>

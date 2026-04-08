@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import {
   getAllProducts,
+  getProductsPaginated,
   getProductsByCategoryHandle,
   getProductById,
   getFeaturedProducts,
@@ -28,6 +29,25 @@ export function useAllProducts() {
     queryFn: getAllProducts,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook para scroll infinito.
+ */
+export function useInfiniteProducts(options: { 
+  limit?: number; 
+  categoryId?: string; 
+  collectionId?: string; 
+  tags?: string[];
+} = {}) {
+  const { limit = 12, categoryId, collectionId, tags } = options;
+  return useInfiniteQuery({
+    queryKey: [...productKeys.lists(), 'infinite', { limit, categoryId, collectionId, tags }],
+    queryFn: ({ pageParam }) => getProductsPaginated({ pageParam, limit, categoryId, collectionId, tags }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 5 * 60 * 1000,
   })
 }
 

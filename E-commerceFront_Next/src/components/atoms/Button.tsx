@@ -29,7 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'inline-flex items-center justify-center px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] border shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:translate-y-0 relative overflow-hidden focus:outline-none';
 
   const variants = {
-    primary: 'bg-black text-white border-black',
+    primary: 'bg-black text-white border-black hover:bg-neutral-800',
     secondary: 'bg-white text-black border-black',
     outline: 'bg-transparent text-black border-slate-200',
     ghost: 'bg-transparent text-black border-transparent shadow-none',

@@ -291,11 +291,20 @@ export const Navbar: React.FC = () => {
             <ShoppingCart size={22} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             
             {/* Count badge */}
-            {totalItems > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-slate-900 text-white text-[8px] font-black rounded-full flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
+            <AnimatePresence>
+              {totalItems > 0 && (
+                <motion.span
+                  key="cart-badge"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="absolute top-1.5 right-1.5 w-4 h-4 bg-slate-900 text-white text-[8px] font-black rounded-full flex items-center justify-center"
+                >
+                  {totalItems}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Link>
         </div>
       </div>

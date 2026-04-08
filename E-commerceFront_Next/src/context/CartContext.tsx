@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Toast } from '@/components/atoms/Toast';
 import { useUser } from '@/context/UserContext';
 import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
 import { useCartQuery } from '@/hooks/useCart';
@@ -32,8 +31,6 @@ interface CartContextType {
   totalAmount: number;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
-  toast: { message: string, isOpen: boolean };
-  hideToast: () => void;
   medusaCartId: string | null;
   ensureCart: () => Promise<string>;
 }
@@ -95,7 +92,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [toast, setToast] = useState({ message: '', isOpen: false });
 
   // Track previous userId to detect login/logout transitions
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
@@ -201,21 +197,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [cartItems, medusaCartId, userId, writeSlot]);
 
   // ── Operaciones ──
-  const showToast = (message: string) => {
-    setToast({ message, isOpen: true });
-  };
-
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isOpen: false }));
-  };
 
   const addToCart = async (item: CartItem) => {
     try {
       await addItem({ variantId: item.id, quantity: item.quantity });
-      showToast(`${item.name} añadido al carrito.`);
     } catch (error) {
       console.error('Error adding to cart:', error);
-      showToast('Error al añadir producto al carrito.');
     }
   };
 
@@ -232,8 +219,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fallback local
         setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
       }
-      
-      showToast(`${item.name} eliminado del carrito.`);
     } catch (error) {
       console.error('Error removing from Medusa cart:', error);
       setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
@@ -259,7 +244,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartItems([]);
     setMedusaCartId(null);
     clearSlot(userId);
-    showToast('Carrito vaciado.');
   };
 
   const totalItems = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
@@ -276,17 +260,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalAmount,
       isCartOpen,
       setIsCartOpen,
-      toast,
-      hideToast,
       medusaCartId,
       ensureCart: async () => medusaCartId || '', // Simplified since hook handles creation
     }}>
       {children}
-      <Toast 
-        message={toast.message} 
-        isOpen={toast.isOpen} 
-        onClose={hideToast} 
-      />
     </CartContext.Provider>
   );
 };
