@@ -31,7 +31,8 @@ export default function CheckoutPage() {
     createPaymentSession: createPaymentSessionMutation,
     completeCart: completeCartMutation,
     isUpdating: isCartUpdating,
-    cartId: medusaCartIdQuery
+    cartId: medusaCartIdQuery,
+    ensureCart
   } = useCartQuery();
 
   const { createAddress: createCustomerAddressMutation } = useCustomerAddresses();
@@ -237,7 +238,7 @@ export default function CheckoutPage() {
       });
 
       // 3. Sync address with Medusa Cart
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         await updateCartAddressMutation({
           first_name: guestFormData.firstName,
@@ -313,7 +314,7 @@ export default function CheckoutPage() {
 
       setIsUpdatingCart(true);
       try {
-        const cartId = medusaCartIdQuery || medusaCartId;
+        const cartId = await ensureCart();
         if (cartId) {
           await updateCartAddressMutation({
             first_name: addr.firstName || user.firstName || "",
@@ -354,7 +355,7 @@ export default function CheckoutPage() {
 
     setIsUpdatingCart(true);
     try {
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         await addShippingMethodMutation(selectedShippingOptionId);
 
@@ -399,7 +400,7 @@ export default function CheckoutPage() {
   const handleWompiSuccess = async () => {
     setIsProcessingOrder(true);
     try {
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         const response = await completeCartMutation();
         
