@@ -41,17 +41,17 @@ export default function ReviewsPage() {
     loadReviews();
   }, []);
 
-  const userReview = useMemo(() => {
-    return user?.isLoggedIn ? reviews.find(r => r.customer_id === user.id) : null;
+  const userReviews = useMemo(() => {
+    return user?.isLoggedIn ? reviews.filter(r => r.customer_id === user.id) : [];
   }, [reviews, user]);
+
+  const userReview = userReviews.length > 0 ? userReviews[0] : null;
 
   useEffect(() => {
     if (userReview && !isEditing) {
-      // eslint-disable-next-line
       setFormData({
         rating: userReview.rating,
         comment: userReview.content,
-        // The backend doesn't seem to store the tag as a regular field, default to the first one or a placeholder if missing
         tag: 'Experiencia Web' 
       });
     }
@@ -67,14 +67,14 @@ export default function ReviewsPage() {
   }, [reviews]);
 
   const hasChanges = useMemo(() => {
-    if (!userReview) {
-      return true; // Permitimos publicar siempre (incluso solo estrellas)
+    if (userReviews.length === 0) {
+      return true;
     }
     return (
-      formData.rating !== userReview.rating ||
-      formData.comment.trim() !== (userReview.content || '').trim()
+      formData.rating !== userReview?.rating ||
+      formData.comment.trim() !== (userReview?.content || '').trim()
     );
-  }, [formData, userReview]);
+  }, [formData, userReviews, userReview]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,36 +83,35 @@ export default function ReviewsPage() {
     try {
         await createPlatformReview({
             rating: formData.rating,
-            content: formData.comment, // Also you can append the tag info here if you want: `[${formData.tag}] ${formData.comment}`
+            content: formData.comment,
             customer_name: `${user.firstName} ${user.lastName || ''}`.trim(),
             customer_id: user.id
         });
 
-        if (userReview) {
-             showToast('¡Reseña actualizada con éxito!', 'success');
+        if (userReviews.length > 0) {
+             showToast('¡Reseña adicional enviada!', 'success');
         } else {
-             showToast('¡Gracias por tu aporte a la comunidad!', 'success');
+             showToast('¡Reseña creada con éxito!', 'success');
         }
 
-        try {
-          const response = await getPlatformReviews();
-          if (response && response.reviews) {
-            setReviews(response.reviews);
-          }
-        } catch (error) {
-          console.error("Error recargando reviews", error);
+        const response = await getPlatformReviews();
+        if (response && response.reviews) {
+          setReviews(response.reviews);
         }
         setIsEditing(false);
         setShowForm(false);
-    } catch (error) {
-        console.error("Error guardando review", error);
-        showToast('Hubo un error al guardar tu reseña', 'error');
+    } catch (err: any) {
+        console.error("Error guardando review", err);
+        // Checking message since status might be missing from Error object in medusaFetch
+        if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
+          showToast('Has alcanzado el límite máximo de 3 reseñas por usuario.', 'error');
+        } else {
+          showToast('Hubo un error al guardar tu reseña', 'error');
+        }
     }
   };
 
   const handleDelete = () => {
-    // Para simplificar ya que el backend de momento no tiene DELETE en reviews, 
-    // lo advertiremos. Si quieres, podrías actualizar el estatus a otra cosa o vaciarla
     showToast('La eliminación no está disponible actualmente.', 'error');
   };
 
@@ -221,25 +220,37 @@ export default function ReviewsPage() {
                        </div>
                        <div className="space-y-4">
                           <Typography variant="h2" className="text-3xl sm:text-4xl font-black uppercase italic text-slate-950 tracking-tighter leading-tight">
-                             {userReview ? 'Tu voz ya resuena en nuestro muro' : 'Tú eres el corazón de nuestra plataforma'}
+                             {userReviews.length >= 3 
+                               ? 'Has completado tus testimonios' 
+                               : userReviews.length > 0 
+                                 ? 'Tu voz ya resuena en nuestro muro' 
+                                 : 'Tú eres el corazón de nuestra plataforma'}
                           </Typography>
                           <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] max-w-lg mx-auto leading-relaxed">
-                             {userReview 
-                               ? 'Cada actualización que haces nos ayuda a perfeccionar la herramienta. ¿Quieres refinar tu testimonio profesional?'
-                               : 'Nuestra comunidad profesional se construye sobre experiencias reales. Ayúdanos a inspirar a otros compartiendo tu visión.'}
+                             {userReviews.length >= 3 
+                               ? `Has alcanzado el límite máximo de 3 reseñas permitidas (${userReviews.length}/3). ¡Gracias por tu participación activa!`
+                               : userReviews.length > 0 
+                                 ? `Llevas ${userReviews.length} de 3 reseñas permitidas. ¿Quieres añadir otro testimonio profesional?`
+                                 : 'Nuestra comunidad profesional se construye sobre experiencias reales. Ayúdanos a inspirar a otros compartiendo tu visión.'}
                           </p>
                        </div>
                        
                        <div className="flex flex-col items-center gap-4">
-                          <button 
-                            onClick={() => setShowForm(true)}
-                            className="flex items-center gap-4 px-8 py-4 sm:px-16 sm:py-7 bg-slate-950 text-white rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] sm:tracking-[0.5em] hover:bg-accent transition-all shadow-xl shadow-slate-300 group mx-auto"
-                          >
-                            {userReview ? 'MI TESTIMONIO' : 'DAR OPINIÓN'}
-                            <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
-                          </button>
-                          {userReview && (
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Última actualización registrada en el sistema</p>
+                          {userReviews.length < 3 ? (
+                            <button 
+                              onClick={() => setShowForm(true)}
+                              className="flex items-center gap-4 px-8 py-4 sm:px-16 sm:py-7 bg-slate-950 text-white rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] sm:tracking-[0.5em] hover:bg-accent transition-all shadow-xl shadow-slate-300 group mx-auto"
+                            >
+                              {userReviews.length > 0 ? 'AÑADIR OTRA' : 'DAR OPINIÓN'}
+                              <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                            </button>
+                          ) : (
+                            <div className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] border border-slate-200 opacity-60">
+                               Límite alcanzado
+                            </div>
+                          )}
+                          {userReviews.length > 0 && (
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Tienes {userReviews.length}/3 reseñas registradas</p>
                           )}
                        </div>
                     </motion.div>
