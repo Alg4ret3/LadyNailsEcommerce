@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
-import { Star, Trash2, LogIn, Award, BarChart3, TrendingUp, ShieldCheck, Heart, ArrowRight } from 'lucide-react';
+import { Star, BarChart3, TrendingUp, ShieldCheck, Heart, ArrowRight, User, Trash2, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
-import { getPlatformReviews, createPlatformReview, ReviewData } from '@/services/medusa/review';
+import { getPlatformReviews, createPlatformReview, updatePlatformReview, deletePlatformReview, ReviewData } from '@/services/medusa/review';
 
 const REVIEW_TAGS = ['Experiencia Web', 'Seguridad', 'Ficha Técnica', 'Mobile Friendly', 'Proceso de Compra', 'Rendimiento'];
 
@@ -18,44 +18,33 @@ export default function ReviewsPage() {
   const { showToast } = useToast();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [showForm, setShowForm] = useState<boolean>(false); // Nuevo estado de visibilidad
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState<boolean>(false);
   
-  // Form State
   const [formData, setFormData] = useState({
     rating: 5,
     comment: '',
     tag: 'Experiencia Web'
   });
 
-  useEffect(() => {
-    const loadReviews = async () => {
-      try {
-        const response = await getPlatformReviews();
-        if (response && response.reviews) {
-          setReviews(response.reviews);
-        }
-      } catch (error) {
-        console.error("Error cargando reviews", error);
+  const loadReviews = useCallback(async () => {
+    try {
+      const response = await getPlatformReviews();
+      if (response && response.reviews) {
+        setReviews(response.reviews);
       }
-    };
-    loadReviews();
+    } catch (error) {
+      console.error("Error cargando reviews", error);
+    }
   }, []);
+
+  useEffect(() => {
+    loadReviews();
+  }, [loadReviews]);
 
   const userReviews = useMemo(() => {
     return user?.isLoggedIn ? reviews.filter(r => r.customer_id === user.id) : [];
   }, [reviews, user]);
-
-  const userReview = userReviews.length > 0 ? userReviews[0] : null;
-
-  useEffect(() => {
-    if (userReview && !isEditing) {
-      setFormData({
-        rating: userReview.rating,
-        comment: userReview.content,
-        tag: 'Experiencia Web' 
-      });
-    }
-  }, [userReview, isEditing]);
 
   const stats = useMemo(() => {
     const total = reviews.length;
@@ -67,285 +56,357 @@ export default function ReviewsPage() {
   }, [reviews]);
 
   const hasChanges = useMemo(() => {
-    if (userReviews.length === 0) {
-      return true;
-    }
+    if (!isEditing) return true;
+    const original = userReviews.find(r => r.id === editingId);
+    if (!original) return true;
     return (
-      formData.rating !== userReview?.rating ||
-      formData.comment.trim() !== (userReview?.content || '').trim()
+      formData.rating !== original.rating ||
+      formData.comment.trim() !== original.content.trim()
     );
-  }, [formData, userReviews, userReview]);
+  }, [formData, isEditing, userReviews, editingId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.isLoggedIn || !hasChanges) return;
 
     try {
-        await createPlatformReview({
+        if (isEditing && editingId) {
+          await updatePlatformReview(editingId, {
             rating: formData.rating,
             content: formData.comment,
             customer_name: `${user.firstName} ${user.lastName || ''}`.trim(),
             customer_id: user.id
-        });
-
-        if (userReviews.length > 0) {
-             showToast('¡Reseña adicional enviada!', 'success');
+          });
         } else {
-             showToast('¡Reseña creada con éxito!', 'success');
+          await createPlatformReview({
+              rating: formData.rating,
+              content: formData.comment,
+              customer_name: `${user.firstName} ${user.lastName || ''}`.trim(),
+              customer_id: user.id
+          });
         }
 
-        const response = await getPlatformReviews();
-        if (response && response.reviews) {
-          setReviews(response.reviews);
-        }
-        setIsEditing(false);
-        setShowForm(false);
-      } catch (err: any) {
-         if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
-            showToast('Has alcanzado el límite máximo de 3 reseñas por usuario.', 'error');
+        showToast(isEditing ? '¡Reseña actualizada!' : '¡Reseña creada!', 'success');
+        await loadReviews();
+        resetForm();
+      } catch (err: unknown) {
+         const error = err as { message?: string };
+         if (error.message?.includes('403') || error.message?.includes('límite máximo')) {
+            showToast('Límite de 3 reseñas alcanzado.', 'error');
             return; 
          }
-
-         console.error("Error guardando review", err);
-         showToast('Hubo un error al guardar tu reseña', 'error');
+         showToast('Error al procesar la reseña.', 'error');
       }
   };
 
-  const handleDelete = () => {
-    showToast('La eliminación no está disponible actualmente.', 'error');
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePlatformReview(id);
+      showToast('Reseña eliminada con éxito.', 'success');
+      await loadReviews();
+    } catch {
+      showToast('No se pudo eliminar la reseña.', 'error');
+    }
+  };
+
+  const handleEdit = (review: ReviewData) => {
+    setFormData({
+      rating: review.rating,
+      comment: review.content,
+      tag: 'Experiencia Web'
+    });
+    setEditingId(review.id);
+    setIsEditing(true);
+    setShowForm(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ rating: 5, comment: '', tag: 'Experiencia Web' });
+    setIsEditing(false);
+    setEditingId(null);
+    setShowForm(false);
   };
 
   return (
-    <div className="bg-[#fafafa] min-h-screen">
+    <div className="bg-white min-h-screen selection:bg-black selection:text-white">
       <Navbar />
 
-      <main className="pt-24 sm:pt-32 pb-24">
-        {/* ── Dashboard Estadístico Avanzado ── */}
-        <section className="px-6 py-16 sm:py-24 bg-slate-950 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-accent/10 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full" />
-          
-          <div className="max-w-[1400px] mx-auto relative z-10">
-             <div className="flex flex-col md:flex-row justify-between items-center sm:items-end gap-10 mb-20 text-center sm:text-left">
-                <div className="space-y-6">
-                   <div className="flex items-center gap-4 justify-center sm:justify-start">
-                      <span className="w-12 h-px bg-white/20" />
-                      <span className="text-[11px] font-black uppercase tracking-[0.6em] text-white">Auditoría Global de Plataforma</span>
-                   </div>
-                   <Typography variant="h1" className="text-4xl sm:text-7xl font-black uppercase tracking-tighter italic text-white leading-tight">
-                      Métricas de <br/> <span className="text-white underline decoration-white/20 underline-offset-12">Excelencia</span>
-                   </Typography>
-                   <p className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-widest max-w-xl">
-                      Análisis dinámico de la percepción profesional sobre nuestra infraestructura digital.
-                   </p>
-                </div>
+      <main className="pt-32 sm:pt-48 lg:pt-56">
+        {/* ── Hero Section Estilizado ── */}
+        <section className="px-6 max-w-7xl mx-auto mb-24 sm:mb-32">
+          <div className="flex flex-col items-center text-center space-y-8 sm:space-y-12">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.3em] text-slate-400 mt-4 sm:mt-8"
+            >
+              <span className="w-8 h-px bg-slate-200" />
+              <span>Plataforma de Opiniones</span>
+              <span className="w-8 h-px bg-slate-200" />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Typography variant="h1" className="text-4xl sm:text-7xl lg:text-8xl font-light tracking-tight text-slate-900 leading-none sm:leading-[1.1]">
+                Nuestra <span className="font-serif italic">comunidad</span> <br className="hidden sm:block" /> 
+                <span className="font-medium">Profesional</span>
+              </Typography>
+            </motion.div>
 
-                <div className="flex flex-col items-center sm:items-end gap-4 p-8 bg-white/5 border border-white/10 rounded-4xl backdrop-blur-xl">
-                   <div className="flex gap-1.5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
-                      {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="currentColor" />)}
-                   </div>
-                   <div className="text-right">
-                      <p className="text-4xl font-black italic text-white leading-none mb-1">{stats.avg}</p>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">PROMEDIO DE CALIDAD WEB</p>
-                   </div>
-                </div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-white/5 border border-white/10 p-10 rounded-4xl backdrop-blur-sm group hover:border-white/20 transition-all relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 opacity-30 text-white group-hover:scale-110 transition-transform group-hover:opacity-100 transition-opacity"><BarChart3 size={40}/></div>
-                   <Typography variant="h2" className="text-5xl font-black text-white italic leading-none mb-4">{stats.total}</Typography>
-                   <div className="space-y-1">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white">TESTIMONIOS</p>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Base de datos autenticada</p>
-                   </div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 p-10 rounded-4xl backdrop-blur-sm group hover:border-white/20 transition-all relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 opacity-30 text-white group-hover:scale-110 transition-transform group-hover:opacity-100 transition-opacity"><TrendingUp size={40}/></div>
-                   <Typography variant="h2" className="text-5xl font-black text-white italic leading-none mb-4">{stats.satisfaction}%</Typography>
-                   <div className="space-y-1">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white">NPS POSITIVO</p>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Satisfacción del Profesional</p>
-                   </div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 p-10 rounded-4xl backdrop-blur-sm group hover:border-white/20 transition-all relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-6 opacity-30 text-white group-hover:scale-110 transition-transform group-hover:opacity-100 transition-opacity"><ShieldCheck size={40}/></div>
-                   <Typography variant="h2" className="text-5xl font-black text-white italic leading-none mb-4">100%</Typography>
-                   <div className="space-y-1">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white">VERIFICADO</p>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Feedback real de personas profesionales</p>
-                   </div>
-                </div>
-             </div>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-slate-500 text-lg sm:text-xl font-light max-w-2xl leading-relaxed"
+            >
+              Voces auténticas que definen el estándar de excelencia en Lady Nails. Análisis y métricas de nuestra infraestructura digital.
+            </motion.p>
           </div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-px bg-slate-100 rounded-3xl overflow-hidden mt-12 sm:mt-20 border border-slate-100"
+          >
+            {[
+              { label: 'OPINIONES TOTALES', value: stats.total, icon: <BarChart3 className="w-4 h-4" /> },
+              { label: 'CALIFICACIÓN MEDIA', value: stats.avg, icon: <TrendingUp className="w-4 h-4" />, suffix: '/ 5.0' },
+              { label: 'SATISFACCIÓN NPS', value: `${stats.satisfaction}%`, icon: <ShieldCheck className="w-4 h-4" /> }
+            ].map((stat, i) => (
+              <div key={i} className="bg-white p-8 sm:p-12 flex flex-col items-center justify-center space-y-4 hover:bg-slate-50 transition-colors group">
+                <div className="text-slate-300 group-hover:text-slate-900 transition-colors">
+                  {stat.icon}
+                </div>
+                <div className="text-center">
+                  <p className="text-4xl sm:text-5xl font-light text-slate-900 tabular-nums">
+                    {stat.value}
+                    {stat.suffix && <span className="text-sm font-medium text-slate-300 ml-1">{stat.suffix}</span>}
+                  </p>
+                  <p className="text-[9px] font-bold tracking-[0.2em] text-slate-400 mt-2 uppercase">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         </section>
 
-        {/* ── Centro de Gestión (Submit/Login) ── */}
-        <section className="max-w-[1000px] mx-auto px-6 -mt-16 relative z-20">
-          {!user?.isLoggedIn ? (
-            <div className="bg-white rounded-4xl p-10 sm:p-20 shadow-2xl shadow-slate-200 text-center border border-slate-100 flex flex-col items-center space-y-10">
-               <div className="w-24 h-24 bg-slate-950 rounded-full flex items-center justify-center text-white shadow-2xl relative">
-                  <LogIn size={36} />
-                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-accent rounded-full border-4 border-white flex items-center justify-center text-white"><Award size={16}/></div>
-               </div>
-               <div className="space-y-4">
-                  <Typography variant="h2" className="text-3xl font-black uppercase italic text-slate-950 tracking-tighter">¿Eres un profesional Lady Nails?</Typography>
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] max-w-md mx-auto leading-relaxed">
-                     Para registrar tu testimonio en nuestra base de datos pública, debes validar tu perfil profesional.
-                  </p>
-               </div>
-               <Link 
-                 href="/auth/login?redirect=/reviews"
-                 className="inline-flex items-center gap-6 px-16 py-7 bg-slate-950 text-white rounded-2xl text-[12px] font-black uppercase tracking-[0.5em] hover:bg-accent transition-all shadow-xl shadow-slate-300 active:scale-95"
-               >
-                 INICIAR SESIÓN
-               </Link>
-            </div>
-          ) : (
-            <div className="bg-white rounded-4xl shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden">
-               <AnimatePresence mode="wait">
-                  {!showForm ? (
-                    <motion.div 
-                      key="motivation"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1.05 }}
-                      className="p-10 sm:p-20 text-center space-y-10"
-                    >
-                       <div className="w-20 h-20 bg-accent/5 rounded-full flex items-center justify-center text-accent mx-auto mb-4 border border-accent/10">
-                          <Heart size={32} fill="currentColor" className="animate-pulse" />
-                       </div>
-                       <div className="space-y-4">
-                          <Typography variant="h2" className="text-3xl sm:text-4xl font-black uppercase italic text-slate-950 tracking-tighter leading-tight">
-                             {userReviews.length >= 3 
-                               ? 'Has completado tus testimonios' 
-                               : userReviews.length > 0 
-                                 ? 'Tu voz ya resuena en nuestro muro' 
-                                 : 'Tú eres el corazón de nuestra plataforma'}
-                          </Typography>
-                          <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] max-w-lg mx-auto leading-relaxed">
-                             {userReviews.length >= 3 
-                               ? `Has alcanzado el límite máximo de 3 reseñas permitidas (${userReviews.length}/3). ¡Gracias por tu participación activa!`
-                               : userReviews.length > 0 
-                                 ? `Llevas ${userReviews.length} de 3 reseñas permitidas. ¿Quieres añadir otro testimonio profesional?`
-                                 : 'Nuestra comunidad profesional se construye sobre experiencias reales. Ayúdanos a inspirar a otros compartiendo tu visión.'}
-                          </p>
-                       </div>
-                       
-                       <div className="flex flex-col items-center gap-4">
-                          {userReviews.length < 3 ? (
-                            <button 
-                              onClick={() => setShowForm(true)}
-                              className="flex items-center gap-4 px-8 py-4 sm:px-16 sm:py-7 bg-slate-950 text-white rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] sm:tracking-[0.5em] hover:bg-accent transition-all shadow-xl shadow-slate-300 group mx-auto"
-                            >
-                              {userReviews.length > 0 ? 'AÑADIR OTRA' : 'DAR OPINIÓN'}
-                              <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
-                            </button>
-                          ) : (
-                            <div className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] border border-slate-200 opacity-60">
-                               Límite alcanzado
+        {/* ── Feed & Interaction ── */}
+        <section className="bg-slate-50 py-24 border-t border-slate-100">
+          <div className="max-w-4xl mx-auto px-6">
+            {!user?.isLoggedIn ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-2xl p-10 sm:p-16 text-center border border-slate-200/60 shadow-sm flex flex-col items-center"
+              >
+                <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center text-white mb-6">
+                  <User size={20} strokeWidth={1.5} />
+                </div>
+                <h2 className="text-xl font-light text-slate-900 mb-3 tracking-tight">Experiencia Profesional</h2>
+                <p className="text-slate-400 text-sm font-light mb-8 max-w-xs leading-relaxed">Inicia sesión para registrar tu testimonio en nuestra base de datos.</p>
+                <Link 
+                  href="/auth/login?redirect=/reviews"
+                  className="px-8 py-3.5 bg-white border border-slate-200 text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300"
+                >
+                  Identificarse
+                </Link>
+              </motion.div>
+            ) : (
+              <div className="space-y-12">
+                {/* User Reviews List */}
+                {userReviews.length > 0 && !showForm && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Tus Testimonios ({userReviews.length}/3)</h3>
+                      {userReviews.length < 3 && (
+                        <button 
+                          onClick={() => setShowForm(true)}
+                          className="bg-slate-900 text-white px-6 py-2.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.15em] hover:bg-black transition-all"
+                        >
+                          Nueva Reseña
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      {userReviews.map((review) => (
+                        <motion.div 
+                          key={review.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white p-8 rounded-xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row justify-between gap-6"
+                        >
+                          <div className="space-y-4">
+                            <div className="flex gap-1 text-slate-900">
+                              {[1, 2, 3, 4, 5].map(s => (
+                                <Star key={s} size={14} fill={s <= review.rating ? "currentColor" : "none"} strokeWidth={1} />
+                              ))}
                             </div>
-                          )}
-                          {userReviews.length > 0 && (
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Tienes {userReviews.length}/3 reseñas registradas</p>
-                          )}
-                       </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      key="form"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-10 sm:p-16"
+                            <p className="text-slate-600 font-light text-sm italic leading-relaxed">&ldquo;{review.content}&rdquo;</p>
+                            <p className="text-[9px] font-medium text-slate-300 uppercase tracking-widest">{new Date(review.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex sm:flex-col items-center justify-end gap-2">
+                            <button 
+                              onClick={() => handleEdit(review)}
+                              className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
+                              title="Editar"
+                            >
+                              <Edit3 size={16} strokeWidth={1.5} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(review.id)}
+                              className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              title="Eliminar"
+                            >
+                              <Trash2 size={16} strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State / Call to Action */}
+                {userReviews.length === 0 && !showForm && (
+                  <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-16 text-center space-y-6">
+                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-900 mx-auto border border-slate-100">
+                      <Heart size={16} strokeWidth={1.5} className="animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-light text-slate-900 tracking-tight">Registro de Voz</h2>
+                      <p className="text-slate-400 text-sm font-light max-w-sm mx-auto">Comparte tu visión profesional sobre nuestra infraestructura digital.</p>
+                    </div>
+                    <button 
+                      onClick={() => setShowForm(true)}
+                      className="bg-slate-900 text-white px-8 py-3.5 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-2 mx-auto"
                     >
-                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12 border-b border-slate-50 pb-12">
-                          <div className="space-y-2">
-                             <div className="flex items-center gap-3 text-slate-400 mb-2 cursor-pointer hover:text-slate-950 transition-colors" onClick={() => setShowForm(false)}>
-                                <ArrowRight size={14} className="rotate-180" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">Volver</span>
-                             </div>
-                             <Typography variant="h3" className="text-3xl font-black uppercase italic text-slate-950 tracking-tighter">
-                                {userReview ? 'Actualiza tu experiencia' : 'Registra tu voz'}
-                             </Typography>
-                             <div className="flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-[11px] font-black uppercase text-accent tracking-widest">PERFIL VALIDADO: {user.firstName} {user.lastName}</p>
-                             </div>
-                          </div>
-                          {userReview && (
-                             <button 
-                               onClick={handleDelete}
-                               className="flex items-center gap-3 px-6 py-4 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-100 group"
-                             >
-                                <Trash2 size={14} className="group-hover:scale-110 transition-transform" /> ELIMINAR AHORA
-                             </button>
-                          )}
-                       </div>
+                      <span>Escribir Opinión</span>
+                      <ArrowRight size={12} />
+                    </button>
+                  </div>
+                )}
 
-                       <form onSubmit={handleSubmit} className="space-y-12">
-                          <div className="space-y-8">
-                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Calificación de la Plataforma</p>
-                                <div className="flex gap-4">
-                                   {[1, 2, 3, 4, 5].map(s => (
-                                      <button key={s} type="button" onClick={() => setFormData({...formData, rating: s})} className="transition-all hover:scale-125 active:scale-90">
-                                         <Star size={40} className={`${formData.rating >= s ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.2)]' : 'text-slate-100'}`} />
-                                      </button>
-                                   ))}
+                {/* Review Form */}
+                <AnimatePresence mode="wait">
+                  {showForm && (
+                    <motion.div 
+                      key="form-container"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden"
+                    >
+                      <div className="p-10 sm:p-14">
+                        <div className="flex justify-between items-center mb-12">
+                          <button 
+                            onClick={resetForm}
+                            className="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-2"
+                          >
+                            <ArrowRight size={10} className="rotate-180" />
+                            Cancelar
+                          </button>
+                          <div className="text-right">
+                            <p className="text-[8px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-0.5">{isEditing ? 'Editando' : 'Nuevo'}</p>
+                            <p className="text-[10px] font-medium text-slate-900">{user.firstName} {user.lastName}</p>
+                          </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-12">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-10">
+                              <div className="space-y-5">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-300">Calificación</p>
+                                  <span className="text-[9px] font-medium text-slate-400 capitalize">
+                                    {formData.rating === 5 ? 'Excelente' : formData.rating === 4 ? 'Muy bueno' : formData.rating === 3 ? 'Bueno' : formData.rating === 2 ? 'Regular' : 'Malo'}
+                                  </span>
                                 </div>
-                             </div>
-                             
-                             <div className="space-y-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">¿Qué área deseas destacar hoy?</p>
-                                <div className="flex flex-wrap gap-2.5">
-                                   {REVIEW_TAGS.map(t => (
-                                      <button 
-                                        key={t}
-                                        type="button" 
-                                        onClick={() => setFormData({...formData, tag: t})}
-                                        className={`px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
-                                          formData.tag === t ? 'bg-slate-950 text-white border-slate-950 shadow-lg' : 'bg-white text-slate-400 border-slate-50 hover:border-slate-200'
-                                        }`}
-                                      >
-                                         {t}
-                                      </button>
-                                   ))}
+                                <div className="flex gap-2">
+                                  {[1, 2, 3, 4, 5].map(s => (
+                                    <button 
+                                      key={s} 
+                                      type="button" 
+                                      onClick={() => setFormData({...formData, rating: s})} 
+                                      className="relative transition-all"
+                                    >
+                                      <Star 
+                                        size={24} 
+                                        strokeWidth={1} 
+                                        className={`transition-all duration-300 ${
+                                          formData.rating >= s 
+                                            ? 'fill-slate-900 text-slate-900' 
+                                            : 'text-slate-200 hover:text-slate-400'
+                                        }`} 
+                                      />
+                                    </button>
+                                  ))}
                                 </div>
-                             </div>
+                              </div>
+                              
+                              <div className="space-y-5">
+                                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-300">Categoría</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {REVIEW_TAGS.map(t => (
+                                    <button 
+                                      key={t}
+                                      type="button" 
+                                      onClick={() => setFormData({...formData, tag: t})}
+                                      className={`px-4 py-2 rounded-md text-[9px] font-bold transition-all border duration-200 ${
+                                        formData.tag === t 
+                                          ? 'bg-slate-900 text-white border-slate-900' 
+                                          : 'bg-transparent text-slate-400 border-slate-100 hover:border-slate-200 hover:text-slate-600'
+                                      }`}
+                                    >
+                                      {t}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-300">Testimonio</p>
+                                <span className="text-[8px] font-medium text-slate-300 uppercase tracking-tighter">{formData.comment.length} / 500</span>
+                              </div>
+                              <div className="relative">
+                                <textarea 
+                                  value={formData.comment}
+                                  maxLength={500}
+                                  onChange={(e) => setFormData({...formData, comment: e.target.value})}
+                                  className="w-full bg-slate-50 border border-transparent rounded-xl p-6 text-sm font-light text-slate-600 min-h-[160px] focus:bg-white focus:border-slate-100 transition-all duration-300 placeholder:text-slate-300 resize-none outline-none"
+                                  placeholder="..."
+                                />
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="space-y-6">
-                             <textarea 
-                                value={formData.comment}
-                                onChange={(e) => setFormData({...formData, comment: e.target.value})}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-4xl p-10 text-sm font-semibold italic text-slate-700 min-h-[200px] focus:outline-none focus:border-accent/30 transition-all shadow-inner"
-                                placeholder="Comparte tu visión sobre la plataforma... (Opcional)"
-                             />
-                             
-                     <button 
-                       disabled={!hasChanges}
-                       className={`w-full py-4 sm:py-7 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] sm:tracking-[0.5em] transition-all shadow-xl ${
-                         hasChanges 
-                           ? 'bg-slate-950 text-white hover:bg-accent hover:shadow-accent/20 cursor-pointer' 
-                           : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
-                       }`}
-                     >
-                        {userReview ? 'ACTUALIZAR AHORA' : 'PUBLICAR AHORA'}
-                     </button>
-                             
-                             {!hasChanges && userReview && (
-                                <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">No se han detectado cambios en tu reseña</p>
-                             )}
+                          <div className="pt-8 border-t border-slate-50 flex flex-col items-center gap-4">
+                            <button 
+                              disabled={formData.comment.trim().length < 2}
+                              className={`px-12 py-3.5 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${
+                                formData.comment.trim().length >= 2
+                                  ? 'bg-slate-900 text-white hover:bg-black' 
+                                  : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                              }`}
+                            >
+                              <span className="flex items-center justify-center gap-2">
+                                {isEditing ? 'Guardar Cambios' : 'Publicar'}
+                              </span>
+                            </button>
                           </div>
-                       </form>
+                        </form>
+                      </div>
                     </motion.div>
                   )}
-               </AnimatePresence>
-            </div>
-          )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </section>
       </main>
 

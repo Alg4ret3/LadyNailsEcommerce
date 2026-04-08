@@ -36,3 +36,16 @@ export async function createPlatformReview(data: { rating: number, content: stri
         body: JSON.stringify(data)
     });
 }
+
+export async function updatePlatformReview(reviewId: string, data: { rating: number, content: string, customer_name: string, customer_id?: string }) {
+    return medusaFetch<{ review: ReviewData }>(`/store/reviews/${reviewId}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+    });
+}
+
+export async function deletePlatformReview(reviewId: string) {
+    return medusaFetch<{ success: boolean }>(`/store/reviews/${reviewId}`, {
+        method: "DELETE"
+    });
+}

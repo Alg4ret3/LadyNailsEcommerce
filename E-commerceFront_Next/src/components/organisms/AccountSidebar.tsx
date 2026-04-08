@@ -29,9 +29,9 @@ export const AccountSidebar = () => {
   return (
     <div className="w-full lg:w-72 space-y-8">
       {/* User Hello Card */}
-      <div className="bg-white border border-slate-200 p-8 shadow-sm">
+      <div className="bg-white border border-neutral-200 p-8 shadow-sm">
         <div className="space-y-1">
-          <Typography variant="detail" className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+          <Typography variant="detail" className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">
             Bienvenido/a,
           </Typography>
           <Typography variant="h3" className="text-xl font-black uppercase tracking-tight truncate">
@@ -41,7 +41,7 @@ export const AccountSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="bg-white border border-slate-200 p-2 shadow-sm space-y-1">
+      <nav className="bg-white border border-neutral-200 p-2 shadow-sm space-y-1">
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -50,14 +50,14 @@ export const AccountSidebar = () => {
               href={item.href}
               className={`group flex items-center gap-4 px-6 py-5 transition-all duration-300 relative overflow-hidden ${
                 isActive 
-                  ? 'bg-slate-900 text-white shadow-lg' 
-                  : 'text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-md'
+                  ? 'bg-black text-white shadow-lg' 
+                  : 'text-black hover:bg-black hover:text-white hover:shadow-md'
               }`}
             >
               {isActive && (
                 <motion.div 
                   layoutId="active-bg"
-                  className="absolute inset-0 bg-slate-900 border-l-4 border-slate-400"
+                  className="absolute inset-0 bg-black border-l-4 border-neutral-400"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
@@ -70,7 +70,7 @@ export const AccountSidebar = () => {
               <Typography 
                 variant="h4" 
                 className={`relative z-10 text-[10px] font-black tracking-[0.2em] uppercase text-left flex-1 transition-colors duration-300 ${
-                  isActive ? 'text-white' : 'text-slate-900 group-hover:text-white'
+                  isActive ? 'text-white' : 'text-black group-hover:text-white'
                 }`}
               >
                 {item.label}
@@ -87,7 +87,7 @@ export const AccountSidebar = () => {
         })}
 
         {/* Divider */}
-        <div className="mx-6 my-4 border-b border-slate-100" />
+        <div className="mx-6 my-4 border-b border-neutral-100" />
 
         <button
           onClick={handleLogout}
@@ -103,11 +103,11 @@ export const AccountSidebar = () => {
       </nav>
 
       {/* Support Info */}
-      <div className="bg-slate-50 border border-slate-100 p-6 space-y-4">
-        <Typography variant="detail" className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block">
+      <div className="bg-neutral-50 border border-neutral-100 p-6 space-y-4">
+        <Typography variant="detail" className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest block">
           ¿Necesitas ayuda?
         </Typography>
-        <Typography variant="body" className="text-[11px] leading-relaxed text-slate-500">
+        <Typography variant="body" className="text-[11px] leading-relaxed text-neutral-500">
           Si tienes problemas con tu cuenta o un pedido, contáctanos a soporte@ladynails.com
         </Typography>
       </div>

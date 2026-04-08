@@ -23,7 +23,7 @@ export default function NosotrosPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-slate-950 font-sans selection:bg-slate-900 selection:text-white overflow-x-hidden">
+    <main className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white overflow-x-hidden">
       <Navbar />
       
       {/* Hero / Header */}
@@ -52,14 +52,14 @@ export default function NosotrosPage() {
               Nacimos con una visión clara: transformar la experiencia del profesional de la belleza en Colombia. Desde el año 2000, identificamos que el talento local necesitaba herramientas de talla mundial para competir.
             </Typography>
             <Typography variant="body" className="text-slate-600 leading-relaxed text-lg max-w-3xl mx-auto">
-              Lo que comenzó como un pequeño punto de distribución es hoy el e-commerce y centro logístico líder, conectando productos de primera línea con artistas que exigen perfección, innovación y eficiencia en su día a día. Hacia el futuro, nos proyectamos como el eje de abastecimiento más rápido de Latinoamérica.
+              Lo que comenzó como un pequeño punto de distribución es hoy el e-commerce y centro logístico líder, conectando productos de primera línea con artistas que exigen perfection, innovación y eficiencia en su día a día. Hacia el futuro, nos proyectamos como el eje de abastecimiento más rápido de Latinoamérica.
             </Typography>
           </motion.div>
         </motion.div>
       </section>
 
       {/* 2. Misión y valores */}
-      <section aria-label="Propósito, Misión y Valores" className="py-24 px-6 bg-slate-950 text-white">
+      <section aria-label="Propósito, Misión y Valores" className="py-24 px-6 bg-black text-white">
         <div className="max-w-[1400px] mx-auto space-y-16">
           <div className="space-y-4">
             <Typography variant="detail" className="tracking-widest uppercase text-white/50 font-bold text-xs">02. Nuestro Propósito</Typography>

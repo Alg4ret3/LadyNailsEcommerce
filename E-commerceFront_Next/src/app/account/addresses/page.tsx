@@ -104,10 +104,10 @@ export default function AddressesPage() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="bg-white border border-slate-200 p-8 sm:px-12 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
+      <div className="bg-white border border-neutral-200 p-8 sm:px-12 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
         <div className="space-y-1 text-center md:text-left">
           <Typography variant="h2" className="text-3xl font-black uppercase tracking-tighter">Libreta de Direcciones</Typography>
-          <Typography variant="detail" className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          <Typography variant="detail" className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
             Tienes {user.addresses?.length || 0} de 3 direcciones permitidas
           </Typography>
         </div>
@@ -117,8 +117,8 @@ export default function AddressesPage() {
             disabled={(user.addresses?.length || 0) >= 3}
             className={`group flex items-center gap-3 px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${
               (user.addresses?.length || 0) >= 3 
-                ? 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed' 
-                : 'bg-slate-900 text-white hover:bg-slate-700 active:scale-95'
+                ? 'bg-neutral-50 text-neutral-300 border border-neutral-100 cursor-not-allowed' 
+                : 'bg-black text-white hover:bg-neutral-800 active:scale-95'
             }`}
           >
             <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
@@ -128,12 +128,12 @@ export default function AddressesPage() {
       </div>
 
       {isAddingAddress && (
-        <div className="bg-white border-4 border-slate-900 p-8 sm:p-12 space-y-10 shadow-2xl animate-in fade-in slide-in-from-top-8 duration-500">
-          <div className="flex justify-between items-center pb-6 border-b border-slate-100">
+        <div className="bg-white border-4 border-black p-8 sm:p-12 space-y-10 shadow-2xl animate-in fade-in slide-in-from-top-8 duration-500">
+          <div className="flex justify-between items-center pb-6 border-b border-neutral-100">
              <Typography variant="h3" className="text-xl font-black uppercase tracking-tight">
                {editingAddressId ? 'Editar Ubicación' : 'Registrar Nueva Dirección'}
              </Typography>
-             <button onClick={resetAddressForm} className="text-slate-400 hover:text-slate-950 transition-colors uppercase text-[9px] font-black tracking-widest">Cancelar</button>
+             <button onClick={resetAddressForm} className="text-neutral-400 hover:text-black transition-colors uppercase text-[9px] font-black tracking-widest">Cancelar</button>
           </div>
 
           <form onSubmit={handleSaveAddress} className="space-y-10">
@@ -144,11 +144,11 @@ export default function AddressesPage() {
               </div>
 
               <div className="space-y-3">
-                <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nombres</Typography>
+                <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Nombres</Typography>
                 <input required value={addressForm.firstName} onChange={e => setAddressForm({...addressForm, firstName: e.target.value})} className="pro-input" />
               </div>
               <div className="space-y-3">
-                <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Apellidos</Typography>
+                <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Apellidos</Typography>
                 <input required value={addressForm.lastName} onChange={e => setAddressForm({...addressForm, lastName: e.target.value})} className="pro-input" />
               </div>
 
@@ -174,9 +174,9 @@ export default function AddressesPage() {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100 flex items-center gap-6">
+            <div className="pt-6 border-t border-neutral-100 flex items-center gap-6">
               <Button type="submit" label={isActionPending ? 'Procesando...' : (editingAddressId ? 'Actualizar Información' : 'Registrar Dirección')} disabled={isActionPending} className="px-12" />
-              <button type="button" onClick={resetAddressForm} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Descartar</button>
+              <button type="button" onClick={resetAddressForm} className="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-black transition-colors">Descartar</button>
             </div>
           </form>
         </div>
@@ -185,11 +185,11 @@ export default function AddressesPage() {
       {/* Addresses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {user.addresses?.map((addr: any) => (
-          <div key={addr.id} className="bg-white border border-slate-200 p-8 sm:p-10 space-y-6 group hover:border-slate-900 transition-all shadow-sm">
+          <div key={addr.id} className="bg-white border border-neutral-200 p-8 sm:p-10 space-y-6 group hover:border-black transition-all shadow-sm">
              <div className="flex justify-between items-start">
                 <div className="space-y-2">
                    <div className="flex items-center gap-3">
-                      <MapPin size={18} className="text-slate-900" />
+                      <MapPin size={18} className="text-black" />
                       <Typography variant="h4" className="text-sm font-black uppercase tracking-tighter">{addr.label || 'Referencia'}</Typography>
                    </div>
                    <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export default function AddressesPage() {
                    </div>
                 </div>
                 <div className="flex gap-3 md:gap-4 md:opacity-0 md:group-hover:opacity-100 transition-all md:scale-90 md:group-hover:scale-100 duration-300">
-                   <button onClick={() => handleEditClick(addr)} className="w-9 h-9 sm:w-10 sm:h-10 bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all border border-slate-100">
+                   <button onClick={() => handleEditClick(addr)} className="w-9 h-9 sm:w-10 sm:h-10 bg-neutral-50 text-neutral-400 hover:bg-black hover:text-white flex items-center justify-center transition-all border border-neutral-100">
                       <Edit2 size={14} />
                    </button>
                    <button onClick={() => setAddressToDelete(addr.id)} className="w-9 h-9 sm:w-10 sm:h-10 bg-red-50 text-red-300 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all border border-red-100/50">
@@ -208,15 +208,15 @@ export default function AddressesPage() {
                 </div>
              </div>
 
-             <div className="space-y-4 pt-4 border-t border-slate-50">
+             <div className="space-y-4 pt-4 border-t border-neutral-50">
                <div className="space-y-1">
-                 <Typography variant="body" className="text-sm font-bold text-slate-900 leading-tight">{addr.address_1}</Typography>
-                 <Typography variant="body" className="text-xs text-slate-400 uppercase tracking-widest font-bold">{addr.city}, {addr.province}</Typography>
+                 <Typography variant="body" className="text-sm font-bold text-black leading-tight">{addr.address_1}</Typography>
+                 <Typography variant="body" className="text-xs text-neutral-400 uppercase tracking-widest font-bold">{addr.city}, {addr.province}</Typography>
                </div>
                
-               <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] text-slate-300 font-bold uppercase tracking-widest">
+               <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] text-neutral-300 font-bold uppercase tracking-widest">
                   <span>{addr.first_name} {addr.last_name}</span>
-                  <span className="w-1 h-1 bg-slate-200 rounded-full mt-1.5" />
+                  <span className="w-1 h-1 bg-neutral-200 rounded-full mt-1.5" />
                   <span>{addr.phone}</span>
                </div>
              </div>
@@ -224,15 +224,15 @@ export default function AddressesPage() {
         ))}
 
         {(!user.addresses || user.addresses.length === 0) && !isAddingAddress && (
-          <div className="md:col-span-2 bg-slate-50 border border-slate-100 border-dashed p-24 text-center space-y-6">
+          <div className="md:col-span-2 bg-neutral-50 border border-neutral-100 border-dashed p-24 text-center space-y-6">
              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                <MapPin size={32} className="text-slate-200" />
+                <MapPin size={32} className="text-neutral-200" />
              </div>
              <div className="space-y-2">
                 <Typography variant="h4" className="text-base font-black uppercase tracking-tight">No tienes direcciones registradas</Typography>
-                <Typography variant="body" className="text-xs text-slate-400 max-w-xs mx-auto">Agrega una dirección para que tus próximas compras sean más rápidas y seguras.</Typography>
+                <Typography variant="body" className="text-xs text-neutral-400 max-w-xs mx-auto">Agrega una dirección para que tus próximas compras sean más rápidas y seguras.</Typography>
              </div>
-             <button onClick={() => setIsAddingAddress(true)} className="px-8 py-3 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all">Empezar Ahora +</button>
+             <button onClick={() => setIsAddingAddress(true)} className="px-8 py-3 bg-black text-white text-[9px] font-black uppercase tracking-widest hover:bg-neutral-800 transition-all">Empezar Ahora +</button>
           </div>
         )}
       </div>

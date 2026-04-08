@@ -127,7 +127,7 @@ export default function OrdersPage() {
             </div>
             <button 
               onClick={() => window.location.reload()} 
-              className="inline-block px-8 py-3 bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md"
+              className="inline-block px-8 py-3 bg-black text-white text-[9px] font-black uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-md"
             >
               Reintentar
             </button>
@@ -144,8 +144,8 @@ export default function OrdersPage() {
                 key={order.id} 
                 className="flex flex-col h-full bg-white border border-gray-200 hover:border-black hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 group relative overflow-hidden"
               >
-                {/* Header Strip - Premium Slate Identity */}
-                <div className="bg-slate-950 p-4 sm:p-5 flex justify-between items-center text-white relative z-10 transition-colors group-hover:bg-black">
+                {/* Header Strip - Premium Black Identity */}
+                <div className="bg-black p-4 sm:p-5 flex justify-between items-center text-white relative z-10 transition-colors group-hover:bg-black">
                   <div className="space-y-0.5">
                     <Typography variant="detail" className="text-[8px] text-white/40 font-black uppercase tracking-[0.2em]">
                       Código de Tracking
@@ -179,20 +179,20 @@ export default function OrdersPage() {
 
                   {/* Items Display - Minimalist Box style */}
                   <div className="flex items-center gap-5 p-3 bg-gray-50 border border-gray-100 group-hover:bg-white group-hover:border-black transition-all">
-                    <div className="relative w-16 h-16 bg-white border border-gray-200 shrink-0 group-hover:border-slate-200 transition-colors p-1">
+                    <div className="relative w-16 h-16 bg-white border border-gray-200 shrink-0 group-hover:border-neutral-200 transition-colors p-1">
                       {firstItem?.thumbnail ? (
                         <Image src={firstItem.thumbnail} alt={firstItem.title} fill className="object-cover" />
                       ) : (
                         <Package size={20} className="text-gray-300 absolute inset-0 m-auto" />
                       )}
                       {extraCount > 0 && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-slate-950 text-white text-[9px] font-black flex items-center justify-center rounded-full shadow-lg z-10 ring-2 ring-white group-hover:scale-110 transition-transform">
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-[9px] font-black flex items-center justify-center rounded-full shadow-lg z-10 ring-2 ring-white group-hover:scale-110 transition-transform">
                           +{extraCount}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <Typography variant="body" className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase leading-tight line-clamp-1 tracking-tight">
+                      <Typography variant="body" className="text-[10px] sm:text-[11px] font-black text-black uppercase leading-tight line-clamp-1 tracking-tight">
                         {firstItem?.title || 'Pedido de Suministros'}
                       </Typography>
                       <Typography variant="detail" className="text-[9px] text-gray-500 font-medium uppercase tracking-widest mt-1.5 block">
@@ -203,16 +203,16 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Footer - Price Focus */}
-                <div className="mt-auto border-t border-slate-100 bg-white p-5 sm:p-6 flex items-center justify-between group-hover:bg-gray-50 transition-colors">
+                <div className="mt-auto border-t border-neutral-100 bg-white p-5 sm:p-6 flex items-center justify-between group-hover:bg-gray-50 transition-colors">
                   <div className="space-y-1">
                     <Typography variant="detail" className="text-[8px] text-gray-400 font-black uppercase tracking-[0.2em] block">
                       Inversión Total
                     </Typography>
-                    <Typography variant="h4" className="text-lg sm:text-2xl font-black text-slate-950 leading-none tracking-tighter">
+                    <Typography variant="h4" className="text-lg sm:text-2xl font-black text-black leading-none tracking-tighter">
                       ${order.total?.toLocaleString()}
                     </Typography>
                   </div>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 border border-gray-200 text-slate-400 group-hover:bg-slate-950 group-hover:text-white group-hover:border-slate-950 transition-all duration-500">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 border border-gray-200 text-neutral-400 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-500">
                     <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>

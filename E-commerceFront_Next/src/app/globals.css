@@ -61,7 +61,7 @@ a,
   }
   
   .pro-button {
-    @apply inline-flex items-center justify-center px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest transition-all hover:bg-slate-950 active:scale-[0.98] cursor-pointer;
+    @apply inline-flex items-center justify-center px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest transition-all hover:bg-black active:scale-[0.98] cursor-pointer;
   }
   
   .pro-input {

@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Facebook, Instagram } from 'lucide-react';
-import { Typography } from '@/components/atoms/Typography';
 import { COMPANY_INFO } from '@/constants';
 
 const SOCIAL_PLATFORMS = [
@@ -23,31 +22,30 @@ const SOCIAL_PLATFORMS = [
 
 export const SocialBanner: React.FC = () => {
   return (
-    <div className="bg-slate-950 border-y border-white/5 py-4 overflow-hidden">
+    <div className="bg-black py-4 overflow-hidden select-none border-y border-white/5">
       <div className="relative flex">
         <motion.div 
-          className="flex whitespace-nowrap gap-16 items-center"
-          animate={{ x: [0, -1000] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="flex whitespace-nowrap gap-20 items-center"
+          animate={{ x: [0, -2000] }}
+          transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
         >
-          {[...Array(10)].map((_, i) => (
+          {[...Array(20)].map((_, i) => (
             <React.Fragment key={i}>
               {SOCIAL_PLATFORMS.map((platform, j) => (
-                <div key={`${i}-${j}`} className="flex items-center">
+                <div key={`${i}-${j}`} className="flex items-center gap-20">
                   <a 
                     href={platform.url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="flex items-center gap-3 group cursor-pointer"
                   >
-                    <div className="p-2 bg-white/5 rounded-full text-slate-400 group-hover:text-white group-hover:bg-white/10 transition-all">
+                    <div className="text-white/40 group-hover:text-white transition-all duration-700 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:stroke-2">
                       {platform.icon}
                     </div>
-                    <Typography variant="detail" className="text-slate-500 group-hover:text-slate-300 tracking-widest uppercase font-bold text-[10px]">
+                    <span className="text-white/40 group-hover:text-white tracking-[0.2em] transition-all duration-700 text-[10px] uppercase font-bold">
                       {platform.handle}
-                    </Typography>
+                    </span>
                   </a>
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/10 mx-4 sm:mx-8" />
                 </div>
               ))}
             </React.Fragment>

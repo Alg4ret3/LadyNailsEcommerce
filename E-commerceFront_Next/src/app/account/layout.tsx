@@ -28,8 +28,8 @@ export default function AccountLayout({
       <main className="min-h-screen bg-white flex items-center justify-center">
         <Navbar />
         <div className="text-center space-y-4 pt-44">
-          <div className="w-12 h-12 border-4 border-slate-900 border-t-transparent animate-spin mx-auto rounded-full"></div>
-          <Typography variant="detail" className="block font-black uppercase tracking-widest text-slate-400">
+          <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin mx-auto rounded-full"></div>
+          <Typography variant="detail" className="block font-black uppercase tracking-widest text-neutral-400">
             Verificando Cuenta...
           </Typography>
         </div>

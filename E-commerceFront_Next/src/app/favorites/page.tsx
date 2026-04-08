@@ -24,26 +24,28 @@ export default function FavoritesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white selection:bg-black selection:text-white">
       <Navbar />
 
       <section className="pt-32 sm:pt-44 pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
         {/* Header Section */}
-        <div className="mb-16 sm:mb-20 space-y-12">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
+        <div className="mb-16 sm:mb-20">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 border-b border-black pb-12">
             <div className="space-y-4">
-              <Typography variant="detail" className="text-slate-400">Tus Productos Guardados</Typography>
-              <Typography variant="h1" className="text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] font-medium">MIS <br /> <span className="text-red-500 font-light">FAVORITOS</span></Typography>
+              <Typography variant="detail" className="text-black/40 font-black uppercase tracking-[0.4em] text-[10px]">Guardado por Ti</Typography>
+              <Typography variant="h1" className="text-5xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] font-black uppercase italic">
+                MIS <br /> <span className="opacity-20 font-light not-italic">FAVORITOS</span>
+              </Typography>
             </div>
-            <div className="flex items-center gap-2 px-6 py-3 bg-slate-50 border border-slate-100 rounded-full">
-              <Heart size={16} className="text-red-500 fill-red-500" />
-              <Typography variant="detail" className="text-slate-900 font-black">{favorites.length} PRODUCTOS</Typography>
+            <div className="flex items-center gap-4 px-8 py-3.5 bg-black">
+              <Heart size={16} className="text-white fill-white" />
+              <Typography variant="detail" className="font-black tracking-[0.2em] text-xs text-white">{favorites.length} PIEZAS</Typography>
             </div>
           </div>
         </div>
 
         {favorites.length > 0 ? (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-px bg-slate-100 border border-slate-100">
             <AnimatePresence mode="popLayout">
               {favorites.map((product) => {
                 const specTags = (product.tags ?? []).filter(t => t.includes(':'));
@@ -54,87 +56,86 @@ export default function FavoritesPage() {
                     key={product.id}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
                     layout
-                    className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col sm:flex-row hover:shadow-lg transition-all duration-300"
+                    className="bg-white group flex flex-col md:flex-row transition-all duration-500"
                   >
                     {/* Image */}
-                    <Link href={`/product/${product.id}`} className="relative shrink-0 w-full sm:w-48 md:w-60 aspect-square sm:aspect-auto bg-slate-50">
+                    <Link href={`/product/${product.id}`} className="relative shrink-0 w-full md:w-80 aspect-square overflow-hidden bg-slate-50">
                       <Image
                         src={product.image}
                         alt={product.name}
                         fill
-                        className="object-cover hover:scale-105 transition-transform duration-700"
+                        className="object-cover transition-all duration-700 hover:scale-110"
                       />
                     </Link>
 
                     {/* Content */}
-                    <div className="flex flex-col sm:flex-row flex-1 p-6 gap-6">
+                    <div className="flex flex-col sm:flex-row flex-1 p-8 sm:p-12 gap-10">
                       {/* Left: Info */}
-                      <div className="flex-1 space-y-4">
-                        <div className="space-y-1">
-                          {category && (
-                            <span className="text-[10px] font-bold text-accent uppercase tracking-widest bg-muted px-2 py-0.5 rounded">
-                              {category}
-                            </span>
-                          )}
+                      <div className="flex-1 space-y-8">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            {category && (
+                              <span className="text-[9px] font-black text-black uppercase tracking-[0.3em] border border-black/10 px-3 py-1">
+                                {category}
+                              </span>
+                            )}
+                            {product.vendor && (
+                              <Typography variant="detail" className="text-black/30 text-[9px] font-bold uppercase tracking-widest">{product.vendor}</Typography>
+                            )}
+                          </div>
+                          
                           <Link href={`/product/${product.id}`}>
-                            <Typography variant="h3" className="text-lg font-bold leading-tight hover:text-accent transition-colors mt-1">
+                            <Typography variant="h3" className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none hover:opacity-60 transition-opacity">
                               {product.name}
                             </Typography>
                           </Link>
-                          {product.vendor && (
-                            <Typography variant="detail" className="text-slate-400 text-xs">{product.vendor}</Typography>
-                          )}
                         </div>
 
                         {product.description && (
-                          <Typography variant="body" className="text-sm text-slate-500 leading-relaxed line-clamp-3">
+                          <Typography variant="body" className="text-xs text-black/50 leading-[1.8] max-w-xl font-medium">
                             {product.description}
                           </Typography>
                         )}
 
-                        <Typography variant="h3" className="text-xl font-black tracking-tighter">
-                          ${product.price.toLocaleString()}
-                        </Typography>
+                        <div className="flex items-end gap-1">
+                          <span className="text-xs font-bold text-black/40 mb-1.5">$</span>
+                          <Typography variant="h3" className="text-3xl font-black tracking-tighter">
+                            {product.price.toLocaleString()}
+                          </Typography>
+                        </div>
 
-                        <div className="flex flex-wrap gap-3 pt-2">
+                        <div className="flex flex-wrap items-center gap-6 pt-4">
                           <Button
-                            label="Ver Producto"
-                            href={`/product/${product.id}`}
-                            className="bg-slate-900 border border-slate-900 text-white text-xs px-6 py-2.5 hover:bg-slate-800 transition-colors"
+                            label="COMPRAR"
+                            onClick={() => handleAddToCartClick(product)}
+                            className="bg-black text-white hover:bg-neutral-800 transition-colors px-10 py-5"
                           />
                           <button
-                            onClick={() => handleAddToCartClick(product)}
-                            className="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.15em] py-3 px-6 rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-2"
-                          >
-                            <ShoppingBag size={12} className="w-4 h-4" /> Añadir
-                          </button>
-                          <button
                             onClick={() => toggleFavorite(product)}
-                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors ml-auto"
+                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/20 hover:text-black transition-colors"
                           >
-                            <Trash2 size={14} /> Eliminar
+                            <Trash2 size={13} /> ELIMINAR
                           </button>
                         </div>
                       </div>
 
-                      {/* Right: Tech Specs */}
-                      <div className="w-full sm:w-56 md:w-64 shrink-0">
-                        <Typography variant="detail" className="text-slate-300 uppercase tracking-widest text-[9px] block mb-2">
-                          Ficha Técnica
+                      {/* Right: Technical Details (Minimal) */}
+                      <div className="w-full sm:w-48 md:w-56 shrink-0 pt-2">
+                        <Typography variant="detail" className="text-black font-black uppercase tracking-[0.4em] text-[9px] block mb-6 pb-2 border-b border-black">
+                          DETALLES
                         </Typography>
-                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                        <div className="space-y-4">
                           {(() => {
                             const specs = [
                               { label: 'Marca', key: 'marca', value: product.brand?.name },
-                              { label: 'Garantía', key: 'garantia', value: product.warranty?.name },
                               { label: 'Uso', key: 'uso', value: product.usage?.name },
+                              { label: 'Garantía', key: 'garantia', value: product.warranty?.name },
                               { label: 'Envío', key: 'envio', value: product.shipping?.name },
                             ];
 
-                            return specs.map((spec, idx) => {
-                              // Try to find in tags if not in structured field
+                            const renderedHardcoded = specs.map((spec, idx) => {
                               let displayValue = spec.value;
                               if (!displayValue) {
                                 const tagMatch = specTags.find(t => t.toLowerCase().startsWith(`${spec.key}:`));
@@ -144,29 +145,34 @@ export default function FavoritesPage() {
                               if (!displayValue) return null;
 
                               return (
-                                <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
-                                  <span className="text-slate-400 font-bold uppercase tracking-widest">{spec.label}</span>
-                                  <span className="text-slate-900 font-semibold text-right">{displayValue}</span>
+                                <div key={idx} className="flex flex-col gap-1">
+                                  <span className="text-[8px] text-black/30 font-black uppercase tracking-[0.25em]">{spec.label}</span>
+                                  <span className="text-[10px] text-black font-bold uppercase truncate">{displayValue}</span>
                                 </div>
                               );
                             });
+
+                            const otherSpecs = specTags.filter(t => {
+                              const tagStr = typeof t === 'string' ? t : (t as any).value || '';
+                              const colonIdx = tagStr.indexOf(':');
+                              if (colonIdx === -1) return false;
+                              const key = tagStr.slice(0, colonIdx).trim().toLowerCase();
+                              return !['marca', 'garantia', 'uso', 'envio'].includes(key);
+                            }).map((tag, idx) => {
+                              const tagStr = typeof tag === 'string' ? tag : (tag as any).value || '';
+                              const colonIdx = tagStr.indexOf(':');
+                              const key = tagStr.slice(0, colonIdx).trim();
+                              const val = tagStr.slice(colonIdx + 1).trim();
+                              return (
+                                <div key={`other-${idx}`} className="flex flex-col gap-1">
+                                  <span className="text-[8px] text-black/30 font-black uppercase tracking-[0.25em]">{key}</span>
+                                  <span className="text-[10px] text-black font-bold uppercase truncate">{val}</span>
+                                </div>
+                              );
+                            });
+
+                            return [...renderedHardcoded, ...otherSpecs];
                           })()}
-                          
-                          {/* Other spec tags */}
-                          {specTags.filter(t => {
-                            const key = t.split(':')[0].trim().toLowerCase();
-                            return !['marca', 'garantia', 'uso', 'envio'].includes(key);
-                          }).map((tag, idx) => {
-                            const colonIdx = tag.indexOf(':');
-                            const key = tag.slice(0, colonIdx).trim();
-                            const val = tag.slice(colonIdx + 1).trim();
-                            return (
-                              <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
-                                <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
-                                <span className="text-slate-900 font-semibold text-right">{val}</span>
-                              </div>
-                            );
-                          })}
                         </div>
                       </div>
                     </div>
@@ -176,24 +182,26 @@ export default function FavoritesPage() {
             </AnimatePresence>
           </div>
         ) : (
-          <div className="py-32 flex flex-col items-center text-center space-y-8 border border-dashed border-slate-200 rounded-[40px] bg-slate-50/50">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl relative">
-              <Heart size={40} className="text-slate-200" strokeWidth={1} />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full"
-              />
+          <div className="py-40 flex flex-col items-center text-center space-y-12">
+            <div className="relative">
+              <Heart size={80} className="text-black/5" strokeWidth={0.5} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-1 h-1 bg-black rounded-full animate-ping" />
+              </div>
             </div>
-            <div className="max-w-md space-y-4">
-              <Typography variant="h2" className="text-3xl tracking-tighter uppercase font-black">Aún no tienes favoritos</Typography>
-              <Typography variant="body" className="text-slate-400 font-light text-lg">
-                Guarda los productos que más te gustan para tenerlos siempre a mano y no perderles la pista.
+            
+            <div className="space-y-6 max-w-sm">
+              <Typography variant="h2" className="text-3xl font-black uppercase tracking-[0.2em]">EL VACÍO</Typography>
+              <Typography variant="body" className="text-black/40 text-sm font-medium leading-relaxed">
+                Tus piezas favoritas aparecerán aquí una vez que las selecciones en nuestro catálogo.
               </Typography>
             </div>
-            <Link href="/shop" className="group inline-flex items-center gap-4 px-10 py-5 bg-slate-900 text-white rounded-full font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl hover:bg-slate-800 transition-all">
-              Ir a la tienda <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
-            </Link>
+
+            <Button 
+              label="EXPLORAR COLECCIONES" 
+              href="/shop" 
+              className="bg-black text-white hover:bg-neutral-800 transition-colors px-12 py-6"
+            />
           </div>
         )}
       </section>
