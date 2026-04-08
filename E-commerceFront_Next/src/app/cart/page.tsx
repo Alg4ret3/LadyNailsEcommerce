@@ -12,14 +12,21 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useToast } from '@/context/ToastContext';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems, medusaCartId, ensureCart } = useCart();
+  const { showToast } = useToast();
   const router = useRouter();
   const [isFinishing, setIsFinishing] = useState(false);
 
   const handleFinalizePurchase = async () => {
     if (cartItems.length === 0) return;
+
+    if (totalAmount < 200000) {
+      showToast('La compra mínima es de $200.000 para proceder.', 'error');
+      return;
+    }
     
     setIsFinishing(true);
     try {

@@ -130,11 +130,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { data: currentCustomer, isLoading: isSessionLoading } = useCurrentUser();
 
   // ── Direcciones via TanStack Query Mutations ──
-  const { 
-    createAddress: createAddressMutation, 
-    updateAddress: updateAddressMutation, 
+  const {
+    createAddress: createAddressMutation,
+    updateAddress: updateAddressMutation,
     deleteAddress: deleteAddressMutation,
-    isPending: isAddressPending 
+    isPending: isAddressPending
   } = useCustomerAddresses();
 
   // Derivamos el user desde la query — sin estado local duplicado
