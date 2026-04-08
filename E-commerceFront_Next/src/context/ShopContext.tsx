@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { MedusaProduct, getAllProducts } from '@/services/medusa/products';
+import { MedusaProduct } from '@/services/medusa/products';
 import { useRouter } from 'next/navigation';
+import { useAllProducts } from '@/hooks/useProducts';
 
 export interface FilterState {
   query: string;
@@ -32,11 +33,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
   initialProducts = [] 
 }) => {
   const router = useRouter();
-  const [products, setProducts] = useState<MedusaProduct[]>(initialProducts);
-  const [loading, setLoading] = useState(initialProducts.length === 0);
+
+  // ── Hook de TanStack Query ──
+  const { data: allProducts = [], isLoading: isProductsLoading } = useAllProducts();
+
   const [filters, setFiltersState] = useState<FilterState>(DEFAULT_FILTERS);
 
-  // Sync initial state from URL on mount (Frontend Only)
+  // Sync initial state from URL on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
        const pathname = window.location.pathname;
@@ -63,19 +66,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
     }
   }, []);
 
-  useEffect(() => {
-    // Only fetch if we don't have products AND no initial products were provided
-    if (initialProducts.length === 0 && products.length === 0) {
-      setLoading(true);
-      getAllProducts()
-        .then(allProducts => {
-          setProducts(allProducts);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, []); // Only run once on mount or when context provides initialProducts (stable)
+  const products = useMemo(() => {
+    // Si tenemos productos de la query (cache o fresh), los usamos. 
+    // De lo contrario, usamos los iniciales (SSR).
+    return allProducts.length > 0 ? allProducts : initialProducts;
+  }, [allProducts, initialProducts]);
+
+  const loading = isProductsLoading && products.length === 0;
 
   const brands = useMemo(() => {
     const brandsSet = new Set<string>();
@@ -90,12 +87,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
     return Array.from(brandsSet).sort();
   }, [products]);
 
-  // Update filters in state AND sync URL as a side effect (not inside setState)
   const setFilters = useCallback((updates: Partial<FilterState>) => {
     setFiltersState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Sync URL when filters change (side effect, not inside setState)
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.query) params.set('q', filters.query);
@@ -105,7 +100,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
     const search = params.toString();
     const newUrl = search ? `/shop?${search}` : '/shop';
     
-    // Use replaceState safely outside of render
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', newUrl);
     }

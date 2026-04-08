@@ -8,19 +8,33 @@ import { Button } from '@/components/atoms/Button';
 import { Truck, CreditCard, ShieldCheck, Plus, CheckCircle2, Eye, EyeOff, Mail, ClipboardCheck, LogIn, UserPlus, Lock } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useCart } from '@/context/CartContext';
+import { useCartQuery } from '@/hooks/useCart';
+import { useCustomerAddresses } from '@/hooks/useCurrentUser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CountryCodeSelect } from '@/components/molecules/CountryCodeSelect';
 import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
-import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption, createPaymentCollection, createPaymentSession, PaymentCollection, completeCart } from '@/services/medusa';
+import { getShippingOptions, ShippingOption, PaymentCollection } from '@/services/medusa';
 import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, totalItems, totalAmount, clearCart, medusaCartId } = useCart();
-  const { user, login, logout, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
+  const { user, login, logout, sendOtp, verifyOtp, register, isLoading: isUserLoading, error: contextError, clearError } = useUser();
+  
+  const { 
+    updateAddress: updateCartAddressMutation, 
+    addShippingMethod: addShippingMethodMutation, 
+    createPaymentCollection: createPaymentCollectionMutation,
+    createPaymentSession: createPaymentSessionMutation,
+    completeCart: completeCartMutation,
+    isUpdating: isCartUpdating,
+    cartId: medusaCartIdQuery
+  } = useCartQuery();
+
+  const { createAddress: createCustomerAddressMutation } = useCustomerAddresses();
 
   // AUTH_CHOICE → SHIP_INFO → SHIPPING → PAYMENT
   const [checkoutStep, setCheckoutStep] = React.useState(() => {
@@ -210,22 +224,22 @@ export default function CheckoutPage() {
       });
 
       // 2. Create Address for the now logged-in user
-      await createAddress({
-        addressName: 'Principal',
-        firstName: guestFormData.firstName,
-        lastName: guestFormData.lastName,
-        street: guestFormData.street,
+      await createCustomerAddressMutation({
+        address_name: 'Principal',
+        first_name: guestFormData.firstName,
+        last_name: guestFormData.lastName,
+        address_1: guestFormData.street,
         city: guestFormData.city,
-        country: 'CO',
+        country_code: 'co',
         phone: `${countryCode}${guestFormData.phone}`,
         province: guestFormData.province,
-        postalCode: guestFormData.postalCode
+        postal_code: guestFormData.postalCode
       });
 
       // 3. Sync address with Medusa Cart
-      const cartId = medusaCartId;
+      const cartId = medusaCartIdQuery || medusaCartId;
       if (cartId) {
-        await updateCartAddress(cartId, {
+        await updateCartAddressMutation({
           first_name: guestFormData.firstName,
           last_name: guestFormData.lastName,
           address_1: guestFormData.street,
@@ -246,7 +260,6 @@ export default function CheckoutPage() {
         }
       }
 
-      // The context update will trigger the useEffect and set the selectedAddressId
       setCheckoutStep('SHIPPING');
     } catch (err) {
       console.error('Registration error:', err);
@@ -264,16 +277,16 @@ export default function CheckoutPage() {
       setLocalError('');
       clearError();
 
-      await createAddress({
-        addressName: newAddressFormData.label,
-        firstName: newAddressFormData.firstName,
-        lastName: newAddressFormData.lastName,
-        street: newAddressFormData.street,
+      await createCustomerAddressMutation({
+        address_name: newAddressFormData.label,
+        first_name: newAddressFormData.firstName,
+        last_name: newAddressFormData.lastName,
+        address_1: newAddressFormData.street,
         city: newAddressFormData.city,
-        country: 'CO',
+        country_code: 'co',
         phone: `${countryCode}${newAddressFormData.phone}`,
         province: newAddressFormData.province,
-        postalCode: newAddressFormData.postalCode
+        postal_code: newAddressFormData.postalCode
       });
 
       // Reset form and close
@@ -285,10 +298,6 @@ export default function CheckoutPage() {
         province: '',
         postalCode: ''
       }));
-
-      // The useEffect for selecting default/first address will handle selecting it
-      // but we can also manually try to find the new one if we had its ID. 
-      // Since createAddress refreshes the user object, we rely on the list update.
     } catch (err: any) {
       console.error('Address creation error:', err);
       setLocalError(err.message || 'Error al crear la dirección.');
@@ -304,9 +313,9 @@ export default function CheckoutPage() {
 
       setIsUpdatingCart(true);
       try {
-        const cartId = medusaCartId;
+        const cartId = medusaCartIdQuery || medusaCartId;
         if (cartId) {
-          await updateCartAddress(cartId, {
+          await updateCartAddressMutation({
             first_name: addr.firstName || user.firstName || "",
             last_name: addr.lastName || user.lastName || "",
             address_1: addr.street,
@@ -345,11 +354,11 @@ export default function CheckoutPage() {
 
     setIsUpdatingCart(true);
     try {
-      const cartId = medusaCartId;
+      const cartId = medusaCartIdQuery || medusaCartId;
       if (cartId) {
-        await addShippingMethodToCart(cartId, selectedShippingOptionId);
+        await addShippingMethodMutation(selectedShippingOptionId);
 
-        const { payment_collection: new_collection } = await createPaymentCollection(cartId);
+        const { payment_collection: new_collection } = await createPaymentCollectionMutation();
         setPaymentCollection(new_collection);
         
         // Auto-select Wompi if available or initialize it
@@ -376,7 +385,7 @@ export default function CheckoutPage() {
     setIsUpdatingCart(true);
     try {
       setSelectedPaymentProviderId(providerId);
-      const { payment_collection } = await createPaymentSession(currentCollection.id, providerId);
+      const { payment_collection } = await createPaymentSessionMutation({ collectionId: currentCollection.id, providerId });
       setPaymentCollection(payment_collection);
     } catch (err) {
       console.error('Payment selection error:', err);
@@ -390,9 +399,9 @@ export default function CheckoutPage() {
   const handleWompiSuccess = async () => {
     setIsProcessingOrder(true);
     try {
-      const cartId = medusaCartId;
+      const cartId = medusaCartIdQuery || medusaCartId;
       if (cartId) {
-        const response = await completeCart(cartId);
+        const response = await completeCartMutation();
         
         // Wipe all trace of the cart (clearCart handles localStorage cleanup)
         clearCart();
@@ -521,7 +530,7 @@ export default function CheckoutPage() {
                                 </button>
                               </div>
                             </div>
-                            <Button type="submit" label={isLoading ? 'Ingresando...' : 'Iniciar Sesión y Continuar'} className="w-full py-5" disabled={isLoading} />
+                            <Button type="submit" label={isUserLoading ? 'Ingresando...' : 'Iniciar Sesión y Continuar'} className="w-full py-5" disabled={isUserLoading} />
                           </form>
                           <button onClick={() => { setAuthMode('choice'); setLocalError(''); clearError(); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
                             ← Volver a las opciones
@@ -732,7 +741,7 @@ export default function CheckoutPage() {
                               />
                             </div>
                           </div>
-                          <Button type="submit" label={isLoading ? "Iniciando..." : "Verificar Correo y Continuar"} className="w-full py-5" disabled={isLoading} />
+                          <Button type="submit" label={isUserLoading ? "Iniciando..." : "Verificar Correo y Continuar"} className="w-full py-5" disabled={isUserLoading} />
                         </form>
                       )}
 
@@ -754,7 +763,7 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                           <div className="flex flex-col gap-4">
-                            <Button type="submit" label={isLoading ? "Verificando..." : "Validar Código"} className="w-full py-5" disabled={isLoading} />
+                            <Button type="submit" label={isUserLoading ? "Verificando..." : "Validar Código"} className="w-full py-5" disabled={isUserLoading} />
                             <button type="button" onClick={() => setGuestStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Volver al correo</button>
                           </div>
                         </form>
@@ -819,7 +828,7 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className="flex flex-col items-center gap-6">
-                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || isUpdatingCart || !isGuestFormValid} />
+                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isUserLoading || isUpdatingCart || !isGuestFormValid} />
                           </div>
                         </form>
                       )}

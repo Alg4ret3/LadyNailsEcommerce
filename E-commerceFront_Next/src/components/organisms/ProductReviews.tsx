@@ -5,7 +5,8 @@ import { useUser } from '@/context/UserContext';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { Star } from 'lucide-react';
-import { getReviews, createReview, type ReviewData } from '@/services/medusa/review';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getReviews, createReview, type ReviewData, getPlatformReviews } from '@/services/medusa/review';
 
 interface ProductReviewsProps {
   productId: string;
@@ -18,8 +19,26 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [review, setReview] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [reviewsList, setReviewsList] = useState<ReviewData[]>(initialReviews || []);
   const [loadingReviews, setLoadingReviews] = useState(!initialReviews);
+  const [userReviewsCount, setUserReviewsCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchGlobalReviewsCount = async () => {
+      if (!user?.isLoggedIn) return;
+      try {
+        const data = await getPlatformReviews();
+        if (data && data.reviews) {
+          const userCount = data.reviews.filter((r: any) => r.customer_id === user.id).length;
+          setUserReviewsCount(userCount);
+        }
+      } catch (err) {
+        console.error('Error fetching global reviews count:', err);
+      }
+    };
+    fetchGlobalReviewsCount();
+  }, [user?.isLoggedIn, user?.id]);
 
   useEffect(() => {
     if (!initialReviews) {
@@ -27,8 +46,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
         try {
           const data = await getReviews(productId);
           setReviewsList(data?.reviews || []);
-        } catch (error) {
-          console.error('Error fetching reviews:', error);
+        } catch (err) {
+          console.error('Error fetching reviews:', err);
         } finally {
           setLoadingReviews(false);
         }
@@ -40,6 +59,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) return;
+    setError(null);
     
     try {
       await createReview(productId, { 
@@ -59,8 +79,14 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
         setRating(0);
         setReview('');
       }, 3000);
-    } catch (error) {
-      console.error('Error submitting review:', error);
+    } catch (err: any) {
+      console.error('Error submitting review:', err);
+      // Check for 403 or the limit message since status might be missing from Error object
+      if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
+        setError('Has alcanzado el límite máximo de 3 reseñas por usuario.');
+      } else {
+        setError('Hubo un error al enviar tu reseña. Por favor intenta de nuevo.');
+      }
     }
   };
 
@@ -80,6 +106,16 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
               className="bg-slate-900 text-white mt-2 px-8"
             />
           </div>
+        </div>
+      ) : userReviewsCount >= 3 ? (
+        <div className="bg-slate-50 border border-slate-200 p-8 text-center rounded-xl space-y-4">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-slate-100">
+            <Star size={24} className="text-slate-400" fill="currentColor" />
+          </div>
+          <Typography variant="h4" className="text-lg font-bold text-slate-900 uppercase tracking-tighter">Límite de Reseñas Alcanzado</Typography>
+          <Typography variant="body" className="text-slate-500 text-xs sm:text-sm uppercase tracking-widest font-medium">
+             Has registrado {userReviewsCount}/3 reseñas globales en la plataforma. ¡Gracias por tu participación!
+          </Typography>
         </div>
       ) : (
         <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-xl">
@@ -124,11 +160,33 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, initi
                 <Typography variant="detail" className="text-slate-700 font-bold mb-2 block">
                   Tu reseña (opcional)
                 </Typography>
+
+                <AnimatePresence>
+                  {error && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-4 bg-red-50 border border-red-100 p-4 rounded-lg flex items-center gap-3 overflow-hidden"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                      <Typography variant="body" className="text-red-600 text-xs font-bold uppercase tracking-widest">
+                        {error}
+                      </Typography>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <textarea
                   value={review}
-                  onChange={(e) => setReview(e.target.value)}
+                  onChange={(e) => {
+                    setReview(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="Escribe aquí tu opinión sobre este producto..."
-                  className="w-full border border-slate-300 rounded-lg p-4 focus:outline-none focus:border-slate-900 min-h-[120px] resize-y"
+                  className={`w-full border rounded-lg p-4 focus:outline-none min-h-[120px] resize-y transition-all ${
+                    error ? 'border-red-200 focus:border-red-900' : 'border-slate-300 focus:border-slate-900'
+                  }`}
                 />
               </div>
 

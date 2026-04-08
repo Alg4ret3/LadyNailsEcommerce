@@ -4,10 +4,11 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Typography } from '@/components/atoms/Typography';
 import { Package, Truck, Clock, ArrowLeft, MapPin, CreditCard, ExternalLink, CheckCircle2, AlertCircle, Star } from 'lucide-react';
-import { getOrder } from '@/services/medusa/order';
+import { useToast } from '@/context/ToastContext';
+import { useOrderDetails, Order } from '@/hooks/useOrders';
 import Image from 'next/image';
 import { WHATSAPP_CONFIG } from '@/constants';
-import { createPlatformReview } from '@/services/medusa/review';
+import { createPlatformReview, getPlatformReviews } from '@/services/medusa/review';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ const FULFILLMENT_STEPS: FulfillmentStep[] = [
   }
 ];
 
-function getActiveStepIndex(order: any): number {
+function getActiveStepIndex(order: Order): number {
   if (order.status === 'canceled') return -1;
   if (order.payment_status !== 'captured') return 0;
   switch (order.fulfillment_status) {
@@ -151,7 +152,7 @@ function getActiveStepIndex(order: any): number {
   }
 }
 
-function FulfillmentProgressChart({ order }: { order: any }) {
+function FulfillmentProgressChart({ order }: { order: Order }) {
   const activeIndex = getActiveStepIndex(order);
   const isCanceled = order.status === 'canceled';
 
@@ -354,9 +355,14 @@ function TrackingBanner({ trackingNumber, trackingUrl }: { trackingNumber: strin
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [order, setOrder] = React.useState<any>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  
+  const { showToast } = useToast();
+  const { 
+    order, 
+    isLoading, 
+    isError, 
+    error: queryError 
+  } = useOrderDetails(id as string);
 
   // Estados para el formulario de reseña incrustado
   const [rating, setRating] = React.useState(0);
@@ -364,9 +370,31 @@ export default function OrderDetailPage() {
   const [reviewText, setReviewText] = React.useState('');
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false);
   const [reviewSubmitted, setReviewSubmitted] = React.useState(false);
+  const [userReviewsCount, setUserReviewsCount] = React.useState(0);
+  const [loadingCount, setLoadingCount] = React.useState(true);
+
+  // Fetch reviews count on mount
+  React.useEffect(() => {
+    const fetchReviewsCount = async () => {
+      try {
+        const response = await getPlatformReviews();
+        if (response && response.reviews && order?.customer_id) {
+          const count = response.reviews.filter((r: any) => r.customer_id === order.customer_id).length;
+          setUserReviewsCount(count);
+        }
+      } catch (err) {
+        console.error('Error fetching reviews count:', err);
+      } finally {
+        setLoadingCount(false);
+      }
+    };
+    if (order?.customer_id) {
+      fetchReviewsCount();
+    }
+  }, [order?.customer_id]);
 
   const handleSubmitReview = async () => {
-    if (rating === 0) return;
+    if (!order || rating === 0) return;
     try {
       setIsSubmittingReview(true);
       await createPlatformReview({
@@ -376,33 +404,21 @@ export default function OrderDetailPage() {
         customer_id: order.customer_id
       });
       setReviewSubmitted(true);
-    } catch (err) {
+      showToast('¡Gracias por tu aporte a la comunidad!', 'success');
+      setUserReviewsCount(prev => prev + 1);
+    } catch (err: any) {
       console.error('Error submitting review:', err);
+      if (err.message?.includes('403') || err.message?.includes('límite máximo')) {
+          showToast('Has alcanzado el límite máximo de 3 reseñas por usuario.', 'error');
+      } else {
+          showToast('Hubo un error al guardar tu reseña', 'error');
+      }
     } finally {
       setIsSubmittingReview(false);
     }
   };
 
-  React.useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getOrder(id as string);
-        setOrder(response.order);
-      } catch (err: any) {
-        console.error('Error fetching order:', err);
-        setError('No pudimos encontrar el detalle de este pedido.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) fetchOrder();
-  }, [id]);
-
-  // ELIMINADO: handleDownloadInvoice por desuso
-
-  const getOrderStatusInfo = (order: any) => {
+  const getOrderStatusInfo = (order: Order) => {
     const { fulfillment_status, payment_status, status } = order;
 
     if (status === 'canceled') {
@@ -433,14 +449,14 @@ export default function OrderDetailPage() {
   }
 
   // ── Error ──
-  if (error || !order) {
+  if (isError || !order) {
     return (
       <div className="w-full bg-white p-10 text-center space-y-6">
         <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto border border-red-100 mb-6">
           <AlertCircle size={24} className="text-red-500" />
         </div>
         <Typography variant="h2" className="text-2xl font-black uppercase tracking-tighter">Ocurrió un error</Typography>
-        <Typography variant="body" className="text-gray-500 text-sm max-w-sm mx-auto">{error || 'El ID proporcionado no pertenece a un pedido válido.'}</Typography>
+        <Typography variant="body" className="text-gray-500 text-sm max-w-sm mx-auto">No pudimos encontrar el detalle de este pedido.</Typography>
         <button onClick={() => router.push('/account/orders')} className="mt-8 px-6 py-3 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors mx-auto block">
           Volver a Mis Pedidos
         </button>
@@ -488,102 +504,6 @@ export default function OrderDetailPage() {
           
           <TrackingBanner trackingNumber={trackingNumber} trackingUrl={trackingUrl} />
           <FulfillmentProgressChart order={order} />
-          
-          {/* Review Experience Prompt — Dynamic Form */}
-          {order.payment_status === 'captured' && (
-            <div className="bg-slate-50 border border-slate-200 p-8 sm:p-10 flex flex-col items-center gap-8 shadow-sm mb-8 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <CheckCircle2 size={100} className="text-black" />
-               </div>
-               
-               <div className="w-full max-w-2xl space-y-6 relative z-10 text-center">
-                 {!reviewSubmitted ? (
-                   <>
-                     <div className="space-y-2">
-                       <div className="inline-flex items-center gap-2 bg-emerald-500 text-white px-2 py-0.5 text-[8px] font-black uppercase tracking-widest mb-1 mx-auto">
-                         <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                         Pago confirmado - ¡Cuéntanos tu experiencia!
-                       </div>
-                       <Typography variant="h3" className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-slate-900 leading-tight">
-                         ¿Qué tal tu experiencia <br className="hidden sm:block" /> con nuestra web?
-                       </Typography>
-                       <Typography variant="body" className="text-[11px] text-slate-500 font-medium">
-                         Tu opinión nos ayuda a ser el mejor aliado de belleza para ti.
-                       </Typography>
-                     </div>
-
-                     <div className="space-y-6 bg-white border border-slate-100 p-6 sm:p-8 shadow-sm">
-                       {/* Star Rating Section */}
-                       <div className="flex flex-col items-center gap-3">
-                         <Typography variant="detail" className="text-[9px] font-black uppercase tracking-widest text-slate-400">Califica con estrellas</Typography>
-                         <div className="flex gap-2">
-                           {[1, 2, 3, 4, 5].map((star) => (
-                             <button
-                               key={star}
-                               onClick={() => setRating(star)}
-                               onMouseEnter={() => setHoverRating(star)}
-                               onMouseLeave={() => setHoverRating(0)}
-                               className="p-1 transition-transform active:scale-95"
-                             >
-                               <Star 
-                                 size={24} 
-                                 className={`transition-colors duration-300 ${
-                                   (hoverRating || rating) >= star 
-                                     ? 'fill-amber-400 text-amber-400' 
-                                     : 'text-slate-200 fill-transparent'
-                                 }`} 
-                                 strokeWidth={2}
-                               />
-                             </button>
-                           ))}
-                         </div>
-                       </div>
-
-                       {/* Text Review */}
-                       <div className="space-y-2 text-left">
-                         <Typography variant="detail" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Escribe tu comentario (opcional)</Typography>
-                         <textarea
-                           value={reviewText}
-                           onChange={(e) => setReviewText(e.target.value)}
-                           placeholder="Me encantó el proceso de compra, es muy rápido..."
-                           className="w-full bg-slate-50 border border-slate-200 p-4 text-sm focus:outline-none focus:border-black transition-colors min-h-[100px] resize-none"
-                         />
-                       </div>
-
-                       <button 
-                         onClick={handleSubmitReview}
-                         disabled={rating === 0 || isSubmittingReview}
-                         className={`w-full py-4 text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-[0.98]
-                           ${rating === 0 || isSubmittingReview 
-                             ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                             : 'bg-slate-950 text-white hover:bg-black'
-                           }
-                         `}
-                       >
-                         {isSubmittingReview ? 'Enviando opinión...' : 'Enviar mi Reseña'}
-                       </button>
-                     </div>
-                   </>
-                 ) : (
-                   <div className="py-10 flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
-                     <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center border-4 border-white shadow-sm mb-2">
-                        <CheckCircle2 size={32} className="text-emerald-600" />
-                     </div>
-                     <Typography variant="h3" className="text-2xl font-black uppercase tracking-tighter text-slate-900">¡Reseña Enviada!</Typography>
-                     <Typography variant="body" className="text-sm text-slate-500 max-w-xs mx-auto">
-                        Gracias por ayudarnos a mejorar. Tu opinión es muy valiosa para nosotros y para otros clientes.
-                     </Typography>
-                     <button 
-                       onClick={() => setReviewSubmitted(false)} 
-                       className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-black border-b border-transparent hover:border-black transition-all pb-1"
-                     >
-                       Volver a editar
-                     </button>
-                   </div>
-                 )}
-               </div>
-            </div>
-          )}
 
           {/* Listado de Productos Premium */}
           <div className="bg-white border border-gray-200 shadow-sm relative overflow-hidden">

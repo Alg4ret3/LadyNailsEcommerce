@@ -51,40 +51,25 @@ export async function POST(
     const reviewModuleService = req.scope.resolve("review")
     const query = req.scope.resolve("query")
 
-    let existingReviewId = null
     if (customer_id) {
-      const { data } = await query.graph({
-        entity: "review",
-        fields: ["id"],
-        filters: { customer_id: customer_id },
-      }) as { data: any[] }
+      const [, count] = await reviewModuleService.listAndCountReviews({
+        customer_id: customer_id
+      })
 
-      if (data && data.length > 0) {
-        existingReviewId = data[0].id
+      if (count >= 3) {
+        return res.status(403).json({ 
+          message: "Has alcanzado el límite máximo de 3 reseñas por usuario." 
+        })
       }
     }
 
-    let review;
-
-    if (existingReviewId) {
-      // If customer already has a review, update it and reset status to pending
-      review = await reviewModuleService.updateReviews({
-        id: existingReviewId,
-        rating,
-        content,
-        customer_name,
-        status: "pending"
-      })
-    } else {
-      // Create new review as pending (default status in model)
-      review = await reviewModuleService.createReviews({
-        rating,
-        content,
-        customer_name,
-        customer_id,
-        status: "pending"
-      })
-    }
+    const review = await reviewModuleService.createReviews({
+      rating,
+      content,
+      customer_name,
+      customer_id,
+      status: "pending"
+    })
 
     res.json({ review })
   } catch (error: any) {

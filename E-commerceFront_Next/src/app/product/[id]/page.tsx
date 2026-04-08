@@ -14,35 +14,18 @@ import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
-import { getProductById, type MedusaProduct } from '@/services/medusa';
-
+import { useProductById } from '@/hooks/useProducts';
 
 export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
-  const [product, setProduct] = useState<MedusaProduct | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: product, isLoading: loading } = useProductById(productId);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const { toggleFavorite, isFavorite } = useWishlist();
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
-
-  useEffect(() => {
-    async function fetchProduct() {
-      try {
-        const data = await getProductById(productId);
-        console.log(data);
-        setProduct(data);
-      } catch (error) {
-        console.error("Error cargando producto", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProduct();
-  }, [productId]);
 
   if (loading) return (
     <main className="min-h-screen bg-white">
