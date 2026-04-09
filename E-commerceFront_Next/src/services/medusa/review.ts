@@ -49,3 +49,9 @@ export async function deletePlatformReview(reviewId: string) {
         method: "DELETE"
     });
 }
+
+export async function getCustomerReviews(customerId: string) {
+    return medusaFetch<{ reviews: ReviewData[] }>(`/store/my-reviews?customer_id=${customerId}`, {
+        method: "GET"
+    });
+}

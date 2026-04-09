@@ -7,7 +7,7 @@ export async function GET(
   try {
     const query = req.scope.resolve("query")
 
-    // Fetch only approved reviews
+    // Fetch only approved reviews for the home page / wall of love
     const { data } = await query.graph({
       entity: "review",
       fields: ["*"],

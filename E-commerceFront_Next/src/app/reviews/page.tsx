@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
-import { getPlatformReviews, createPlatformReview, updatePlatformReview, deletePlatformReview, ReviewData } from '@/services/medusa/review';
+import { getPlatformReviews, createPlatformReview, updatePlatformReview, deletePlatformReview, getCustomerReviews, ReviewData } from '@/services/medusa/review';
 
 const REVIEW_TAGS = ['Experiencia Web', 'Seguridad', 'Ficha Técnica', 'Mobile Friendly', 'Proceso de Compra', 'Rendimiento'];
 
@@ -17,6 +17,7 @@ export default function ReviewsPage() {
   const { user } = useUser();
   const { showToast } = useToast();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [myReviews, setMyReviews] = useState<ReviewData[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -33,18 +34,25 @@ export default function ReviewsPage() {
       if (response && response.reviews) {
         setReviews(response.reviews);
       }
+      
+      if (user?.isLoggedIn) {
+        const myRes = await getCustomerReviews(user.id);
+        if (myRes && myRes.reviews) {
+          setMyReviews(myRes.reviews);
+        }
+      }
     } catch (error) {
       console.error("Error cargando reviews", error);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadReviews();
   }, [loadReviews]);
 
   const userReviews = useMemo(() => {
-    return user?.isLoggedIn ? reviews.filter(r => r.customer_id === user.id) : [];
-  }, [reviews, user]);
+    return user?.isLoggedIn ? myReviews : [];
+  }, [myReviews, user]);
 
   const stats = useMemo(() => {
     const total = reviews.length;
@@ -246,7 +254,16 @@ export default function ReviewsPage() {
                               ))}
                             </div>
                             <p className="text-slate-600 font-light text-sm italic leading-relaxed">&ldquo;{review.content}&rdquo;</p>
-                            <p className="text-[9px] font-medium text-slate-300 uppercase tracking-widest">{new Date(review.created_at).toLocaleDateString()}</p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-[9px] font-medium text-slate-300 uppercase tracking-widest">{new Date(review.created_at).toLocaleDateString()}</p>
+                              <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${
+                                (review as any).status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                (review as any).status === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' : 
+                                'bg-amber-50 text-amber-600 border-amber-100'
+                              }`}>
+                                {(review as any).status || 'pending'}
+                              </span>
+                            </div>
                           </div>
                           <div className="flex sm:flex-col items-center justify-end gap-2">
                             <button 
