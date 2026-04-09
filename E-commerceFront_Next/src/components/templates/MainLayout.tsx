@@ -10,7 +10,7 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-[#f1f5f9] font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <Navbar />
       {children}
       <Footer />

@@ -21,14 +21,16 @@ export async function GET(
       "*",
       "variants.*",
       "variants.prices.*",
+      "variants.inventory_items.*",
+      "variants.inventory_items.inventory.*",
+      "variants.inventory_items.inventory.location_levels.*",
       "categories.*",
       "tags.*",
       "images.*",
       "brand.*",
       "usage.*",
       "warranty.*",
-      "shipping.*",
-      "reviews.*"
+      "shipping.*"
     ],
     filters,
   })

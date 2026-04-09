@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { ShoppingBasket, Menu, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon } from 'lucide-react';
+import { ShoppingCart, Menu, X, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ export const Navbar: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [activeHoverCategory, setActiveHoverCategory] = useState<Category | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
   const { totalFavorites } = useWishlist();
@@ -61,15 +62,8 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-900/10">
-
-      <MobileDrawer 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-        categories={rootCategories}
-        expandedSections={expandedMobileSections}
-        onToggleSection={toggleMobileSection}
-      />
+    <>
+    <nav className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-slate-900/10">
 
       {/* Utility Bar */}
       <div className="bg-slate-50 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] px-4 lg:px-6 py-2.5 flex justify-between items-center border-b border-slate-100 overflow-hidden whitespace-nowrap">
@@ -98,9 +92,33 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 h-16 lg:h-20 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 h-16 lg:h-20 flex items-center justify-between relative">
+        <button 
+          className="lg:hidden p-2.5 text-slate-900 -ml-2.5 relative flex items-center justify-center w-10 h-10 z-[70]" 
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+        >
+          <div className="flex flex-col justify-center items-center gap-[5px] w-6 h-6">
+            <motion.span
+              animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
+              className="w-full h-[1.5px] bg-slate-900 rounded-full"
+            />
+            <motion.span
+              animate={isOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.3, ease: [0.65, 0, 0.35, 1] }}
+              className="w-full h-[1.5px] bg-slate-900 rounded-full"
+            />
+            <motion.span
+              animate={isOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
+              className="w-full h-[1.5px] bg-slate-900 rounded-full"
+            />
+          </div>
+        </button>
+
         {/* Logo */}
-        <Link href={ROUTES.home} className="flex items-center group py-2">
+        <Link href={ROUTES.home} className="flex items-center group py-2 lg:static absolute left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0">
           <div className="relative w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
             <Image 
               src={COMPANY_INFO.logo.src} 
@@ -186,10 +204,10 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-1.5 lg:gap-6">
 
           
-          <Link href={ROUTES.favorites} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group">
-            <Heart size={18} strokeWidth={2.5} className="group-hover:text-red-500 transition-colors" />
+          <Link href={ROUTES.favorites} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900">
+            <Heart size={22} strokeWidth={2} className="group-hover:text-red-500 transition-colors" />
             {totalFavorites > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-red-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
                 {totalFavorites}
               </span>
             )}
@@ -199,10 +217,11 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button 
                 onMouseEnter={() => setIsProfileOpen(true)}
-                className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block relative group"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900"
               >
-                <UserIcon size={18} strokeWidth={2.5} className={isProfileOpen ? 'text-slate-900' : 'text-slate-400'} />
-                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></div>
+                <UserIcon size={22} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+                <div className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
               </button>
 
               <AnimatePresence>
@@ -221,7 +240,7 @@ export const Navbar: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                       <Link 
-                        href={ROUTES.account} 
+                        href={ROUTES.profile} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
@@ -229,16 +248,24 @@ export const Navbar: React.FC = () => {
                         <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mi Perfil</span>
                       </Link>
                       <Link 
-                        href={ROUTES.account} 
+                        href={ROUTES.orders} 
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
                       >
                         <Package size={16} />
                         <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Pedidos</span>
                       </Link>
+                      <Link 
+                        href={ROUTES.addresses} 
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                      >
+                        <MapPin size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Direcciones</span>
+                      </Link>
                       <button 
                         onClick={() => {
-                          logout();
+                          setShowLogoutConfirm(true);
                           setIsProfileOpen(false);
                         }}
                         className="flex items-center gap-4 px-6 py-3 hover:bg-red-50 text-red-400 mt-2 transition-all group"
@@ -252,31 +279,77 @@ export const Navbar: React.FC = () => {
               </AnimatePresence>
             </div>
           ) : (
-            <Link href={ROUTES.login} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors hidden lg:block">
-              <UserIcon size={18} strokeWidth={2.5} />
+            <Link href={ROUTES.login} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900">
+              <UserIcon size={22} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </Link>
           )}
 
-          <Link href={ROUTES.cart} className="flex items-center gap-2 px-3 lg:px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 transition-all rounded-full group shadow-lg shadow-slate-900/10">
-            <div className="flex items-center gap-2 lg:gap-3">
-              <ShoppingBasket size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
-              <div className="hidden lg:flex flex-col items-start leading-none">
-                <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">MI CARRITO</span>
-                <span className="text-[11px] font-black mt-0.5">{totalItems} ARTÍCULOS</span>
-              </div>
-              <span className="lg:hidden text-[10px] font-black">{totalItems}</span>
-            </div>
-          </Link>
-          
-          <button 
-            className="lg:hidden p-2.5 text-slate-900" 
-            onClick={() => setIsOpen(true)}
-            aria-label="Menú"
+          <Link 
+            href={ROUTES.cart} 
+            className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900"
           >
-            <Menu size={24} />
-          </button>
+            <ShoppingCart size={22} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+            
+            {/* Count badge */}
+            <AnimatePresence>
+              {totalItems > 0 && (
+                <motion.span
+                  key="cart-badge"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="absolute top-1.5 right-1.5 w-4 h-4 bg-slate-900 text-white text-[8px] font-black rounded-full flex items-center justify-center"
+                >
+                  {totalItems}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
         </div>
       </div>
     </nav>
+    <MobileDrawer 
+      isOpen={isOpen} 
+      onClose={() => setIsOpen(false)} 
+      categories={rootCategories}
+      expandedSections={expandedMobileSections}
+      onToggleSection={toggleMobileSection}
+    />
+    
+    {/* Custom Logout Confirmation Modal */}
+    <AnimatePresence>
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="bg-white p-8 max-w-[320px] w-full shadow-2xl flex flex-col items-center text-center border border-slate-100/50"
+          >
+            <Typography variant="h4" className="text-sm font-black uppercase tracking-widest mb-3 text-slate-900">CERRAR SESIÓN</Typography>
+            <p className="text-xs text-slate-400 mb-8">¿Deseas salir de tu cuenta?</p>
+            <div className="flex gap-4 w-full">
+              <button 
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  logout();
+                  setShowLogoutConfirm(false);
+                }}
+                className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-900 border border-slate-200 hover:bg-slate-900 hover:text-white transition-all"
+              >
+                Salir
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+    </>
   );
 };

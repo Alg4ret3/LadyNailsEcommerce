@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     remotePatterns: [
       {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '9000',
@@ -23,10 +27,6 @@ const nextConfig: NextConfig = {
         hostname: 'upload.wikimedia.org',
       },
 
-      {
-        protocol: 'https',
-        hostname: 'inexmoda.org.co',
-      },
       {
         protocol: 'https',
         hostname: 'logos-world.net',

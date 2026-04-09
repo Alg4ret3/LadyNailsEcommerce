@@ -7,7 +7,7 @@ import { COMPANY_INFO, ROUTES } from '@/constants';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-950 border-t border-white/5 pt-16 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-6">
+    <footer className="bg-black border-t border-white/5 pt-16 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-6">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-16 mb-16 sm:mb-32">
         {/* Column 1: Identity */}
         <div className="space-y-8">
@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
                />
              </div>
            </div>
-           <Typography variant="body" className="max-w-xs text-slate-400">
+           <Typography variant="body" className="max-w-xs text-white/90">
              {COMPANY_INFO.description}
            </Typography>
            <div className="flex gap-4">
@@ -41,6 +41,7 @@ export const Footer: React.FC = () => {
              <Link href={ROUTES.faq} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">FAQ / Ayuda</Link>
              <Link href={ROUTES.shipping} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Política Envíos</Link>
              <Link href={ROUTES.returns} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Devoluciones</Link>
+             <Link href={ROUTES.reviews} className="text-sm font-bold uppercase tracking-widest text-white/80 hover:text-white hover:pl-2 transition-all">Reseñas</Link>
           </div>
         </div>
 

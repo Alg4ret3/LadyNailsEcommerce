@@ -14,51 +14,21 @@ import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
-import { getProductById, type MedusaProduct } from '@/services/medusa';
-import { ProductReviews } from '@/components/organisms/ProductReviews';
-import { getReviews, type ReviewData } from '@/services/medusa/review';
-import { Star } from 'lucide-react';
-
+import { useProductById } from '@/hooks/useProducts';
 
 export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
-  const [product, setProduct] = useState<MedusaProduct | null>(null);
-  const [reviewsList, setReviewsList] = useState<ReviewData[]>([]);
-  const [dynamicRating, setDynamicRating] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const { data: product, isLoading: loading } = useProductById(productId);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const { toggleFavorite, isFavorite } = useWishlist();
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
 
-  useEffect(() => {
-    async function fetchProduct() {
-      try {
-        const data = await getProductById(productId);
-        console.log(data);
-        setProduct(data);
-        
-        try {
-          const revs = await getReviews(productId);
-          setReviewsList(revs?.reviews || []);
-          setDynamicRating(revs?.average_rating || 0);
-        } catch (e) {
-          console.error("Error cargando reviews", e);
-        }
-      } catch (error) {
-        console.error("Error cargando producto", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProduct();
-  }, [productId]);
-
   if (loading) return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <div className="pt-44 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
@@ -67,7 +37,7 @@ export default function ProductPage() {
   );
 
   if (!product) return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <div className="pt-44 text-center">
         <Typography variant="h3">Producto no encontrado</Typography>
@@ -113,13 +83,12 @@ export default function ProductPage() {
   const nextImage = () => setCurrentIndex(prev => (prev + 1) % galleryImages.length);
   const prevImage = () => setCurrentIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
 
-  // Usa rating del backend
-  const averageRating = dynamicRating;
-  const displayRating = averageRating > 0 ? averageRating.toFixed(1) : '0.0';
+  const totalStock = product.variants?.reduce((sum, v: any) => sum + (v.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0), 0) ?? 0;
+  const isOutOfStock = totalStock <= 0;
 
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-32 sm:pt-44 pb-24 px-4 sm:px-6 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 bg-white border border-slate-200 p-4 sm:p-16">
@@ -206,27 +175,19 @@ export default function ProductPage() {
               <Typography variant="h1" className="text-3xl sm:text-6xl uppercase tracking-tighter leading-tight sm:leading-none">
                 {product.title}
               </Typography>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      size={16}
-                      className={s <= Math.round(averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'}
-                    />
-                  ))}
-                </div>
-                <Typography variant="detail" className="text-slate-500 font-bold text-sm">
-                  {reviewsList.length > 0 ? `${displayRating} (${reviewsList.length} reseñas)` : 'Sin reseñas'}
-                </Typography>
-              </div>
-              <div className="flex items-center gap-4 py-2 border-y border-slate-100">
+              <div className="flex items-center gap-4 py-4 border-y border-slate-100">
                 <Typography variant="h3" className="text-2xl sm:text-3xl font-black">
                   ${formattedPrice}
                 </Typography>
-                <span className="text-[10px] sm:text-xs bg-slate-900 text-white px-3 py-1 font-bold tracking-widest uppercase">
-                  STOCK DISPONIBLE
-                </span>
+                {isOutOfStock ? (
+                  <span className="text-[10px] sm:text-xs bg-red-500 text-white px-3 py-1 font-black tracking-widest uppercase shadow-sm">
+                    AGOTADO
+                  </span>
+                ) : (
+                  <span className="text-[10px] sm:text-xs bg-slate-900 text-white px-3 py-1 font-bold tracking-widest uppercase shadow-sm">
+                    {totalStock > 0 ? `DISPONIBLE (${totalStock})` : 'STOCK DISPONIBLE'}
+                  </span>
+                )}
               </div>
               <Typography variant="detail" className="text-slate-400 text-[10px]">
                 SKU: {sku}
@@ -242,9 +203,10 @@ export default function ProductPage() {
             <div className="space-y-8 pt-8 border-t border-slate-100">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <Button
-                  label="Añadir al Carrito"
-                  className="flex-1 py-5 text-[11px] sm:text-xs tracking-[0.3em]"
-                  onClick={() => setIsModalOpen(true)}
+                  label={isOutOfStock ? "Producto Agotado" : "Añadir al Carrito"}
+                  className={`flex-1 py-5 text-[11px] sm:text-xs tracking-[0.3em] ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}
+                  onClick={() => !isOutOfStock && setIsModalOpen(true)}
+                  disabled={isOutOfStock}
                 />
 
                 <div className="flex gap-2 sm:gap-4">
@@ -331,9 +293,6 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
-        
-        {/* Product Reviews Section */}
-        <ProductReviews productId={product.id} initialReviews={reviewsList.length > 0 ? reviewsList : product.reviews} />
       </section>
 
       <AddToCartModal

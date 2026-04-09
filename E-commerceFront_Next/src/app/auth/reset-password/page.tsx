@@ -173,7 +173,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
     return (
-        <main className="min-h-screen bg-[#f8fafc]">
+        <main className="min-h-screen bg-white">
             <Navbar />
             <Suspense fallback={
                 <div className="min-h-[60vh] flex items-center justify-center pt-44">

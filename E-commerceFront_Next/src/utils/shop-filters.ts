@@ -2,20 +2,16 @@ import { MedusaProduct } from "@/services/medusa/products";
 
 export interface FilterState {
   query: string;
-  priceRange: number;
   selectedCategories: string[];
   selectedBrands: string[];
 }
 
 export const filterProducts = (products: MedusaProduct[], state: FilterState): MedusaProduct[] => {
-  const { query, priceRange, selectedCategories, selectedBrands } = state;
+  const { query, selectedCategories, selectedBrands } = state;
 
   return products.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(query.toLowerCase());
-
-    const matchesPrice =
-      (p.variants?.[0]?.prices?.[0]?.amount ?? 0) <= priceRange;
 
     const matchesCategory = 
       selectedCategories.length === 0 || 
@@ -26,6 +22,6 @@ export const filterProducts = (products: MedusaProduct[], state: FilterState): M
       selectedBrands.includes(p.brand?.name || '') ||
       p.tags?.some((t) => t.value.startsWith('marca:') && selectedBrands.includes(t.value.replace('marca:', '')));
 
-    return matchesSearch && matchesPrice && matchesCategory && matchesBrand;
+    return matchesSearch && matchesCategory && matchesBrand;
   });
 };

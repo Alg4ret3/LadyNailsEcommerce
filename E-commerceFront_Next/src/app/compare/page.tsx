@@ -23,84 +23,109 @@ export default function ComparePage() {
   };
 
   return (
-    <main className="min-h-screen bg-white font-sans">
+    <main className="min-h-screen bg-white selection:bg-black selection:text-white">
       <Navbar />
       
-      <div className="pt-32 pb-20 px-6 max-w-[1400px] mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
-          <div className="space-y-2">
-            <Link href="/shop" className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-xs font-bold uppercase tracking-widest mb-4">
-              <ArrowLeft size={14} /> Volver a la tienda
+      <div className="pt-32 sm:pt-48 pb-32 px-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-10 border-b border-black pb-12">
+          <div className="space-y-4">
+            <Link href="/shop" className="flex items-center gap-2 text-black/40 hover:text-black transition-colors text-[10px] font-black uppercase tracking-[0.3em] mb-6">
+              <ArrowLeft size={14} /> VOLVER AL CATÁLOGO
             </Link>
-            <Typography variant="h2" className="text-5xl sm:text-6xl tracking-tighter">COMPARAR <br /> PRODUCTOS</Typography>
+            <Typography variant="h2" className="text-6xl sm:text-8xl tracking-tighter font-black uppercase italic leading-[0.85]">
+              COMPARAR <br /> <span className="opacity-20 font-light not-italic">PIEZAS</span>
+            </Typography>
           </div>
           
           {compareItems.length > 0 && (
             <button 
               onClick={clearCompare}
-              className="flex items-center gap-2 text-red-500 hover:text-red-700 transition-colors text-xs font-bold uppercase tracking-widest"
+              className="px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all border border-black"
             >
-              <Trash2 size={16} /> Limpiar Comparación
+              LIMPIAR SELECCIÓN
             </button>
           )}
         </div>
 
         {compareItems.length === 0 ? (
-          <div className="py-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-3xl space-y-8">
-            <div className="w-16 h-16 bg-slate-50 flex items-center justify-center rounded-full text-slate-300">
-               <ShoppingBag size={32} />
+          <div className="py-40 flex flex-col items-center justify-center space-y-12">
+            <div className="relative">
+              <ShoppingBag size={80} className="text-black/5" strokeWidth={0.5} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-1 h-1 bg-black rounded-full animate-ping" />
+              </div>
             </div>
-            <Typography variant="body" className="text-slate-400 text-xl font-light">No has seleccionado productos para comparar.</Typography>
-            <Button label="Ir al Catálogo" href="/shop" className="bg-slate-900 text-white px-12" />
+            <div className="text-center space-y-4">
+              <Typography variant="h2" className="text-3xl font-black uppercase tracking-[0.2em]">SIN SELECCIÓN</Typography>
+              <Typography variant="body" className="text-black/40 text-sm font-medium">No has seleccionado piezas para contraste técnico.</Typography>
+            </div>
+            <Button label="Ir al Catálogo" href="/shop" className="bg-black text-white px-12 py-6" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 bg-slate-100 border border-slate-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-neutral-100 border border-neutral-100">
             {compareItems.map((item) => (
-              <div key={item.id} className="bg-white p-6 flex flex-col group relative border border-slate-100/50">
+              <div key={item.id} className="bg-white p-8 flex flex-col group relative transition-all duration-500">
                 {/* Action Header */}
-                <div className="flex justify-end mb-4">
+                <div className="absolute top-4 right-4 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => removeFromCompare(item.id)}
-                    className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                    title="Eliminar de la comparación"
+                    className="p-3 bg-black text-white hover:bg-neutral-800 transition-all"
+                    title="Eliminar"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
 
-                <Link href={`/product/${item.id}`} className="block relative aspect-square mb-8 overflow-hidden bg-slate-50 rounded-2xl border border-slate-100">
-                   <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                <Link href={`/product/${item.id}`} className="block relative aspect-square mb-10 overflow-hidden bg-white">
+                   <Image 
+                    src={item.image} 
+                    alt={item.name} 
+                    fill 
+                    className="object-cover transition-all duration-700 hover:scale-110" 
+                  />
                 </Link>
 
-                <div className="flex-1 space-y-6">
-                  <div className="space-y-3">
-                    <Typography variant="detail" className="text-accent">{item.vendor}</Typography>
-                    <Link href={`/product/${item.id}`}>
-                      <Typography variant="h4" className="text-lg leading-tight hover:text-accent transition-colors">{item.name}</Typography>
-                    </Link>
-                    <div className="flex items-center gap-1 text-slate-400">
-                       <Star size={14} fill="currentColor" className="text-accent border-none" />
-                       <span className="text-sm font-bold text-slate-900">{item.rating || 4.8}</span>
+                <div className="flex-1 flex flex-col space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                       <Typography variant="detail" className="text-black/30 font-black text-[9px] uppercase tracking-widest">{item.vendor}</Typography>
+                       <div className="w-1 h-1 bg-black/10 rounded-full" />
+                       <div className="flex items-center gap-1">
+                          <Star size={10} fill="black" className="text-black" />
+                          <span className="text-[10px] font-black">{item.rating || 4.8}</span>
+                       </div>
                     </div>
+                    
+                    <Link href={`/product/${item.id}`}>
+                      <Typography variant="h4" className="text-xl sm:text-2xl font-black uppercase tracking-tighter leading-tight hover:opacity-60 transition-opacity">
+                        {item.name}
+                      </Typography>
+                    </Link>
+
                     {item.description && (
-                      <Typography variant="body" className="text-xs text-slate-500 line-clamp-3 leading-relaxed mt-2">
+                      <Typography variant="body" className="text-xs text-black/50 line-clamp-3 leading-relaxed font-medium">
                         {item.description}
                       </Typography>
                     )}
                   </div>
 
-                  <div className="py-6 border-t border-slate-100 flex-1 flex flex-col justify-end">
-                     <Typography variant="h3" className="text-2xl font-black tracking-tighter">${item.price.toLocaleString()}</Typography>
+                  <div className="pt-6 border-t border-black/5 mt-auto">
+                     <span className="text-[10px] font-medium text-black/30">$</span>
+                     <Typography variant="h3" className="text-3xl font-black tracking-tighter inline-block ml-1">
+                      {item.price.toLocaleString()}
+                     </Typography>
                   </div>
 
-                  {/* Tags / Ficha Técnica */}
-                  <div className="space-y-4 pt-6 border-t border-slate-100">
-                    <Typography variant="detail" className="text-slate-300 block mb-2">Especificaciones</Typography>
-                    <div className="space-y-0 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+                  {/* Ficha Técnica Minimal */}
+                  <div className="space-y-6 pt-8 border-t border-black">
+                    <Typography variant="detail" className="text-black font-black uppercase tracking-[0.4em] text-[9px] block">
+                      ESPECIFICACIONES
+                    </Typography>
+                    <div className="space-y-5">
                       {/* Categoría */}
-                      <div className="flex items-center justify-between px-3 py-2 text-xs">
-                        <span className="text-slate-400 font-bold uppercase tracking-widest">Categoría</span>
-                        <span className="text-slate-900 font-semibold text-right">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] text-black/30 font-black uppercase tracking-[0.25em]">Categoría</span>
+                        <span className="text-[10px] text-black font-bold uppercase">
                           {item.categories?.[0]?.name ?? item.category}
                         </span>
                       </div>
@@ -108,12 +133,12 @@ export default function ComparePage() {
                       {(() => {
                         const specConfigs = [
                           { label: 'Marca', key: 'marca', value: item.brand?.name },
-                          { label: 'Garantía', key: 'garantia', value: item.warranty?.name },
                           { label: 'Uso', key: 'uso', value: item.usage?.name },
+                          { label: 'Garantía', key: 'garantia', value: item.warranty?.name },
                           { label: 'Envío', key: 'envio', value: item.shipping?.name },
                         ];
 
-                        return specConfigs.map((spec, idx) => {
+                        const renderedHardcoded = specConfigs.map((spec, idx) => {
                           let displayValue = spec.value;
                           if (!displayValue && item.tags) {
                             const tagMatch = item.tags.find(t => t.toLowerCase().startsWith(`${spec.key}:`));
@@ -123,40 +148,43 @@ export default function ComparePage() {
                           if (!displayValue) return null;
 
                           return (
-                            <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
-                              <span className="text-slate-400 font-bold uppercase tracking-widest">{spec.label}</span>
-                              <span className="text-slate-900 font-semibold text-right">{displayValue}</span>
+                            <div key={idx} className="flex flex-col gap-1">
+                              <span className="text-[8px] text-black/30 font-black uppercase tracking-[0.25em]">{spec.label}</span>
+                              <span className="text-[10px] text-black font-bold uppercase">{displayValue}</span>
                             </div>
                           );
                         });
-                      })()}
 
-                      {/* Tags as key:value rows for other attributes */}
-                      {item.tags && item.tags.filter(t => {
-                        const key = t.split(':')[0].trim().toLowerCase();
-                        return t.includes(':') && !['marca', 'garantia', 'uso', 'envio'].includes(key);
-                      }).map((tag, idx) => {
-                        const colonIdx = tag.indexOf(':');
-                        if (colonIdx === -1) return null;
-                        const key = tag.slice(0, colonIdx).trim();
-                        const val = tag.slice(colonIdx + 1).trim();
-                        return (
-                          <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs">
-                            <span className="text-slate-400 font-bold uppercase tracking-widest">{key}</span>
-                            <span className="text-slate-900 font-semibold text-right">{val}</span>
-                          </div>
-                        );
-                      })}
+                        const otherSpecs = (item.tags || []).filter(t => {
+                          const tagStr = typeof t === 'string' ? t : (t as any).value || '';
+                          const colonIdx = tagStr.indexOf(':');
+                          if (colonIdx === -1) return false;
+                          const key = tagStr.slice(0, colonIdx).trim().toLowerCase();
+                          return !['marca', 'garantia', 'uso', 'envio'].includes(key);
+                        }).map((tag, idx) => {
+                          const tagStr = typeof tag === 'string' ? tag : (tag as any).value || '';
+                          const colonIdx = tagStr.indexOf(':');
+                          const key = tagStr.slice(0, colonIdx).trim();
+                          const val = tagStr.slice(colonIdx + 1).trim();
+                          return (
+                            <div key={`other-${idx}`} className="flex flex-col gap-1">
+                              <span className="text-[8px] text-black/30 font-black uppercase tracking-[0.25em]">{key}</span>
+                              <span className="text-[10px] text-black font-bold uppercase">{val}</span>
+                            </div>
+                          );
+                        });
+
+                        return [...renderedHardcoded, ...otherSpecs];
+                      })()}
                     </div>
                   </div>
 
-                  <div className="pt-8">
-                     <button
-                       onClick={() => handleAddToCartClick(item)}
-                       className="w-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.15em] py-3 px-6 rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-2"
-                     >
-                       <ShoppingBag size={12} className="w-4 h-4" /> Añadir al Carrito
-                     </button>
+                  <div className="pt-10">
+                    <Button
+                      label="AÑADIR AL CARRO"
+                      onClick={() => handleAddToCartClick(item)}
+                      className="w-full bg-black text-white hover:bg-neutral-800 transition-colors py-5"
+                    />
                   </div>
                 </div>
               </div>

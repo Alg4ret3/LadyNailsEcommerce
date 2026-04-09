@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowLeftRight, XIcon as X, Heart } from '@/components/icons';
 import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -10,6 +9,9 @@ import { Typography } from '@/components/atoms/Typography';
 import { AddToCartModal } from '@/components/organisms/AddToCartModal';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
+import { productKeys } from '@/hooks/useProducts';
+import { getProductById } from '@/services/medusa/products';
 
 interface ProductCardProps {
   id: string;
@@ -34,6 +36,7 @@ interface ProductCardProps {
   colors?: string[];
   sizes?: string[];
   variants?: any[];
+  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -58,22 +61,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   colors,
   sizes,
   variants,
+  priority = false,
 }) => {
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
   const { toggleFavorite, isFavorite } = useWishlist();
+  const queryClient = useQueryClient();
   const alreadyInCompare = isInCompare(id);
   const alreadyInWishlist = isFavorite(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const currentSrc = gallery[currentIndex];
+  const imageIsReady = loadedSrc === currentSrc;
+
+  const handlePrefetch = () => {
+    queryClient.prefetchQuery({
+      queryKey: productKeys.detail(id),
+      queryFn: () => getProductById(id),
+      staleTime: 5 * 60 * 1000,
+    });
+  };
 
   const nextImage = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    setCurrentIndex((prev) => (prev + 1) % gallery.length);
+    setCurrentIndex((prev: any) => (prev + 1) % gallery.length);
   };
 
   const prevImage = (e?: React.MouseEvent) => {
@@ -81,13 +98,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    setCurrentIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+    setCurrentIndex((prev: any) => (prev - 1 + gallery.length) % gallery.length);
   };
 
   return (
     <div 
       className="group bg-white border border-border rounded-2xl sm:rounded-3xl overflow-hidden hover:shadow-[0_20px_50px_rgba(42,37,32,0.12)] transition-all duration-500 flex flex-col h-full font-sans"
-      onMouseEnter={() => {}}
+      onMouseEnter={handlePrefetch}
       onMouseLeave={() => {
         // Optional: Reset to first image on leave
         // setCurrentIndex(0);
@@ -95,32 +112,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Visual Workspace */}
       <div className="relative aspect-4/5 overflow-hidden bg-white">
+        {/* Skeleton shimmer only while image is loading */}
+        {!imageIsReady && (
+          <div className="absolute inset-0 bg-linear-to-r from-zinc-50 via-white to-zinc-50 animate-pulse z-0" />
+        )}
         <Link href={`/product/${id}`} className="absolute inset-0 z-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="w-full h-full touch-none"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                const swipeThreshold = 50;
-                if (info.offset.x > swipeThreshold) prevImage();
-                else if (info.offset.x < -swipeThreshold) nextImage();
-              }}
-            >
-              <Image 
-                src={gallery[currentIndex]} 
-                alt={name} 
-                fill 
-                className="object-contain transition-transform duration-[2s] group-hover:scale-105 select-none pointer-events-none"
-              />
-            </motion.div>
-          </AnimatePresence>
+          <div
+            className="w-full h-full touch-none"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              (e.currentTarget as HTMLDivElement).dataset.startX = String(touch.clientX);
+            }}
+            onTouchEnd={(e) => {
+              const startX = Number((e.currentTarget as HTMLDivElement).dataset.startX || 0);
+              const endX = e.changedTouches[0].clientX;
+              const diff = startX - endX;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) nextImage();
+                else prevImage();
+              }
+            }}
+          >
+            <Image 
+              src={gallery[currentIndex]} 
+              alt={name} 
+              fill 
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={priority && currentIndex === 0}
+              onLoad={() => setLoadedSrc(currentSrc)}
+              className={`object-contain group-hover:scale-105 transition-all duration-500 select-none pointer-events-none ${
+                imageIsReady ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          </div>
           
           {/* Pagination Indicators (only if more than 1 image) */}
           {gallery.length > 1 && (
@@ -145,7 +169,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                e.stopPropagation();
                toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping });
              }}
-             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
+             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-zinc-100 text-zinc-900 hover:bg-zinc-50'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
            >
              <Heart size={16} fill={alreadyInWishlist ? 'currentColor' : 'none'} className={alreadyInWishlist ? 'scale-110' : ''} />
@@ -159,10 +183,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           return (
             <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
               {isWholesale && (
-                <span className="bg-slate-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
+                <span className="bg-zinc-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
               )}
               {visibleTag && (
-                <span className="bg-white/90 backdrop-blur text-slate-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-slate-100">{visibleTag}</span>
+                <span className="bg-white/90 backdrop-blur text-zinc-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-zinc-100">{visibleTag}</span>
               )}
             </div>
           );
@@ -189,7 +213,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                e.stopPropagation();
                setIsModalOpen(true);
              }}
-             className="flex-1 bg-slate-900 text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl hover:bg-[#22c55e] transition-all flex items-center justify-center gap-1 sm:gap-2"
+             className="flex-1 bg-black text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl hover:bg-neutral-800 transition-all flex items-center justify-center gap-1 sm:gap-2"
            >
              <ShoppingBag size={12} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Añadir</span>
            </button>
@@ -205,7 +229,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                  addToCompare(compareItem);
                }
              }}
-             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all border ${alreadyInCompare ? 'bg-red-500 border-red-600 text-white hover:bg-red-600' : 'bg-white border-slate-100 text-slate-900 hover:bg-slate-50'}`}
+             className={`p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl transition-all border ${alreadyInCompare ? 'bg-red-500 border-red-600 text-white hover:bg-red-600' : 'bg-white border-zinc-100 text-zinc-900 hover:bg-zinc-50'}`}
            >
              <ArrowLeftRight size={12} className="sm:w-4 sm:h-4" />
            </button>

@@ -7,7 +7,7 @@ import { HOME_CATEGORIES } from '@/constants';
 
 export const CategoryGrid: React.FC = () => {
   return (
-    <section className="py-20 sm:py-32 px-4 sm:px-6">
+    <section aria-label="Categorías de Productos" className="py-20 sm:py-32 px-4 sm:px-6">
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-12 sm:mb-20 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 pb-8 sm:pb-12 gap-6">
           <div>

@@ -13,6 +13,9 @@ export const translateError = (message: string): string => {
   if (lowMessage.includes("unauthorized") || lowMessage.includes("401")) {
     return "No tienes permiso para realizar esta acción. Inicia sesión.";
   }
+  if (lowMessage.includes("forbidden") || lowMessage.includes("403") || lowMessage.includes("límite máximo")) {
+    return "Has alcanzado el límite máximo permitido para esta acción.";
+  }
   if (lowMessage.includes("already exists") || lowMessage.includes("409")) {
     return "Esta cuenta ya está registrada.";
   }
@@ -49,7 +52,7 @@ export const translateError = (message: string): string => {
   }
 
   // Fallback for unknown errors (return the original if it's already in Spanish or short)
-  if (message.length < 50 && /[áéíóúñ]/i.test(message)) {
+  if (message.length < 100 && /[áéíóúñ]/i.test(message)) {
     return message;
   }
 

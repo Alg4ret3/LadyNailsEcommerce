@@ -1,32 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
-import { validateEmail } from '@/utils/validations';
+import { validateContactForm, ContactFormData } from '@/utils/contact-validation';
 import { sendContactRequest } from '@/services/medusa';
 
 
 export default function ContactPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('Ventas Mayoristas');
-  const [message, setMessage] = useState('');
+  const [formData, setFormData] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    subject: 'Ventas Mayoristas',
+    message: ''
+  });
   
-  const [emailTouched, setEmailTouched] = useState(false);
-  const isEmailValid = validateEmail(email);
-  const showEmailError = emailTouched && email.length > 0 && !isEmailValid;
-
+  const [touched, setTouched] = useState<Partial<Record<keyof ContactFormData, boolean>>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const isFormValid = name.trim().length >= 2 && isEmailValid && subject && message.trim().length >= 10;
+  const errors = useMemo(() => validateContactForm(formData), [formData]);
+  const isFormValid = Object.keys(errors).length === 0;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  const handleBlur = (field: keyof ContactFormData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Mark all as touched to show errors if any
+    setTouched({
+      name: true,
+      email: true,
+      subject: true,
+      message: true
+    });
+
     if (!isFormValid) return;
 
     setStatus('loading');
@@ -34,21 +53,23 @@ export default function ContactPage() {
 
     try {
       await sendContactRequest({
-        name: name.trim(),
-        email: email.trim(),
-        subject,
-        message: message.trim()
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject,
+        message: formData.message.trim()
       });
 
       setStatus('success');
-      // Limpiar formulario
-      setName('');
-      setEmail('');
-      setSubject('Ventas Mayoristas');
-      setMessage('');
-      setEmailTouched(false);
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        subject: 'Ventas Mayoristas',
+        message: ''
+      });
+      setTouched({});
       
-      // Ocultar mensaje de éxito después de 5 segundos
+      // Hide success message after 5 seconds
       setTimeout(() => setStatus('idle'), 5000);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -57,8 +78,19 @@ export default function ContactPage() {
     }
   };
 
+  const getInputClass = (field: keyof ContactFormData) => {
+    const base = "w-full border-b-2 py-3 outline-none transition-colors ";
+    if (touched[field] && errors[field]) {
+      return base + "border-red-400 text-red-600";
+    }
+    if (touched[field] && !errors[field] && formData[field].length > 0) {
+      return base + "border-green-500 text-slate-900";
+    }
+    return base + "border-slate-100 focus:border-slate-900";
+  };
+
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-32 sm:pt-44 pb-16 sm:pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
         <div className="mb-12 sm:mb-20">
@@ -74,36 +106,43 @@ export default function ContactPage() {
                     <div className="space-y-2">
                        <Typography variant="detail">Nombre / Empresa</Typography>
                        <input 
+                         name="name"
                          type="text" 
-                         value={name}
-                         onChange={(e) => setName(e.target.value)}
-                         className="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-slate-900 transition-colors" 
+                         value={formData.name}
+                         onChange={handleChange}
+                         onBlur={() => handleBlur('name')}
+                         className={getInputClass('name')} 
                          required
                        />
+                       {touched.name && errors.name && (
+                         <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+                           {errors.name}
+                         </p>
+                       )}
+                       {touched.name && !errors.name && formData.name.length > 0 && (
+                         <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                           ✓ Nombre válido
+                         </p>
+                       )}
                     </div>
                     <div className="space-y-2">
                        <Typography variant="detail">Correo Electrónico</Typography>
                        <input
+                         name="email"
                          type="email"
-                         value={email}
-                         onChange={(e) => setEmail(e.target.value)}
-                         onBlur={() => setEmailTouched(true)}
+                         value={formData.email}
+                         onChange={handleChange}
+                         onBlur={() => handleBlur('email')}
                          placeholder="ejemplo@correo.com"
-                         className={`w-full border-b-2 py-3 outline-none transition-colors placeholder:text-slate-300 ${
-                           showEmailError
-                             ? 'border-red-400 text-red-600'
-                             : emailTouched && isEmailValid
-                             ? 'border-green-500 text-slate-900'
-                             : 'border-slate-100 focus:border-slate-900'
-                         }`}
+                         className={getInputClass('email')}
                          required
                        />
-                       {showEmailError && (
+                       {touched.email && errors.email && (
                          <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1">
-                           Correo electrónico inválido
+                           {errors.email}
                          </p>
                        )}
-                       {emailTouched && isEmailValid && (
+                       {touched.email && !errors.email && formData.email.length > 0 && (
                          <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
                            ✓ Correo válido
                          </p>
@@ -113,8 +152,10 @@ export default function ContactPage() {
                  <div className="space-y-2">
                     <Typography variant="detail">Asunto de Consulta</Typography>
                     <select 
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('subject')}
                       className="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-slate-900 transition-colors bg-white"
                       required
                     >
@@ -127,13 +168,25 @@ export default function ContactPage() {
                  <div className="space-y-2">
                     <Typography variant="detail">Mensaje Detallado</Typography>
                     <textarea 
+                      name="message"
                       rows={4} 
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-slate-900 transition-colors resize-none"
+                      value={formData.message}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('message')}
+                      className={getInputClass('message') + " resize-none"}
                       required
                       placeholder="Cuéntanos cómo podemos ayudarte (mínimo 10 caracteres)"
                     ></textarea>
+                    {touched.message && errors.message && (
+                      <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {errors.message}
+                      </p>
+                    )}
+                    {touched.message && !errors.message && formData.message.length > 0 && (
+                      <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                        ✓ Mensaje válido
+                      </p>
+                    )}
                  </div>
                  
                  {status === 'error' && (

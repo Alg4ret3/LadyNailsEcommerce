@@ -1,6 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useUser } from '@/context/UserContext';
+import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
+import { useCartQuery } from '@/hooks/useCart';
+import { associateCartToCustomer } from '@/services/medusa';
 
 export interface CartItem {
   id: string;
@@ -18,11 +22,6 @@ export interface CartItem {
   category?: string;
 }
 
-import { Toast } from '@/components/atoms/Toast';
-import { createCart, addItemToCart, getCart, deleteLineItem, updateLineItem } from '@/services/medusa';
-import { useUser } from '@/context/UserContext';
-import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
-
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (item: CartItem) => Promise<void>;
@@ -33,8 +32,6 @@ interface CartContextType {
   totalAmount: number;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
-  toast: { message: string, isOpen: boolean };
-  hideToast: () => void;
   medusaCartId: string | null;
   ensureCart: () => Promise<string>;
 }
@@ -43,8 +40,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 /**
  * Merge guest items into user items.
- * If the same product+size+color exists, sum quantities.
- * Otherwise, append the guest item.
  */
 function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem[] {
   const merged = [...userItems];
@@ -63,21 +58,57 @@ function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem
   return merged;
 }
 
+/**
+ * Maps Medusa LineItem to frontend CartItem
+ */
+function mapMedusaLineItemToCartItem(li: any): CartItem {
+  return {
+    id: li.variant_id,
+    name: li.title,
+    price: li.unit_price,
+    image: li.thumbnail,
+    quantity: li.quantity,
+    size: li.variant?.options?.find((o: any) => o.option?.title === 'Size' || o.option_id?.includes('size'))?.value,
+    color: li.variant?.options?.find((o: any) => o.option?.title === 'Color' || o.option_id?.includes('color'))?.value,
+    slug: li.variant?.product?.handle || '',
+    tags: li.variant?.product?.tags?.map((t: any) => t.value) || [],
+    vendor: li.variant?.product?.vendor,
+    category: li.variant?.product?.categories?.[0]?.name,
+  };
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useUser();
   const userId = user?.id ?? null;
 
+  // ── Hook de TanStack Query ──
+  const { 
+    cart, 
+    addItem, 
+    updateQuantity: updateQtyMutation, 
+    removeItem: removeMutation,
+    cartId: medusaCartId,
+    setCartId: setMedusaCartId 
+  } = useCartQuery();
+
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [medusaCartId, setMedusaCartId] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [toast, setToast] = useState({ message: '', isOpen: false });
 
   // Track previous userId to detect login/logout transitions
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
   const isInitializedRef = useRef(false);
 
-  // ── Helper: read cart data from localStorage for a given userId slot ──
+  // Sync cartItems with TanStack Query data
+  useEffect(() => {
+    if (cart) {
+      const mapped = cart.items.map(mapMedusaLineItemToCartItem);
+      setCartItems(mapped);
+    }
+  }, [cart]);
+
+  // ── Helpers ──
   const readSlot = useCallback((slotUserId: string | null): { items: CartItem[], cartId: string | null } => {
+    if (typeof window === 'undefined') return { items: [], cartId: null };
     const itemsRaw = localStorage.getItem(getCartItemsKey(slotUserId));
     const cartId = localStorage.getItem(getCartIdKey(slotUserId));
     let items: CartItem[] = [];
@@ -90,8 +121,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { items, cartId };
   }, []);
 
-  // ── Helper: write cart data to localStorage for a given userId slot ──
   const writeSlot = useCallback((slotUserId: string | null, items: CartItem[], cartId: string | null) => {
+    if (typeof window === 'undefined') return;
     localStorage.setItem(getCartItemsKey(slotUserId), JSON.stringify(items));
     if (cartId) {
       localStorage.setItem(getCartIdKey(slotUserId), cartId);
@@ -100,40 +131,33 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // ── Helper: clear a slot entirely ──
   const clearSlot = useCallback((slotUserId: string | null) => {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem(getCartItemsKey(slotUserId));
     localStorage.removeItem(getCartIdKey(slotUserId));
   }, []);
 
-  // ──────────────────────────────────────────────
-  // INITIAL HYDRATION + USER TRANSITION HANDLER
-  // ──────────────────────────────────────────────
+  // ── Transition Handler ──
   useEffect(() => {
-    // Migrate legacy keys on first run
     if (!isInitializedRef.current) {
       migrateLegacyCartKeys();
       isInitializedRef.current = true;
     }
 
     const prevUserId = prevUserIdRef.current;
-
-    // ─── First mount (prevUserId === undefined) ───
     if (prevUserId === undefined) {
       const { items, cartId } = readSlot(userId);
-      setCartItems(items);
-      setMedusaCartId(cartId);
+      // Solo cargamos localItems si NO hay carrito en medusa (o para consistencia inicial)
+      if (items.length > 0 && !cart) setCartItems(items);
+      if (cartId && !medusaCartId) setMedusaCartId(cartId);
       prevUserIdRef.current = userId;
       return;
     }
 
-    // ─── No change in userId ───
     if (prevUserId === userId) return;
 
-    // ─── LOGIN: null → userId (guest → authenticated) ───
+    // LOGIN: guest -> user
     if (prevUserId === null && userId !== null) {
-      // 1. Save current state (guest) to guest slot
-      // (already saved by the persist effect, but ensure it's up to date)
       const guestSlot = readSlot(null);
       const userSlot = readSlot(userId);
 
@@ -141,104 +165,55 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let finalCartId: string | null;
 
       if (guestSlot.items.length > 0 && userSlot.items.length > 0) {
-        // Merge: guest items into existing user items
         finalItems = mergeCartItems(userSlot.items, guestSlot.items);
-        finalCartId = userSlot.cartId; // Keep user's Medusa cart
+        finalCartId = userSlot.cartId;
+        
+        // Sync guest items to Medusa user cart
+        guestSlot.items.forEach(item => {
+          addItem({ variantId: item.id, quantity: item.quantity }).catch(console.error);
+        });
       } else if (guestSlot.items.length > 0) {
-        // No previous user cart → adopt guest items, but need a new cart for this user
         finalItems = guestSlot.items;
-        finalCartId = null; // Will create a new authenticated cart on next addToCart / checkout
+        finalCartId = guestSlot.cartId;
+        
+        // Associate guest cart with logged-in user
+        if (finalCartId) {
+          associateCartToCustomer(finalCartId).catch(console.error);
+        }
       } else {
-        // No guest items → just load user's existing cart
         finalItems = userSlot.items;
         finalCartId = userSlot.cartId;
       }
 
-      // Apply merged state
       setCartItems(finalItems);
       setMedusaCartId(finalCartId);
       writeSlot(userId, finalItems, finalCartId);
-
-      // Clean guest slot
       clearSlot(null);
     }
 
-    // ─── LOGOUT: userId → null (authenticated → guest) ───
+    // LOGOUT: user -> guest
     if (prevUserId !== null && userId === null) {
-      // The persist effect will have already saved to the old userId slot.
-      // Now switch to guest slot
       const guestSlot = readSlot(null);
       setCartItems(guestSlot.items);
       setMedusaCartId(guestSlot.cartId);
     }
 
-    // ─── USER SWITCH: userId A → userId B ───
-    if (prevUserId !== null && userId !== null && prevUserId !== userId) {
-      // Save current to old user (persist effect handles this)
-      // Load new user's cart
-      const newUserSlot = readSlot(userId);
-      setCartItems(newUserSlot.items);
-      setMedusaCartId(newUserSlot.cartId);
-    }
-
     prevUserIdRef.current = userId;
-  }, [userId, readSlot, writeSlot, clearSlot]);
+  }, [userId, readSlot, writeSlot, clearSlot, medusaCartId, setMedusaCartId, cart]);
 
-  // ──────────────────────────────────────────────
-  // PERSIST: Save cart items + cartId to current user's slot
-  // ──────────────────────────────────────────────
+  // Persist local copies
   useEffect(() => {
-    // Don't persist during initial hydration (prevUserIdRef not set yet)
     if (prevUserIdRef.current === undefined) return;
-
     writeSlot(userId, cartItems, medusaCartId);
   }, [cartItems, medusaCartId, userId, writeSlot]);
 
-  // ──────────────────────────────────────────────
-  // CART OPERATIONS
-  // ──────────────────────────────────────────────
-  const showToast = (message: string) => {
-    setToast({ message, isOpen: true });
-  };
-
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isOpen: false }));
-  };
-
-  const ensureCart = async (): Promise<string> => {
-    if (medusaCartId) return medusaCartId;
-    
-    try {
-      const data = await createCart();
-      const newCartId = data.cart.id;
-      setMedusaCartId(newCartId);
-      // Persist immediately to the current user's slot
-      writeSlot(userId, cartItems, newCartId);
-      return newCartId;
-    } catch (error) {
-      console.error('Failed to ensure cart exists in Medusa:', error);
-      throw error;
-    }
-  };
+  // ── Operaciones ──
 
   const addToCart = async (item: CartItem) => {
     try {
-      const cartId = await ensureCart();
-
-      // Sync with Medusa: adds to existing line item if same variant
-      await addItemToCart(cartId, item.id, item.quantity);
-
-      setCartItems(prev => {
-        const existing = prev.find(i => i.id === item.id && i.size === item.size && i.color === item.color);
-        if (existing) {
-          return prev.map(i => i === existing ? { ...i, quantity: i.quantity + item.quantity } : i);
-        }
-        return [...prev, item];
-      });
-      showToast(`${item.name} añadido al carrito.`);
+      await addItem({ variantId: item.id, quantity: item.quantity });
     } catch (error) {
       console.error('Error adding to cart:', error);
-      showToast('Error al añadir producto al carrito en Medusa.');
     }
   };
 
@@ -247,38 +222,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const item = cartItems.find(i => i.id === id && i.size === size);
       if (!item) return;
 
-      if (medusaCartId) {
-        // Fetch cart to find the specific line_item_id
-        const { cart } = await getCart(medusaCartId);
-        const lineItem = cart.items.find((li: any) => li.variant_id === id);
-        if (lineItem) {
-          await deleteLineItem(medusaCartId, lineItem.id);
-        }
+      // Buscamos el lineItemId en el cart de Medusa
+      const lineItem = cart?.items.find((li: any) => li.variant_id === id);
+      if (lineItem) {
+        await removeMutation(lineItem.id);
+      } else {
+        // Fallback local
+        setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
       }
-
-      setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
-      showToast(`${item.name} eliminado del carrito.`);
     } catch (error) {
       console.error('Error removing from Medusa cart:', error);
-      // Fallback: still remove from local state
       setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
     }
   };
 
   const updateQuantity = async (id: string, quantity: number, size?: string) => {
     const newQuantity = Math.max(1, quantity);
-    
     try {
-      if (medusaCartId) {
-        // Fetch cart to find the specific line_item_id
-        const { cart } = await getCart(medusaCartId);
-        const lineItem = cart.items.find((li: any) => li.variant_id === id);
-        if (lineItem) {
-          await updateLineItem(medusaCartId, lineItem.id, newQuantity);
-        }
+      const lineItem = cart?.items.find((li: any) => li.variant_id === id);
+      if (lineItem) {
+        await updateQtyMutation({ lineItemId: lineItem.id, quantity: newQuantity });
+      } else {
+         setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
       }
-
-      setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
     } catch (error) {
       console.error('Error updating Medusa cart quantity:', error);
       setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
@@ -288,12 +254,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = () => {
     setCartItems([]);
     setMedusaCartId(null);
-    clearSlot(userId); // Also clear the slot's files physically
-    showToast('Carrito vaciado.');
+    clearSlot(userId);
   };
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const totalAmount = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const totalItems = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
+  const totalAmount = useMemo(() => cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cartItems]);
 
   return (
     <CartContext.Provider value={{
@@ -306,17 +271,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalAmount,
       isCartOpen,
       setIsCartOpen,
-      toast,
-      hideToast,
       medusaCartId,
-      ensureCart
+      ensureCart: async () => medusaCartId || '', // Simplified since hook handles creation
     }}>
       {children}
-      <Toast 
-        message={toast.message} 
-        isOpen={toast.isOpen} 
-        onClose={hideToast} 
-      />
     </CartContext.Provider>
   );
 };

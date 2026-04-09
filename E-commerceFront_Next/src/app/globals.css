@@ -21,7 +21,7 @@
 }
 
 :root {
-  --background: #f8fafc; /* Slate 50 - clean professional */
+  --background: #ffffff; /* Blanco puro */
   --foreground: #0f172a; /* Slate 900 - high readablity */
   --primary: #1e293b; /* Slate 800 - professional dark */
   --accent: #0f172a; /* Equal to foreground for neutral consistency */
@@ -61,7 +61,7 @@ a,
   }
   
   .pro-button {
-    @apply inline-flex items-center justify-center px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest transition-all hover:bg-slate-950 active:scale-[0.98] cursor-pointer;
+    @apply inline-flex items-center justify-center px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest transition-all hover:bg-black active:scale-[0.98] cursor-pointer;
   }
   
   .pro-input {

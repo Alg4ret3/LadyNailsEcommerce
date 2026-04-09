@@ -8,21 +8,36 @@ import { Button } from '@/components/atoms/Button';
 import { Truck, CreditCard, ShieldCheck, Plus, CheckCircle2, Eye, EyeOff, Mail, ClipboardCheck, LogIn, UserPlus, Lock } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useCart } from '@/context/CartContext';
+import { useCartQuery } from '@/hooks/useCart';
+import { useCustomerAddresses } from '@/hooks/useCurrentUser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CountryCodeSelect } from '@/components/molecules/CountryCodeSelect';
 import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { useRouter } from 'next/navigation';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
-import { updateCartAddress, getShippingOptions, addShippingMethodToCart, ShippingOption, createPaymentCollection, createPaymentSession, PaymentCollection, completeCart } from '@/services/medusa';
+import { getShippingOptions, ShippingOption, PaymentCollection } from '@/services/medusa';
 import { WompiSubmitButton } from '@/components/molecules/WompiSubmitButton';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, totalItems, totalAmount, clearCart, medusaCartId } = useCart();
-  const { user, login, logout, sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
+  const { user, login, logout, sendOtp, verifyOtp, register, isLoading: isUserLoading, error: contextError, clearError } = useUser();
 
-  // AUTH_CHOICE → SHIP_INFO → SHIPPING → PAYMENT
+  const {
+    updateAddress: updateCartAddressMutation,
+    addShippingMethod: addShippingMethodMutation,
+    createPaymentCollection: createPaymentCollectionMutation,
+    createPaymentSession: createPaymentSessionMutation,
+    completeCart: completeCartMutation,
+    isUpdating: isCartUpdating,
+    cartId: medusaCartIdQuery,
+    ensureCart
+  } = useCartQuery();
+
+  const { createAddress: createCustomerAddressMutation } = useCustomerAddresses();
+
+  // AUTH_CHOICE → EMAIL_VERIFY (guests only) → SHIP_INFO → SHIPPING → PAYMENT
   const [checkoutStep, setCheckoutStep] = React.useState(() => {
     // Start at AUTH_CHOICE if not logged in (will be overridden by user effect)
     return 'AUTH_CHOICE';
@@ -61,6 +76,8 @@ export default function CheckoutPage() {
 
   // Auth step state
   const [authMode, setAuthMode] = React.useState<'choice' | 'login' | 'register'>('choice');
+  const [checkoutAuthPath, setCheckoutAuthPath] = React.useState<'login' | 'register' | null>(null);
+  const isRegisterPath = checkoutAuthPath === 'register';
   const [loginEmail, setLoginEmail] = React.useState('');
   const [loginPassword, setLoginPassword] = React.useState('');
   const [showLoginPassword, setShowLoginPassword] = React.useState(false);
@@ -115,7 +132,7 @@ export default function CheckoutPage() {
       validateName(guestFormData.firstName) &&
       validateName(guestFormData.lastName) &&
       validatePhone(guestFormData.phone) &&
-      guestFormData.street.length > 5 &&
+      guestFormData.street.length >= 10 &&
       guestFormData.city.length > 2 &&
       isPasswordValid &&
       passwordsMatch
@@ -130,7 +147,7 @@ export default function CheckoutPage() {
       newAddressFormData.firstName.trim().length >= 2 &&
       newAddressFormData.lastName.trim().length >= 2 &&
       validatePhone(newAddressFormData.phone) &&
-      newAddressFormData.street.trim().length > 5 &&
+      newAddressFormData.street.trim().length >= 10 &&
       newAddressFormData.city.length > 2 &&
       newAddressFormData.province.length > 2
     );
@@ -179,7 +196,8 @@ export default function CheckoutPage() {
       clearError();
       const response = await verifyOtp(email, otpCode);
       if (response && response.verified) {
-        setGuestStep(3);
+        // OTP verified → move to SHIP_INFO (address + profile form)
+        setCheckoutStep('SHIP_INFO');
       } else {
         setLocalError('Código inválido. Por favor, intente de nuevo.');
       }
@@ -194,12 +212,12 @@ export default function CheckoutPage() {
       setLocalError('Por favor, verifique todos los campos.');
       return;
     }
-    
+
     setIsUpdatingCart(true);
     try {
       setLocalError('');
       clearError();
-      
+
       // 1. Register User
       await register({
         email,
@@ -210,22 +228,22 @@ export default function CheckoutPage() {
       });
 
       // 2. Create Address for the now logged-in user
-      await createAddress({
-        addressName: 'Principal',
-        firstName: guestFormData.firstName,
-        lastName: guestFormData.lastName,
-        street: guestFormData.street,
+      await createCustomerAddressMutation({
+        address_name: 'Principal',
+        first_name: guestFormData.firstName,
+        last_name: guestFormData.lastName,
+        address_1: guestFormData.street,
         city: guestFormData.city,
-        country: 'CO',
+        country_code: 'co',
         phone: `${countryCode}${guestFormData.phone}`,
         province: guestFormData.province,
-        postalCode: guestFormData.postalCode
+        postal_code: guestFormData.postalCode
       });
 
       // 3. Sync address with Medusa Cart
-      const cartId = medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
-        await updateCartAddress(cartId, {
+        await updateCartAddressMutation({
           first_name: guestFormData.firstName,
           last_name: guestFormData.lastName,
           address_1: guestFormData.street,
@@ -239,14 +257,13 @@ export default function CheckoutPage() {
         // Fetch Shipping Options
         const { shipping_options } = await getShippingOptions(cartId);
         setShippingOptions(shipping_options);
-        
+
         // Default to first option
         if (shipping_options.length > 0) {
           setSelectedShippingOptionId(shipping_options[0].id);
         }
       }
 
-      // The context update will trigger the useEffect and set the selectedAddressId
       setCheckoutStep('SHIPPING');
     } catch (err) {
       console.error('Registration error:', err);
@@ -264,16 +281,16 @@ export default function CheckoutPage() {
       setLocalError('');
       clearError();
 
-      await createAddress({
-        addressName: newAddressFormData.label,
-        firstName: newAddressFormData.firstName,
-        lastName: newAddressFormData.lastName,
-        street: newAddressFormData.street,
+      await createCustomerAddressMutation({
+        address_name: newAddressFormData.label,
+        first_name: newAddressFormData.firstName,
+        last_name: newAddressFormData.lastName,
+        address_1: newAddressFormData.street,
         city: newAddressFormData.city,
-        country: 'CO',
+        country_code: 'co',
         phone: `${countryCode}${newAddressFormData.phone}`,
         province: newAddressFormData.province,
-        postalCode: newAddressFormData.postalCode
+        postal_code: newAddressFormData.postalCode
       });
 
       // Reset form and close
@@ -285,10 +302,6 @@ export default function CheckoutPage() {
         province: '',
         postalCode: ''
       }));
-
-      // The useEffect for selecting default/first address will handle selecting it
-      // but we can also manually try to find the new one if we had its ID. 
-      // Since createAddress refreshes the user object, we rely on the list update.
     } catch (err: any) {
       console.error('Address creation error:', err);
       setLocalError(err.message || 'Error al crear la dirección.');
@@ -304,9 +317,9 @@ export default function CheckoutPage() {
 
       setIsUpdatingCart(true);
       try {
-        const cartId = medusaCartId;
+        const cartId = await ensureCart();
         if (cartId) {
-          await updateCartAddress(cartId, {
+          await updateCartAddressMutation({
             first_name: addr.firstName || user.firstName || "",
             last_name: addr.lastName || user.lastName || "",
             address_1: addr.street,
@@ -320,7 +333,7 @@ export default function CheckoutPage() {
           // Fetch Shipping Options
           const { shipping_options } = await getShippingOptions(cartId);
           setShippingOptions(shipping_options);
-          
+
           // Default to first option
           if (shipping_options.length > 0) {
             setSelectedShippingOptionId(shipping_options[0].id);
@@ -345,20 +358,20 @@ export default function CheckoutPage() {
 
     setIsUpdatingCart(true);
     try {
-      const cartId = medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
-        await addShippingMethodToCart(cartId, selectedShippingOptionId);
+        await addShippingMethodMutation(selectedShippingOptionId);
 
-        const { payment_collection: new_collection } = await createPaymentCollection(cartId);
+        const { payment_collection: new_collection } = await createPaymentCollectionMutation();
         setPaymentCollection(new_collection);
-        
+
         // Auto-select Wompi if available or initialize it
         const wompiSession = new_collection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'));
         const wompiProviderId = wompiSession?.provider_id || 'pp_wompi_wompi';
-        
+
         // Attempt to select and initialize Wompi session (throw during flow)
         await handlePaymentSelect(wompiProviderId, new_collection, true);
-        
+
         setCheckoutStep('PAYMENT');
       }
     } catch (err) {
@@ -372,11 +385,11 @@ export default function CheckoutPage() {
   const handlePaymentSelect = async (providerId: string, collectionOverride?: PaymentCollection, shouldThrow: boolean = false) => {
     const currentCollection = collectionOverride || paymentCollection;
     if (!currentCollection) return;
-    
+
     setIsUpdatingCart(true);
     try {
       setSelectedPaymentProviderId(providerId);
-      const { payment_collection } = await createPaymentSession(currentCollection.id, providerId);
+      const { payment_collection } = await createPaymentSessionMutation({ collectionId: currentCollection.id, providerId });
       setPaymentCollection(payment_collection);
     } catch (err) {
       console.error('Payment selection error:', err);
@@ -390,13 +403,13 @@ export default function CheckoutPage() {
   const handleWompiSuccess = async () => {
     setIsProcessingOrder(true);
     try {
-      const cartId = medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
-        const response = await completeCart(cartId);
-        
+        const response = await completeCartMutation();
+
         // Wipe all trace of the cart (clearCart handles localStorage cleanup)
         clearCart();
-        
+
         const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
         router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
       } else {
@@ -411,9 +424,9 @@ export default function CheckoutPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] relative">
+    <main className="min-h-screen bg-white relative">
       <Navbar />
-      
+
       {/* Processing Order Overlay */}
       {isProcessingOrder && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in">
@@ -440,14 +453,21 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Step 0: Authentication Gate */}
-            {checkoutStep === 'AUTH_CHOICE' && (
-              <div className="bg-white border border-slate-900 p-8 sm:p-12 shadow-sm">
-                <div className="flex items-center gap-4 border-b border-slate-100 pb-6 mb-10">
-                  <div className="w-10 h-10 bg-slate-900 text-white flex items-center justify-center font-black">1</div>
-                  <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Identificación</Typography>
+            {/* Step 1: Authentication Gate */}
+            <div className={`bg-white border ${checkoutStep === 'AUTH_CHOICE' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 shadow-sm transition-all`}>
+              <div className={`flex items-center gap-4 ${checkoutStep === 'AUTH_CHOICE' ? 'border-b border-slate-100 pb-6 mb-10' : ''}`}>
+                <div className="w-10 h-10 bg-slate-900 text-white flex items-center justify-center font-black shrink-0">
+                  {checkoutStep !== 'AUTH_CHOICE' ? <CheckCircle2 size={18} /> : '1'}
                 </div>
+                <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Identificación</Typography>
+                {checkoutStep !== 'AUTH_CHOICE' && (
+                  <Typography variant="detail" className="ml-auto text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {user ? `${user.firstName} ${user.lastName}` : email ? email : 'Completado'}
+                  </Typography>
+                )}
+              </div>
 
+              {checkoutStep === 'AUTH_CHOICE' && (
                 <AnimatePresence mode="wait">
                   {!user ? (
                     <motion.div key="auth-forms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -456,8 +476,8 @@ export default function CheckoutPage() {
                           <Typography variant="body" className="text-sm text-slate-500 font-medium">¿Cómo desea continuar con su compra?</Typography>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button
-                              onClick={() => { setAuthMode('login'); setLocalError(''); clearError(); }}
-                              className="group relative flex flex-col items-center gap-4 p-8 border-2 border-slate-200 hover:border-slate-900 bg-white hover:bg-slate-50 transition-all duration-200"
+                              onClick={() => { setAuthMode('login'); setCheckoutAuthPath('login'); setLocalError(''); clearError(); }}
+                              className="group relative flex flex-col items-center gap-4 p-8 border-2 border-slate-200 hover:border-slate-900 bg-white transition-all duration-200"
                             >
                               <div className="w-14 h-14 bg-slate-100 group-hover:bg-slate-900 rounded-full flex items-center justify-center transition-colors duration-200">
                                 <LogIn size={24} className="text-slate-600 group-hover:text-white transition-colors duration-200" />
@@ -468,7 +488,7 @@ export default function CheckoutPage() {
                               </div>
                             </button>
                             <button
-                              onClick={() => { setAuthMode('register'); setLocalError(''); clearError(); }}
+                              onClick={() => { setAuthMode('register'); setCheckoutAuthPath('register'); setLocalError(''); clearError(); }}
                               className="group relative flex flex-col items-center gap-4 p-8 border-2 border-slate-900 bg-slate-900 hover:bg-slate-800 transition-all duration-200"
                             >
                               <div className="w-14 h-14 bg-white/10 group-hover:bg-white/20 rounded-full flex items-center justify-center transition-colors duration-200">
@@ -521,9 +541,9 @@ export default function CheckoutPage() {
                                 </button>
                               </div>
                             </div>
-                            <Button type="submit" label={isLoading ? 'Ingresando...' : 'Iniciar Sesión y Continuar'} className="w-full py-5" disabled={isLoading} />
+                            <Button type="submit" label={isUserLoading ? 'Ingresando...' : 'Iniciar Sesión y Continuar'} className="w-full py-5" disabled={isUserLoading} />
                           </form>
-                          <button onClick={() => { setAuthMode('choice'); setLocalError(''); clearError(); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
+                          <button onClick={() => { setAuthMode('choice'); setCheckoutAuthPath(null); setLocalError(''); clearError(); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
                             ← Volver a las opciones
                           </button>
                         </motion.div>
@@ -534,10 +554,10 @@ export default function CheckoutPage() {
                           <Typography variant="body" className="text-sm text-slate-500 font-medium">Complete el siguiente paso para crear su cuenta y continuar con el pedido.</Typography>
                           <Button
                             label="Continuar con el Registro"
-                            onClick={() => { setAuthMode('choice'); setCheckoutStep('SHIP_INFO'); }}
+                            onClick={() => { setAuthMode('choice'); setCheckoutStep('EMAIL_VERIFY'); }}
                             className="w-full py-5"
                           />
-                          <button onClick={() => { setAuthMode('choice'); setLocalError(''); clearError(); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all block">
+                          <button onClick={() => { setAuthMode('choice'); setCheckoutAuthPath(null); setLocalError(''); clearError(); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all block">
                             ← Volver a las opciones
                           </button>
                         </motion.div>
@@ -545,7 +565,7 @@ export default function CheckoutPage() {
                     </motion.div>
                   ) : (
                     <motion.div key="logged-in-info" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.35 }} className="space-y-8">
-                      <div className="bg-slate-50 p-8 border border-slate-200 space-y-4">
+                      <div className="bg-white p-8 border border-slate-200 space-y-4">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-xl">
                             {user.firstName[0]}{user.lastName[0]}
@@ -572,19 +592,103 @@ export default function CheckoutPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+              )}
+            </div>
+
+            {/* Step 2: Email Verification (register path only — 5-step flow) */}
+            {isRegisterPath && !user && (
+              <div className={`bg-white border ${
+                checkoutStep === 'EMAIL_VERIFY' ? 'border-slate-900' :
+                checkoutStep === 'AUTH_CHOICE' ? 'border-slate-200 opacity-40 pointer-events-none' :
+                'border-slate-200'
+              } p-8 sm:p-12 shadow-sm transition-all`}>
+                <div className={`flex items-center gap-4 ${checkoutStep === 'EMAIL_VERIFY' ? 'border-b border-slate-100 pb-6 mb-10' : ''}`}>
+                  <div className={`w-10 h-10 flex-shrink-0 ${
+                    checkoutStep === 'AUTH_CHOICE' ? 'bg-slate-200' :
+                    checkoutStep === 'EMAIL_VERIFY' ? 'bg-slate-900' :
+                    'bg-slate-900'
+                  } text-white flex items-center justify-center font-black`}>
+                    {(checkoutStep === 'SHIP_INFO' || checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') ? <CheckCircle2 size={18} /> : '2'}
+                  </div>
+                  <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Verificación de Correo</Typography>
+                  {(checkoutStep === 'SHIP_INFO' || checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') && (
+                    <Typography variant="detail" className="ml-auto text-[10px] font-black uppercase tracking-widest text-slate-400">{email}</Typography>
+                  )}
+                </div>
+
+                {checkoutStep === 'EMAIL_VERIFY' && (
+                  <AnimatePresence mode="wait">
+                    <motion.div key="email-verify" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
+                      {guestStep === 1 && (
+                        <form onSubmit={handleGuestStep1} className="space-y-6">
+                          <div className="space-y-2">
+                            <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Correo Electrónico para Facturación</Typography>
+                            <div className="relative">
+                              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                              <input
+                                type="email"
+                                className="pro-input pl-12"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="ejemplo@correo.com"
+                              />
+                            </div>
+                          </div>
+                          <Button type="submit" label={isUserLoading ? 'Enviando...' : 'Verificar Correo y Continuar'} className="w-full py-5" disabled={isUserLoading} />
+                          <button type="button" onClick={() => setCheckoutStep('AUTH_CHOICE')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all block">
+                            ← Volver a las opciones
+                          </button>
+                        </form>
+                      )}
+
+                      {guestStep === 2 && (
+                        <form onSubmit={handleGuestStep2} className="space-y-8">
+                          <div className="space-y-4 text-center">
+                            <Typography variant="detail" className="font-black uppercase tracking-widest text-slate-400">Hemos enviado un código a su correo</Typography>
+                            <div className="relative flex justify-center">
+                              <ClipboardCheck size={20} className="absolute left-1/4 top-1/2 -translate-y-1/2 text-slate-300 hidden md:block" />
+                              <input
+                                type="text"
+                                className="pro-input text-center text-4xl tracking-[1rem] font-black max-w-[300px]"
+                                maxLength={6}
+                                required
+                                value={otpCode}
+                                onChange={(e) => setOtpCode(e.target.value)}
+                                placeholder="000000"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-4">
+                            <Button type="submit" label={isUserLoading ? 'Verificando...' : 'Validar Código'} className="w-full py-5" disabled={isUserLoading} />
+                            <button type="button" onClick={() => setGuestStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Volver al correo</button>
+                          </div>
+                        </form>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
               </div>
             )}
 
-            {/* Step 1: Logistic Information */}
-            <div className={`bg-white border ${checkoutStep === 'SHIP_INFO' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep === 'AUTH_CHOICE' ? 'opacity-40 pointer-events-none' : ''}`}>
+            {/* Step 3: Logistic Information */}
+            <div className={`bg-white border ${checkoutStep === 'SHIP_INFO' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${
+              checkoutStep === 'AUTH_CHOICE' || checkoutStep === 'EMAIL_VERIFY' ? 'opacity-40 pointer-events-none' : ''
+            }`}>
               <div className="flex items-center justify-between border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 ${checkoutStep === 'SHIP_INFO' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>2</div>
+                  <div className={`w-10 h-10 ${
+                    checkoutStep === 'SHIP_INFO' ? 'bg-slate-900' :
+                    (checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') ? 'bg-slate-900' :
+                    'bg-slate-200'
+                  } text-white flex items-center justify-center font-black`}>
+                    {(checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') ? <CheckCircle2 size={18} /> : (user ? '2' : '3')}
+                  </div>
                   <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Dirección de Entrega</Typography>
                 </div>
                 {checkoutStep === 'SHIP_INFO' && (
-                  <button onClick={() => setCheckoutStep('AUTH_CHOICE')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">
-                    ← Volver a las opciones
+                  <button onClick={() => setCheckoutStep(user ? 'AUTH_CHOICE' : 'EMAIL_VERIFY')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline underline-offset-4">
+                    ← Volver
                   </button>
                 )}
                 {(checkoutStep === 'SHIPPING' || checkoutStep === 'PAYMENT') && (
@@ -592,7 +696,7 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {(checkoutStep === 'SHIP_INFO' || (checkoutStep !== 'AUTH_CHOICE' && checkoutStep !== 'SHIP_INFO' && false)) && (
+              {checkoutStep === 'SHIP_INFO' && (
                 <AnimatePresence mode="wait">
                   {user ? (
                     /* LOGGED IN FLOW */
@@ -602,8 +706,8 @@ export default function CheckoutPage() {
                           <button
                             key={addr.id}
                             onClick={() => { setSelectedAddressId(addr.id); setLocalError(''); }}
-                            className={`p-6 border-2 text-left transition-all space-y-2 group ${selectedAddressId === addr.id ? 'border-slate-900 bg-slate-50' : 'border-slate-100 hover:border-slate-300'}`}
-                          >
+                            className={`p-6 border-2 text-left transition-all space-y-2 group outline-none ${selectedAddressId === addr.id ? 'border-slate-900 bg-white ring-1 ring-slate-900/5' : 'border-slate-100 hover:border-slate-300'}`}
+                          >bg-slate-50
                             <div className="flex justify-between items-start">
                               <Typography variant="h4" className="text-[10px] uppercase font-black tracking-widest">{addr.label}</Typography>
                               {selectedAddressId === addr.id && <CheckCircle2 size={16} className="text-slate-900" />}
@@ -612,7 +716,7 @@ export default function CheckoutPage() {
                             <Typography variant="body" className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{addr.city}, {addr.province}</Typography>
                           </button>
                         ))}
-                        
+
                         {user.addresses.length < 3 ? (
                           <button
                             onClick={() => {
@@ -643,7 +747,7 @@ export default function CheckoutPage() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden bg-slate-50 p-8 border border-slate-900 space-y-8"
+                            className="overflow-hidden bg-white p-8 border border-slate-900 space-y-8"
                           >
                             <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                               <Typography variant="h4" className="text-sm font-black uppercase tracking-widest">Nueva Dirección de Entrega</Typography>
@@ -681,7 +785,24 @@ export default function CheckoutPage() {
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
                                   <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega *</Typography>
-                                  <input type="text" className="pro-input" required value={newAddressFormData.street} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                                  <input type="text" className="pro-input" required minLength={10} value={newAddressFormData.street} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    {newAddressFormData.street.length > 0 && (
+                                      <>
+                                        {newAddressFormData.street.length >= 10 ? (
+                                          <>
+                                            <CheckCircle2 size={12} className="text-emerald-500" />
+                                            <Typography variant="detail" className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Dirección completa</Typography>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></div>
+                                            <Typography variant="detail" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Escriba al menos 10 caracteres ({10 - newAddressFormData.street.length} faltan)</Typography>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                                 <ColombiaLocationSelect
                                   departamento={newAddressFormData.province}
@@ -705,63 +826,18 @@ export default function CheckoutPage() {
                       </AnimatePresence>
 
                       {!isAddingAddress && (
-                        <Button 
-                          label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"} 
-                          onClick={handleLoggedContinue} 
-                          className="w-full py-5" 
+                        <Button
+                          label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"}
+                          onClick={handleLoggedContinue}
+                          className="w-full py-5"
                           disabled={isUpdatingCart}
                         />
                       )}
                     </motion.div>
                   ) : (
-                    /* GUEST FLOW (Step-by-step Fast Signup) */
+                    /* GUEST FLOW — Profile + Address (email/OTP already handled in EMAIL_VERIFY step) */
                     <motion.div key="guest" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
-                      {guestStep === 1 && (
-                        <form onSubmit={handleGuestStep1} className="space-y-6">
-                          <div className="space-y-2">
-                            <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Correo Electrónico para Facturación</Typography>
-                            <div className="relative">
-                              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                              <input
-                                type="email"
-                                className="pro-input pl-12"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="ejemplo@correo.com"
-                              />
-                            </div>
-                          </div>
-                          <Button type="submit" label={isLoading ? "Iniciando..." : "Verificar Correo y Continuar"} className="w-full py-5" disabled={isLoading} />
-                        </form>
-                      )}
-
-                      {guestStep === 2 && (
-                        <form onSubmit={handleGuestStep2} className="space-y-8">
-                          <div className="space-y-4 text-center">
-                            <Typography variant="detail" className="font-black uppercase tracking-widest text-slate-400">Hemos enviado un código a su correo</Typography>
-                            <div className="relative flex justify-center">
-                              <ClipboardCheck size={20} className="absolute left-1/4 top-1/2 -translate-y-1/2 text-slate-300 hidden md:block" />
-                              <input
-                                type="text"
-                                className="pro-input text-center text-4xl tracking-[1rem] font-black max-w-[300px]"
-                                maxLength={6}
-                                required
-                                value={otpCode}
-                                onChange={(e) => setOtpCode(e.target.value)}
-                                placeholder="000000"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-4">
-                            <Button type="submit" label={isLoading ? "Verificando..." : "Validar Código"} className="w-full py-5" disabled={isLoading} />
-                            <button type="button" onClick={() => setGuestStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Volver al correo</button>
-                          </div>
-                        </form>
-                      )}
-
-                      {guestStep === 3 && (
-                        <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                      <form onSubmit={handleGuestStep3} className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Personal Details */}
                             <div className="space-y-2">
@@ -783,7 +859,24 @@ export default function CheckoutPage() {
                             {/* Address Details */}
                             <div className="space-y-2 md:col-span-2">
                               <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega Principal</Typography>
-                              <input type="text" className="pro-input" required value={guestFormData.street} onChange={(e) => setGuestFormData({ ...guestFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                              <input type="text" className="pro-input" required minLength={10} value={guestFormData.street} onChange={(e) => setGuestFormData({ ...guestFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                              <div className="flex items-center gap-1.5 mt-1">
+                                {guestFormData.street.length > 0 && (
+                                  <>
+                                    {guestFormData.street.length >= 10 ? (
+                                      <>
+                                        <CheckCircle2 size={12} className="text-emerald-500" />
+                                        <Typography variant="detail" className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Dirección completa</Typography>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></div>
+                                        <Typography variant="detail" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Escriba al menos 10 caracteres ({10 - guestFormData.street.length} faltan)</Typography>
+                                      </>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             </div>
                             <ColombiaLocationSelect
                               departamento={guestFormData.province}
@@ -819,21 +912,22 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className="flex flex-col items-center gap-6">
-                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isLoading || isUpdatingCart || !isGuestFormValid} />
+                            <Button type="submit" label={isUpdatingCart ? "Creando Cuenta..." : "Registrar y Continuar al Pago"} className="w-full py-5" disabled={isUserLoading || isUpdatingCart || !isGuestFormValid} />
                           </div>
                         </form>
-                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
               )}
             </div>
 
-            {/* Step 2: Shipping Method */}
-            <div className={`bg-white border ${checkoutStep === 'SHIPPING' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${(checkoutStep === 'SHIP_INFO' || checkoutStep === 'AUTH_CHOICE') ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Step 4/3: Shipping Method */}
+            <div className={`bg-white border ${checkoutStep === 'SHIPPING' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${(checkoutStep === 'SHIP_INFO' || checkoutStep === 'AUTH_CHOICE' || checkoutStep === 'EMAIL_VERIFY') ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center justify-between border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 ${checkoutStep === 'SHIPPING' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>3</div>
+                  <div className={`w-10 h-10 ${checkoutStep === 'SHIPPING' ? 'bg-slate-900' : checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>
+                    {checkoutStep === 'PAYMENT' ? <CheckCircle2 size={18} /> : (isRegisterPath ? '4' : '3')}
+                  </div>
                   <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Envío</Typography>
                 </div>
                 {checkoutStep === 'PAYMENT' && (
@@ -849,7 +943,7 @@ export default function CheckoutPage() {
                         <button
                           key={option.id}
                           onClick={() => setSelectedShippingOptionId(option.id)}
-                          className={`p-6 border-2 text-left transition-all space-y-2 group ${selectedShippingOptionId === option.id ? 'border-slate-900 bg-slate-50' : 'border-slate-100 hover:border-slate-300'}`}
+                          className={`p-6 border-2 text-left transition-all space-y-2 group outline-none ${selectedShippingOptionId === option.id ? 'border-slate-900 bg-white ring-1 ring-slate-900/5' : 'border-slate-100 hover:border-slate-300'}`}
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
@@ -869,21 +963,21 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
-                  
-                  <Button 
-                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"} 
-                    onClick={handleShippingContinue} 
-                    className="w-full py-5" 
+
+                  <Button
+                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"}
+                    onClick={handleShippingContinue}
+                    className="w-full py-5"
                     disabled={isUpdatingCart || !selectedShippingOptionId}
                   />
                 </div>
               )}
             </div>
 
-            {/* Step 3: Payment Method */}
+            {/* Step 5/4: Payment Method */}
             <div className={`bg-white border ${checkoutStep === 'PAYMENT' ? 'border-slate-900' : 'border-slate-200'} p-8 sm:p-12 space-y-12 shadow-sm transition-all ${checkoutStep !== 'PAYMENT' ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>4</div>
+                <div className={`w-10 h-10 ${checkoutStep === 'PAYMENT' ? 'bg-slate-900' : 'bg-slate-200'} text-white flex items-center justify-center font-black`}>{isRegisterPath ? '5' : '4'}</div>
                 <Typography variant="h3" className="text-2xl uppercase font-black tracking-tighter">Método de Pago</Typography>
               </div>
 
@@ -902,11 +996,11 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="pt-8 border-t border-slate-200 w-full">
                       <WompiSubmitButton
                         paymentSessionData={
-                          paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data || 
+                          paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data ||
                           paymentCollection?.payment_sessions?.[0]?.data
                         }
                         onPaymentSuccess={handleWompiSuccess}
@@ -920,71 +1014,77 @@ export default function CheckoutPage() {
           </div>
 
           <div className="lg:col-span-4">
-            <div className="bg-slate-900 text-white p-8 space-y-8 sticky top-44 border-b-4 border-emerald-500">
-              <div className="flex items-end justify-between border-b border-white/10 pb-4">
-                <Typography variant="h3" className="text-2xl font-black uppercase tracking-tighter">Resumen Central</Typography>
-                <Typography variant="detail" className="text-[10px] text-white/40">{totalItems} {totalItems === 1 ? 'Artículo' : 'Artículos'}</Typography>
+            <div className="sticky top-44 bg-slate-900 p-8 space-y-0">
+
+              {/* Header */}
+              <div className="flex items-center justify-between pb-6 border-b border-white/8">
+                <Typography variant="h4" className="text-[11px] font-black uppercase tracking-[0.25em] text-white">Resumen</Typography>
+                <div className="px-2 py-1 bg-white/5 rounded-full">
+                  <Typography variant="detail" className="text-[9px] text-white/40 font-bold uppercase tracking-widest">{totalItems} {totalItems === 1 ? 'item' : 'items'}</Typography>
+                </div>
               </div>
 
-              <div className="space-y-6 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+              {/* Items */}
+              <div className="py-8 space-y-6 border-b border-white/8">
                 {cartItems.map((item) => (
-                  <div key={`${item.id}-${item.size}-${item.color}`} className="flex justify-between items-start border-b border-white/5 pb-6">
-                    <div className="space-y-1">
-                      <Typography variant="h4" className="text-[11px] font-bold uppercase tracking-widest">{item.name}</Typography>
-                      <Typography variant="detail" className="text-white/40 text-[9px]">
-                        Cantidad: {item.quantity}
-                        {item.size && ` • Talla: ${item.size}`}
-                        {item.color && ` • Color: ${item.color}`}
-                      </Typography>
+                  <div key={`${item.id}-${item.size}-${item.color}`} className="flex justify-between items-start gap-6">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <Typography variant="h4" className="text-[12px] font-bold text-white tracking-tight leading-tight truncate">{item.name}</Typography>
+                      <div className="flex items-center gap-2">
+                        <Typography variant="detail" className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{item.quantity} × ${item.price.toLocaleString()}</Typography>
+                        {item.size && (
+                          <>
+                            <div className="w-1 h-1 rounded-full bg-white/10"></div>
+                            <Typography variant="detail" className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{item.size}</Typography>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <Typography variant="h4" className="font-black text-xs">${(item.price * item.quantity).toLocaleString()}</Typography>
+                    <Typography variant="detail" className="text-[12px] font-black text-white shrink-0 mt-0.5">${(item.price * item.quantity).toLocaleString()}</Typography>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-4 pt-4">
-                <div className="flex justify-between">
-                  <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Subtotal Neto</Typography>
-                  <Typography variant="h4" className="font-bold">${totalAmount.toLocaleString()}</Typography>
+              {/* Totals */}
+              <div className="py-8 space-y-4 border-b border-white/5">
+                <div className="flex justify-between items-center">
+                  <Typography variant="detail" className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Subtotal Bruto</Typography>
+                  <Typography variant="detail" className="text-[13px] font-bold text-white/80 tracking-tight">${totalAmount.toLocaleString()}</Typography>
                 </div>
+
                 <div className="flex justify-between">
                   <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Logística & Despacho</Typography>
                   <Typography variant="h4" className="font-bold text-emerald-400 italic">
-                    {selectedShippingOptionId 
-                      ? `$${selectedShippingAmount.toLocaleString()}` 
+                    {selectedShippingOptionId
+                      ? `$${selectedShippingAmount.toLocaleString()}`
                       : 'Calculando...'}
                   </Typography>
                 </div>
-                <div className="pt-8 border-t border-white/20 flex justify-between items-end">
-                  <Typography variant="h4" className="text-sm font-black uppercase tracking-widest">Total a Pagar</Typography>
-                  <Typography variant="h1" className="text-5xl font-black tracking-tighter">
+              </div>
+
+              {/* Total */}
+              <div className="pt-6 flex justify-between items-center">
+                <Typography variant="h4" className="text-[11px] font-black uppercase tracking-[0.2em] text-white/30">Total</Typography>
+                <div className="flex flex-col items-end">
+                  <Typography variant="h1" className="text-4xl font-black tracking-tighter text-white">
                     ${(totalAmount + selectedShippingAmount).toLocaleString()}
                   </Typography>
+                  <Typography variant="detail" className="text-[9px] text-white/20 font-medium uppercase tracking-widest mt-1">IVA Incluido</Typography>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-3 bg-white/5 py-6 px-4 rounded-sm border border-white/10 group hover:border-emerald-500/50 transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    <ShieldCheck size={24} className="text-emerald-400" />
-                    <Typography variant="detail" className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Pago 100% Seguro</Typography>
-                  </div>
-                  <div className="w-px h-10 bg-white/10 mx-2"></div>
-                  <div className="text-[8px] text-white/40 uppercase font-bold leading-relaxed">
-                    Utilice el botón de pago a la izquierda para completar su pedido a través de Wompi.
-                  </div>
+              {/* Security footnote */}
+              <div className="pt-10 flex items-center justify-center gap-4 border-t border-white/5 mt-8">
+                <div className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity duration-300">
+                  <ShieldCheck size={14} className="text-white" />
+                  <Typography variant="detail" className="text-[9px] font-bold text-white uppercase tracking-widest">Pago Seguro</Typography>
                 </div>
-
-                <div className="flex items-center justify-center gap-3 bg-white/5 py-4 rounded-sm">
-                  <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-                    <ShieldCheck size={12} /> Cifrado AES-256
-                  </div>
-                  <div className="w-px h-3 bg-white/10"></div>
-                  <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-white/40">
-                    <CheckCircle2 size={12} /> Garantía GA
-                  </div>
+                <div className="w-1 h-1 rounded-full bg-white/10"></div>
+                <div className="opacity-40 hover:opacity-100 transition-opacity duration-300">
+                  <Typography variant="detail" className="text-[9px] font-bold text-white uppercase tracking-widest">AES-256 bits</Typography>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

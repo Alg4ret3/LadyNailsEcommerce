@@ -113,7 +113,7 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="pt-44 pb-32 px-6 flex items-center justify-center">
         <div className="max-w-2xl w-full bg-white border border-slate-200 p-8 sm:p-16 space-y-12 shadow-xl">

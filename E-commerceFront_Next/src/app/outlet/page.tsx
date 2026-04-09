@@ -52,7 +52,7 @@ export default function OutletPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-16">
           {OUTLET_STOCK.map((item) => (
              <div key={item.id} className="group cursor-pointer">
-                <div className="relative aspect-square mb-8 overflow-hidden bg-[#f8fafc] border border-slate-100 flex items-center justify-center p-8">
+                <div className="relative aspect-square mb-8 overflow-hidden bg-white border border-slate-100 flex items-center justify-center p-8">
                    <Image src={item.image} fill alt={item.name} className="object-contain p-4 group-hover:scale-110 transition-transform duration-700" />
                    <div className="absolute top-4 right-4 bg-slate-900 text-white text-[9px] font-black px-3 py-1 uppercase tracking-widest">Outlet</div>
                 </div>
@@ -70,7 +70,7 @@ export default function OutletPage() {
       </section>
 
       {/* Bulk Info */}
-      <section className="py-24 border-y border-slate-100 bg-[#f8fafc]">
+      <section className="py-24 border-y border-slate-100 bg-white">
         <div className="max-w-[1400px] mx-auto px-6 text-center space-y-8">
            <Typography variant="detail">Distribución a gran escala</Typography>
            <Typography variant="h3" className="text-4xl max-w-2xl mx-auto tracking-tighter">¿Necesitas un lote mayor a 50 unidades? <br /> Consulta precios personalizados.</Typography>

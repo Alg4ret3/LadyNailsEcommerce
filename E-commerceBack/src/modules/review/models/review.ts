@@ -6,6 +6,7 @@ const Review = model.define("review", {
   content: model.text(),
   customer_name: model.text(),
   customer_id: model.text().nullable(),
+  status: model.enum(["pending", "approved", "rejected"]).default("pending"),
 })
 
 export default Review

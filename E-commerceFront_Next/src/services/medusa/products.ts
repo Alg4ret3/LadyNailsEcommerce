@@ -85,6 +85,30 @@ interface MedusaProductResponse {
   products: MedusaProduct
 }
 
+export function sortProductsBySuggested(products: MedusaProduct[]) {
+  return [...products].sort((a, b) => {
+    const aTags = a.tags?.map(t => t.value) || [];
+    const bTags = b.tags?.map(t => t.value) || [];
+
+    const aHasDestacado = aTags.includes("Destacados");
+    const bHasDestacado = bTags.includes("Destacados");
+    if (aHasDestacado && !bHasDestacado) return -1;
+    if (!aHasDestacado && bHasDestacado) return 1;
+
+    const aHasPopular = aTags.includes("Popular");
+    const bHasPopular = bTags.includes("Popular");
+    if (aHasPopular && !bHasPopular) return -1;
+    if (!aHasPopular && bHasPopular) return 1;
+
+    const aHasAnyTags = aTags.length > 0;
+    const bHasAnyTags = bTags.length > 0;
+    if (aHasAnyTags && !bHasAnyTags) return -1;
+    if (!aHasAnyTags && bHasAnyTags) return 1;
+
+    return 0;
+  });
+}
+
 export async function getAllProducts() {
   const data = await medusaFetch<MedusaProductsResponse>(
     "/store/products",
@@ -97,19 +121,44 @@ export async function getAllProducts() {
   )
 
   const products = data.products || []
+  return sortProductsBySuggested(products)
+}
 
-  // Ordenar: productos con tags primero
-  const sortedProducts = products.sort((a, b) => {
-    const aHasTags = (a.tags?.length ?? 0) > 0
-    const bHasTags = (b.tags?.length ?? 0) > 0
+export async function getProductsPaginated({ 
+  pageParam = 0, 
+  limit = 12,
+  categoryId,
+  collectionId,
+  tags
+}: { 
+  pageParam?: number; 
+  limit?: number;
+  categoryId?: string;
+  collectionId?: string;
+  tags?: string[];
+}) {
+  const query: Record<string, string | string[]> = {
+    limit: limit.toString(),
+    offset: pageParam.toString(),
+  }
 
-    if (aHasTags && !bHasTags) return -1
-    if (!aHasTags && bHasTags) return 1
+  if (categoryId) query["category_id"] = categoryId;
+  if (collectionId) query["collection_id"] = collectionId;
+  if (tags) query["tags"] = tags;
 
-    return 0
-  })
+  const data = await medusaFetch<MedusaProductsResponse>(
+    "/store/products",
+    {
+      method: "GET",
+    },
+    query
+  )
 
-  return sortedProducts
+  return {
+    products: sortProductsBySuggested(data.products || []),
+    nextCursor: (data.products?.length || 0) === limit ? pageParam + limit : undefined,
+    count: data.count
+  }
 }
 
 export async function getProductsByCategoryHandle(handle: string) {
@@ -132,19 +181,7 @@ export async function getProductsByCategoryHandle(handle: string) {
   )
 
   const products = productsRes.products || []
-
-  // Ordenar: productos con tags primero
-  const sortedProducts = products.sort((a, b) => {
-    const aHasTags = (a.tags?.length ?? 0) > 0
-    const bHasTags = (b.tags?.length ?? 0) > 0
-
-    if (aHasTags && !bHasTags) return -1
-    if (!aHasTags && bHasTags) return 1
-
-    return 0
-  })
-
-  return sortedProducts
+  return sortProductsBySuggested(products)
 }
 
 export async function getProductById(id: string) {

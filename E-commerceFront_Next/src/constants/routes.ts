@@ -12,7 +12,11 @@ export const ROUTES = {
   login: "/auth/login",
   cart: "/cart",
   favorites: "/favorites",
-  account: "/account"
+  account: "/account",
+  reviews: "/reviews",
+  orders: "/account/orders",
+  addresses: "/account/addresses",
+  profile: "/account/profile"
 };
 
 export const NAVBAR_CONTENT = {

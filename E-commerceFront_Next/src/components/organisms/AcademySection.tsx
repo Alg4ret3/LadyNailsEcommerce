@@ -43,7 +43,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
   };
 
   return (
-    <section className="py-32 bg-slate-950 text-white overflow-hidden relative" id="academy">
+    <section aria-label="Academia Lady Nails" className="py-32 bg-black text-white overflow-hidden relative" id="academy">
       <AnimatePresence mode="wait">
         <motion.div
           key={location.id}
@@ -78,7 +78,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
                  className="space-y-6 sm:space-y-10"
               >
                 <div className="space-y-4">
-                  <Typography variant="detail" className="text-slate-500 text-[10px] sm:text-xs tracking-[0.2em]">{location.name}</Typography>
+                  <Typography variant="detail" className="text-white mb-2 text-[10px] sm:text-xs tracking-[0.4em] uppercase font-bold">{location.name}</Typography>
                   <Typography variant="h2" className="text-4xl sm:text-6xl lg:text-7xl leading-[0.95] sm:leading-[0.9] tracking-tighter">
                     {location.title.split('\n').map((line, i) => (
                       <React.Fragment key={i}>
@@ -87,7 +87,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
                       </React.Fragment>
                     )) || location.title}
                   </Typography>
-                  <Typography variant="body" className="text-white/50 text-lg sm:text-xl max-w-lg font-light leading-relaxed">
+                  <Typography variant="body" className="text-white/80 text-lg sm:text-xl max-w-lg font-light leading-relaxed">
                     {location.description}
                   </Typography>
                 </div>
@@ -95,10 +95,10 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
               <div className="flex flex-col gap-6">
                 {location.features.map((feature, i) => (
                   <div key={i} className="flex items-center gap-4 group cursor-default">
-                    <div className="w-10 h-10 border border-white/10 flex items-center justify-center rounded-full group-hover:border-white transition-colors">
-                      <CheckCircle2 size={18} className="text-slate-500 group-hover:text-white transition-colors" />
+                    <div className="w-10 h-10 border border-white/20 flex items-center justify-center rounded-full group-hover:border-white transition-colors">
+                      <CheckCircle2 size={18} className="text-white group-hover:text-white transition-colors" />
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-widest text-white/70">{feature}</span>
+                    <span className="text-sm font-bold uppercase tracking-widest text-white">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -106,22 +106,22 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ locations = DEFA
               <div className="pt-8 flex flex-wrap items-center gap-8">
                 <Button 
                   label="INSCRÍBETE AQUÍ" 
-                  className="bg-white !text-black px-12 py-5 font-black tracking-[0.3em] transition-all duration-500 text-xs hover:bg-transparent hover:text-white! border-2 border-white" 
+                  className="px-12 py-5 font-black tracking-[0.3em] transition-all duration-300 text-xs hover:scale-95 active:scale-90" 
                   href={whatsappUrl}
-                  variant="primary"
+                  variant="secondary"
                 />
                 
                 {locations.length > 1 && (
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={prevSlide}
-                      className="w-12 h-12 border border-white/10 flex items-center justify-center rounded-full hover:bg-white hover:text-black transition-all group"
+                      className="w-12 h-12 border border-white/20 flex items-center justify-center rounded-full hover:bg-white hover:text-black transition-all group"
                     >
                       <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <button 
                       onClick={nextSlide}
-                      className="w-12 h-12 border border-white/10 flex items-center justify-center rounded-full hover:bg-white hover:text-black transition-all group"
+                      className="w-12 h-12 border border-white/20 flex items-center justify-center rounded-full hover:bg-white hover:text-black transition-all group"
                     >
                       <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>

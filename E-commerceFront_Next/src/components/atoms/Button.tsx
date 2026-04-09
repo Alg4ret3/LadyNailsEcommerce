@@ -1,5 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MotionLink = motion(Link as any);
 
 interface ButtonProps {
   label?: string;
@@ -22,13 +26,23 @@ export const Button: React.FC<ButtonProps> = ({
   type = 'button',
   disabled = false,
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-200 active:scale-[0.98] border shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100';
+  const baseStyles = 'inline-flex items-center justify-center px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] border shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:translate-y-0 relative overflow-hidden focus:outline-none';
 
   const variants = {
-    primary: 'bg-primary text-white border-primary hover:bg-slate-950 hover:shadow-md',
-    secondary: 'bg-white text-primary border-primary hover:bg-slate-50',
-    outline: 'bg-transparent text-foreground border-border hover:border-foreground hover:bg-slate-50',
-    ghost: 'bg-transparent text-foreground border-transparent hover:bg-muted shadow-none',
+    primary: 'bg-black text-white border-black hover:bg-neutral-800',
+    secondary: 'bg-white text-black border-black',
+    outline: 'bg-transparent text-black border-slate-200',
+    ghost: 'bg-transparent text-black border-transparent shadow-none',
+  };
+
+  // Hover/Tap animations
+  const motionProps = {
+    whileHover: disabled ? {} : { 
+      scale: 1.02, 
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)' 
+    },
+    whileTap: disabled ? {} : { scale: 0.98, y: 1 },
+    transition: { type: 'spring' as const, stiffness: 400, damping: 20 },
   };
 
   const content = label || children;
@@ -38,23 +52,39 @@ export const Button: React.FC<ButtonProps> = ({
     
     if (isExternal) {
       return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className={`${baseStyles} ${variants[variant]} ${className}`}>
+        <motion.a 
+          href={href} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className={`${baseStyles} ${variants[variant]} ${className}`}
+          {...motionProps}
+        >
           {content}
-        </a>
+        </motion.a>
       );
     }
 
     return (
-      <Link href={href} className={`${baseStyles} ${variants[variant]} ${className}`}>
+      <MotionLink 
+        href={href}
+        className={`${baseStyles} ${variants[variant]} ${className}`}
+        {...motionProps}
+      >
         {content}
-      </Link>
+      </MotionLink>
     );
   }
 
   return (
-    <button type={type} onClick={onClick} className={`${baseStyles} ${variants[variant]} ${className}`} disabled={disabled}>
+    <motion.button 
+      type={type} 
+      onClick={onClick} 
+      className={`${baseStyles} ${variants[variant]} ${className}`} 
+      disabled={disabled}
+      {...motionProps}
+    >
       {content}
-    </button>
+    </motion.button>
   );
 };
 
