@@ -140,36 +140,36 @@ export const DeliveryAddressSection: React.FC<DeliveryAddressSectionProps> = ({
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2 md:col-span-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Etiqueta (Ej: Casa, Oficina) *</Typography>
-                          <input type="text" className="pro-input" required value={newAddressFormData.label} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, label: e.target.value })} placeholder="Casa" />
+                          <input type="text" className="pro-input" required value={newAddressFormData.label} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, label: e.target.value }))} placeholder="Casa" />
                         </div>
                         <div className="space-y-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Nombres *</Typography>
-                          <input type="text" className="pro-input" required value={newAddressFormData.firstName} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, firstName: formatNameInput(e.target.value) })} />
+                          <input type="text" className="pro-input" required value={newAddressFormData.firstName} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, firstName: formatNameInput(e.target.value) }))} />
                         </div>
                         <div className="space-y-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Apellidos *</Typography>
-                          <input type="text" className="pro-input" required value={newAddressFormData.lastName} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, lastName: formatNameInput(e.target.value) })} />
+                          <input type="text" className="pro-input" required value={newAddressFormData.lastName} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, lastName: formatNameInput(e.target.value) }))} />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Teléfono Móvil *</Typography>
                           <div className="flex flex-col md:flex-row gap-0">
                             <div className="w-full md:w-32"><CountryCodeSelect value={countryCode} onChange={setCountryCode} /></div>
-                            <input type="text" className="pro-input flex-1" required value={newAddressFormData.phone} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, phone: formatPhoneInput(e.target.value) })} placeholder="300 000 0000" />
+                            <input type="text" className="pro-input flex-1" required value={newAddressFormData.phone} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="300 000 0000" />
                           </div>
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega *</Typography>
-                          <input type="text" className="pro-input" required minLength={10} value={newAddressFormData.street} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                          <input type="text" className="pro-input" required minLength={10} value={newAddressFormData.street} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
                         </div>
                         <ColombiaLocationSelect
                           departamento={newAddressFormData.province}
                           ciudad={newAddressFormData.city}
-                          onDepartamentoChange={(val) => setNewAddressFormData({ ...newAddressFormData, province: val })}
-                          onCiudadChange={(val) => setNewAddressFormData({ ...newAddressFormData, city: val })}
+                          onDepartamentoChange={(val) => setNewAddressFormData((prev: any) => ({ ...prev, province: val }))}
+                          onCiudadChange={(val) => setNewAddressFormData((prev: any) => ({ ...prev, city: val }))}
                         />
                          <div className="space-y-2 md:col-span-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Código Postal (opcional)</Typography>
-                          <input type="text" className="pro-input" value={newAddressFormData.postalCode} onChange={(e) => setNewAddressFormData({ ...newAddressFormData, postalCode: e.target.value })} placeholder="(Opcional)" />
+                          <input type="text" className="pro-input" value={newAddressFormData.postalCode} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, postalCode: e.target.value }))} placeholder="(Opcional)" />
                         </div>
                       </div>
                       <div className="flex flex-col md:flex-row gap-4 pt-4">
@@ -196,37 +196,37 @@ export const DeliveryAddressSection: React.FC<DeliveryAddressSectionProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Nombres</Typography>
-                    <input type="text" className="pro-input" required value={guestFormData.firstName} onChange={(e) => setGuestFormData({ ...guestFormData, firstName: formatNameInput(e.target.value) })} />
+                    <input type="text" className="pro-input" required value={guestFormData.firstName} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, firstName: formatNameInput(e.target.value) }))} />
                   </div>
                   <div className="space-y-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Apellidos</Typography>
-                    <input type="text" className="pro-input" required value={guestFormData.lastName} onChange={(e) => setGuestFormData({ ...guestFormData, lastName: formatNameInput(e.target.value) })} />
+                    <input type="text" className="pro-input" required value={guestFormData.lastName} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, lastName: formatNameInput(e.target.value) }))} />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Teléfono Móvil</Typography>
                     <div className="flex flex-col md:flex-row gap-0">
                       <div className="w-full md:w-32"><CountryCodeSelect value={countryCode} onChange={setCountryCode} /></div>
-                      <input type="text" className="pro-input flex-1" required value={guestFormData.phone} onChange={(e) => setGuestFormData({ ...guestFormData, phone: formatPhoneInput(e.target.value) })} placeholder="300 000 0000" />
+                      <input type="text" className="pro-input flex-1" required value={guestFormData.phone} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="300 000 0000" />
                     </div>
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega Principal</Typography>
-                    <input type="text" className="pro-input" required minLength={10} value={guestFormData.street} onChange={(e) => setGuestFormData({ ...guestFormData, street: e.target.value })} placeholder="Calle 123 #45-67" />
+                    <input type="text" className="pro-input" required minLength={10} value={guestFormData.street} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
                   </div>
                   <ColombiaLocationSelect
                     departamento={guestFormData.province}
                     ciudad={guestFormData.city}
-                    onDepartamentoChange={(val) => setGuestFormData({ ...guestFormData, province: val })}
-                    onCiudadChange={(val) => setGuestFormData({ ...guestFormData, city: val })}
+                    onDepartamentoChange={(val) => setGuestFormData((prev: any) => ({ ...prev, province: val }))}
+                    onCiudadChange={(val) => setGuestFormData((prev: any) => ({ ...prev, city: val }))}
                   />
                   <div className="space-y-2 md:col-span-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Código Postal (opcional)</Typography>
-                    <input type="text" className="pro-input" value={guestFormData.postalCode} onChange={(e) => setGuestFormData({ ...guestFormData, postalCode: e.target.value })} placeholder="(Opcional)" />
+                    <input type="text" className="pro-input" value={guestFormData.postalCode} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, postalCode: e.target.value }))} placeholder="(Opcional)" />
                   </div>
                   <div className="space-y-2 md:col-span-2 border-t border-slate-100 pt-8 mt-4">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Cree una Contraseña para sus futuros pedidos</Typography>
                     <div className="relative group">
-                      <input type={showPassword ? "text" : "password"} className="pro-input pr-12 group-focus-within:border-slate-900" required value={guestFormData.password} onChange={(e) => setGuestFormData({ ...guestFormData, password: e.target.value })} />
+                      <input type={showPassword ? "text" : "password"} className="pro-input pr-12 group-focus-within:border-slate-900" required value={guestFormData.password} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, password: e.target.value }))} />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10 p-1">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -236,7 +236,7 @@ export const DeliveryAddressSection: React.FC<DeliveryAddressSectionProps> = ({
                   <div className="space-y-2 md:col-span-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Confirmar Contraseña</Typography>
                     <div className="relative group">
-                      <input type={showConfirmPassword ? "text" : "password"} className="pro-input pr-12 group-focus-within:border-slate-900" required value={guestFormData.confirmPassword} onChange={(e) => setGuestFormData({ ...guestFormData, confirmPassword: e.target.value })} />
+                      <input type={showConfirmPassword ? "text" : "password"} className="pro-input pr-12 group-focus-within:border-slate-900" required value={guestFormData.confirmPassword} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, confirmPassword: e.target.value }))} />
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10 p-1">
                         {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
