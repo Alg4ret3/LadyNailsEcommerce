@@ -12,11 +12,12 @@ import {
   completeCart,
   createPaymentCollection,
   createPaymentSession,
+  associateCartToCustomer,
   type CreateCartResponse,
   type MedusaAddress
 } from '@/services/medusa';
 import { useCallback, useEffect, useState } from 'react';
-import { getCartIdKey } from '@/utils/cartKeys';
+import { getCartIdKey, getCartItemsKey } from '@/utils/cartKeys';
 import { useUser } from '@/context/UserContext';
 
 export const CART_QUERY_KEY = ['cart'];
@@ -229,6 +230,31 @@ export function useCartQuery() {
     completeCart: completeCartMutation.mutateAsync,
     createPaymentCollection: createPaymentCollectionMutation.mutateAsync,
     createPaymentSession: createPaymentSessionMutation.mutateAsync,
+    associateCart: async (guestCartId: string) => {
+      // 1. Associate in Medusa
+      await associateCartToCustomer(guestCartId);
+
+      // 2. Move keys in localStorage
+      if (typeof window !== 'undefined') {
+        const guestItemsKey = getCartItemsKey(null);
+        const guestIdKey = getCartIdKey(null);
+        const userItemsKey = getCartItemsKey(userId);
+        const userIdKey = getCartIdKey(userId);
+
+        const items = localStorage.getItem(guestItemsKey);
+        if (items) {
+          localStorage.setItem(userItemsKey, items);
+          localStorage.removeItem(guestItemsKey);
+        }
+
+        localStorage.setItem(userIdKey, guestCartId);
+        localStorage.removeItem(guestIdKey);
+      }
+
+      // 3. Update state and cache
+      setCartId(guestCartId);
+      await queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY] });
+    },
     isUpdating:
       updateAddressMutation.isPending ||
       addShippingMethodMutation.isPending ||

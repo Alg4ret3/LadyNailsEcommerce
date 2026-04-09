@@ -23,10 +23,16 @@ export function useCheckoutFlow() {
     createPaymentCollection: createPaymentCollectionMutation,
     createPaymentSession: createPaymentSessionMutation,
     completeCart: completeCartMutation,
-    ensureCart
+    associateCart,
+    ensureCart,
+    cartId: medusaCartId,
+    isUpdating: isCartUpdating
   } = useCartQuery();
 
-  const { createAddress: createCustomerAddressMutation } = useCustomerAddresses();
+  const {
+    createAddress: createCustomerAddressMutation,
+    isPending: isAddressPending
+  } = useCustomerAddresses();
 
   const [checkoutStep, setCheckoutStep] = React.useState<CheckoutStep>('AUTH_CHOICE');
   const [selectedAddressId, setSelectedAddressId] = React.useState<string | null>(null);
@@ -203,6 +209,9 @@ export function useCheckoutFlow() {
       setLocalError('');
       clearError();
 
+      // 0. Get the guest cart ID before registration (auth token change)
+      const guestCartId = medusaCartId;
+
       await register({
         email,
         password: guestFormData.password,
@@ -210,6 +219,11 @@ export function useCheckoutFlow() {
         lastName: guestFormData.lastName,
         phone: `${countryCode}${guestFormData.phone}`
       });
+
+      // 1. Associate guest cart with new customer if it exists
+      if (guestCartId) {
+        await associateCart(guestCartId);
+      }
 
       await createCustomerAddressMutation({
         address_name: 'Principal',
@@ -400,7 +414,7 @@ export function useCheckoutFlow() {
     paymentCollection,
     selectedPaymentProviderId,
     isProcessingOrder,
-    isUpdatingCart,
+    isUpdatingCart: isUpdatingCart || isCartUpdating || isAddressPending || isUserLoading,
     isAddingAddress, setIsAddingAddress,
     loginEmail, setLoginEmail,
     loginPassword, setLoginPassword,
