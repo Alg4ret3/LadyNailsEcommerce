@@ -42,22 +42,23 @@ export default async function orderFulfillmentHandler({
       entity: "order",
       fields: [
         "id",
-        "email",
         "display_id",
+        "email",
         "currency_code",
         "total",
-        "shipping_address.first_name",
-        "shipping_address.last_name",
-        "shipping_address.address_1",
-        "shipping_address.city",
-        "items.product_title",
-        "items.variant_title",
-        "items.quantity",
-        "items.unit_price",
+        "subtotal",
+        "tax_total",
+        "order_total",
+        "shipping_total",
+        "discount_total",
+        "item_total",
+        "item_subtotal",
+        "shipping_subtotal",
+        "summary.*",
+        "shipping_address.*",
+        "items.*",
         "fulfillments.id",
-        "fulfillments.labels.tracking_url",
-        "fulfillments.labels.tracking_number",
-        "fulfillments.labels.label_url"
+        "fulfillments.labels.*"
       ],
       filters: {
         id: orderId
@@ -68,6 +69,8 @@ export default async function orderFulfillmentHandler({
       console.warn(`[orderFulfillmentHandler] ABORTO: No se recuperó ninguna orden de la base de datos con id ${orderId}.`);
       return
     }
+
+    console.log(`[orderFulfillmentHandler] ORDEN RECUPERADA:`, JSON.stringify(order, null, 2));
 
     if (!order.email) {
       console.warn(`[orderFulfillmentHandler] ABORTO: La orden ${order.display_id} no tiene correo (email) establecido.`);
@@ -89,12 +92,15 @@ export default async function orderFulfillmentHandler({
 
     console.log(`[orderFulfillmentHandler] Preparando notificación para la orden ${order.display_id} al correo ${order.email}...`);
 
+    // Aplanamos el objeto para que BigNumbers se conviertan en números/strings
+    const flattenedOrder = JSON.parse(JSON.stringify(order));
+
     await notificationModuleService.createNotifications({
       to: order.email,
       channel: "email",
       template: "order-fulfillment",
       data: {
-        order,
+        order: flattenedOrder,
         fulfillment,
       },
     })
