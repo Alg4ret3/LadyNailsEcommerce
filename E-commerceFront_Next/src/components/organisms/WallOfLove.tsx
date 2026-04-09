@@ -11,12 +11,6 @@ import { ROUTES } from '@/constants';
 
 // ─── Animations ─────────────────────────────────────────────────────────────
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  transition: { duration: 0.8, ease: "easeOut" as const },
-  viewport: { once: true }
-};
 
 const stagger = {
   animate: {
@@ -31,6 +25,24 @@ const stagger = {
 export const WallOfLove: React.FC = () => {
   const { user } = useUser();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [startIndex, setStartIndex] = useState(0);
+
+  useEffect(() => {
+    if (reviews.length <= 3) return;
+    const interval = setInterval(() => {
+      setStartIndex((prev) => (prev + 3) % reviews.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [reviews.length]);
+
+  const visibleReviews = useMemo(() => {
+    if (reviews.length <= 3) return reviews;
+    const items = [];
+    for (let i = 0; i < 3; i++) {
+        items.push(reviews[(startIndex + i) % reviews.length]);
+    }
+    return items;
+  }, [reviews, startIndex]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -97,23 +109,25 @@ export const WallOfLove: React.FC = () => {
              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-300 max-w-xs mx-auto">Aún no hay testimonios. <br/>¡Sé el primero en calificar!</p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="wait">
             <motion.div 
-              layout
+              key={`grid-${startIndex}`}
               variants={stagger}
-              initial="animate"
-              whileInView="animate"
+              initial="initial"
+              animate="animate"
+              exit={{ opacity: 0, y: -20, transition: { duration: 0.4 } }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              {reviews.map((review) => {
+              {visibleReviews.map((review, i) => {
                 const isOwner = user?.isLoggedIn && review.customer_id === user.id;
                 
                 return (
                   <motion.div 
-                    layout
-                    key={review.id}
-                    {...fadeInUp}
-                    exit={{ opacity: 0, scale: 0.8, y: 30 }}
+                    key={`${review.id}-${startIndex}-${i}`}
+                    variants={{
+                      initial: { opacity: 0, y: 30 },
+                      animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+                    }}
                     className={`bg-white rounded-4xl p-8 sm:p-10 border border-neutral-100 shadow-xl shadow-black/5 relative overflow-hidden group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-between ${isOwner ? 'ring-1 ring-accent/30' : ''}`}
                   >
                     <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500 text-neutral-950 transform -rotate-12 pointer-events-none">
