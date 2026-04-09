@@ -23,15 +23,16 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, totalItems, totalAmount, clearCart, medusaCartId } = useCart();
   const { user, login, logout, sendOtp, verifyOtp, register, isLoading: isUserLoading, error: contextError, clearError } = useUser();
-  
-  const { 
-    updateAddress: updateCartAddressMutation, 
-    addShippingMethod: addShippingMethodMutation, 
+
+  const {
+    updateAddress: updateCartAddressMutation,
+    addShippingMethod: addShippingMethodMutation,
     createPaymentCollection: createPaymentCollectionMutation,
     createPaymentSession: createPaymentSessionMutation,
     completeCart: completeCartMutation,
     isUpdating: isCartUpdating,
-    cartId: medusaCartIdQuery
+    cartId: medusaCartIdQuery,
+    ensureCart
   } = useCartQuery();
 
   const { createAddress: createCustomerAddressMutation } = useCustomerAddresses();
@@ -211,12 +212,12 @@ export default function CheckoutPage() {
       setLocalError('Por favor, verifique todos los campos.');
       return;
     }
-    
+
     setIsUpdatingCart(true);
     try {
       setLocalError('');
       clearError();
-      
+
       // 1. Register User
       await register({
         email,
@@ -240,7 +241,7 @@ export default function CheckoutPage() {
       });
 
       // 3. Sync address with Medusa Cart
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         await updateCartAddressMutation({
           first_name: guestFormData.firstName,
@@ -256,7 +257,7 @@ export default function CheckoutPage() {
         // Fetch Shipping Options
         const { shipping_options } = await getShippingOptions(cartId);
         setShippingOptions(shipping_options);
-        
+
         // Default to first option
         if (shipping_options.length > 0) {
           setSelectedShippingOptionId(shipping_options[0].id);
@@ -316,7 +317,7 @@ export default function CheckoutPage() {
 
       setIsUpdatingCart(true);
       try {
-        const cartId = medusaCartIdQuery || medusaCartId;
+        const cartId = await ensureCart();
         if (cartId) {
           await updateCartAddressMutation({
             first_name: addr.firstName || user.firstName || "",
@@ -332,7 +333,7 @@ export default function CheckoutPage() {
           // Fetch Shipping Options
           const { shipping_options } = await getShippingOptions(cartId);
           setShippingOptions(shipping_options);
-          
+
           // Default to first option
           if (shipping_options.length > 0) {
             setSelectedShippingOptionId(shipping_options[0].id);
@@ -357,20 +358,20 @@ export default function CheckoutPage() {
 
     setIsUpdatingCart(true);
     try {
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         await addShippingMethodMutation(selectedShippingOptionId);
 
         const { payment_collection: new_collection } = await createPaymentCollectionMutation();
         setPaymentCollection(new_collection);
-        
+
         // Auto-select Wompi if available or initialize it
         const wompiSession = new_collection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'));
         const wompiProviderId = wompiSession?.provider_id || 'pp_wompi_wompi';
-        
+
         // Attempt to select and initialize Wompi session (throw during flow)
         await handlePaymentSelect(wompiProviderId, new_collection, true);
-        
+
         setCheckoutStep('PAYMENT');
       }
     } catch (err) {
@@ -384,7 +385,7 @@ export default function CheckoutPage() {
   const handlePaymentSelect = async (providerId: string, collectionOverride?: PaymentCollection, shouldThrow: boolean = false) => {
     const currentCollection = collectionOverride || paymentCollection;
     if (!currentCollection) return;
-    
+
     setIsUpdatingCart(true);
     try {
       setSelectedPaymentProviderId(providerId);
@@ -402,13 +403,13 @@ export default function CheckoutPage() {
   const handleWompiSuccess = async () => {
     setIsProcessingOrder(true);
     try {
-      const cartId = medusaCartIdQuery || medusaCartId;
+      const cartId = await ensureCart();
       if (cartId) {
         const response = await completeCartMutation();
-        
+
         // Wipe all trace of the cart (clearCart handles localStorage cleanup)
         clearCart();
-        
+
         const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
         router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
       } else {
@@ -425,7 +426,7 @@ export default function CheckoutPage() {
   return (
     <main className="min-h-screen bg-white relative">
       <Navbar />
-      
+
       {/* Processing Order Overlay */}
       {isProcessingOrder && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in">
@@ -715,7 +716,7 @@ export default function CheckoutPage() {
                             <Typography variant="body" className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{addr.city}, {addr.province}</Typography>
                           </button>
                         ))}
-                        
+
                         {user.addresses.length < 3 ? (
                           <button
                             onClick={() => {
@@ -825,10 +826,10 @@ export default function CheckoutPage() {
                       </AnimatePresence>
 
                       {!isAddingAddress && (
-                        <Button 
-                          label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"} 
-                          onClick={handleLoggedContinue} 
-                          className="w-full py-5" 
+                        <Button
+                          label={isUpdatingCart ? "Sincronizando..." : "Continuar al Pago"}
+                          onClick={handleLoggedContinue}
+                          className="w-full py-5"
                           disabled={isUpdatingCart}
                         />
                       )}
@@ -962,11 +963,11 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
-                  
-                  <Button 
-                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"} 
-                    onClick={handleShippingContinue} 
-                    className="w-full py-5" 
+
+                  <Button
+                    label={isUpdatingCart ? "Procesando..." : "Continuar al Pago"}
+                    onClick={handleShippingContinue}
+                    className="w-full py-5"
                     disabled={isUpdatingCart || !selectedShippingOptionId}
                   />
                 </div>
@@ -995,11 +996,11 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="pt-8 border-t border-slate-200 w-full">
                       <WompiSubmitButton
                         paymentSessionData={
-                          paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data || 
+                          paymentCollection?.payment_sessions?.find((s: any) => s.provider_id.includes('wompi'))?.data ||
                           paymentCollection?.payment_sessions?.[0]?.data
                         }
                         onPaymentSuccess={handleWompiSuccess}
@@ -1050,10 +1051,13 @@ export default function CheckoutPage() {
                   <Typography variant="detail" className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Subtotal Bruto</Typography>
                   <Typography variant="detail" className="text-[13px] font-bold text-white/80 tracking-tight">${totalAmount.toLocaleString()}</Typography>
                 </div>
-                <div className="flex justify-between items-center">
-                  <Typography variant="detail" className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Envío</Typography>
-                  <Typography variant="detail" className={`text-[13px] font-bold tracking-tight ${selectedShippingOptionId ? 'text-white/80' : 'text-white transition-all italic'}`}>
-                    {selectedShippingOptionId ? `$${selectedShippingAmount.toLocaleString()}` : 'Por calcular'}
+
+                <div className="flex justify-between">
+                  <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Logística & Despacho</Typography>
+                  <Typography variant="h4" className="font-bold text-emerald-400 italic">
+                    {selectedShippingOptionId
+                      ? `$${selectedShippingAmount.toLocaleString()}`
+                      : 'Calculando...'}
                   </Typography>
                 </div>
               </div>

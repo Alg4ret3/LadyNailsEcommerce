@@ -1,11 +1,11 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getCart, 
-  addItemToCart, 
-  updateLineItem, 
-  deleteLineItem, 
+import {
+  getCart,
+  addItemToCart,
+  updateLineItem,
+  deleteLineItem,
   createCart,
   updateCartAddress,
   addShippingMethodToCart,
@@ -53,16 +53,25 @@ export function useCartQuery() {
   // Mutation Helper: Ensure cart exists
   const ensureCart = useCallback(async (): Promise<string> => {
     if (cartId) return cartId;
-    
+
+    // Fallback to localStorage if state is not yet updated
+    if (typeof window !== 'undefined') {
+      const savedId = localStorage.getItem(getCartIdKey(userId));
+      if (savedId) {
+        setCartId(savedId);
+        return savedId;
+      }
+    }
+
     const response = await createCart();
     const newCartId = response.cart.id;
-    
+
     localStorage.setItem(getCartIdKey(userId), newCartId);
     setCartId(newCartId);
-    
+
     // Seed the cache with the new empty cart to avoid extra fetch
     queryClient.setQueryData([...CART_QUERY_KEY, newCartId], response);
-    
+
     return newCartId;
   }, [cartId, userId, queryClient]);
 
@@ -96,15 +105,15 @@ export function useCartQuery() {
   // Mutation: Update Quantity
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ lineItemId, quantity }: { lineItemId: string, quantity: number }) => {
-      if (!cartId) throw new Error("No cart ID");
-      return updateLineItem(cartId, lineItemId, quantity);
+      const activeCartId = await ensureCart();
+      return updateLineItem(activeCartId, lineItemId, quantity);
     },
     onMutate: async ({ lineItemId, quantity }) => {
       await queryClient.cancelQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
       const previousCart = queryClient.getQueryData<CreateCartResponse>([...CART_QUERY_KEY, cartId]);
 
       if (previousCart) {
-        const updatedItems = previousCart.cart.items.map((item: any) => 
+        const updatedItems = previousCart.cart.items.map((item: any) =>
           item.id === lineItemId ? { ...item, quantity } : item
         );
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], {
@@ -128,8 +137,8 @@ export function useCartQuery() {
   // Mutation: Remove Item
   const removeItemMutation = useMutation({
     mutationFn: async (lineItemId: string) => {
-      if (!cartId) throw new Error("No cart ID");
-      return deleteLineItem(cartId, lineItemId);
+      const activeCartId = await ensureCart();
+      return deleteLineItem(activeCartId, lineItemId);
     },
     onMutate: async (lineItemId) => {
       await queryClient.cancelQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -159,8 +168,8 @@ export function useCartQuery() {
 
   const updateAddressMutation = useMutation({
     mutationFn: async (address: MedusaAddress) => {
-      if (!cartId) throw new Error("No cart ID");
-      return updateCartAddress(cartId, address);
+      const activeCartId = await ensureCart();
+      return updateCartAddress(activeCartId, address);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -169,8 +178,8 @@ export function useCartQuery() {
 
   const addShippingMethodMutation = useMutation({
     mutationFn: async (optionId: string) => {
-      if (!cartId) throw new Error("No cart ID");
-      return addShippingMethodToCart(cartId, optionId);
+      const activeCartId = await ensureCart();
+      return addShippingMethodToCart(activeCartId, optionId);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -179,8 +188,8 @@ export function useCartQuery() {
 
   const completeCartMutation = useMutation({
     mutationFn: async () => {
-      if (!cartId) throw new Error("No cart ID");
-      return completeCart(cartId);
+      const activeCartId = await ensureCart();
+      return completeCart(activeCartId);
     },
     onSuccess: () => {
       // Limpiamos el caché del carrito al completar la orden
@@ -191,8 +200,8 @@ export function useCartQuery() {
 
   const createPaymentCollectionMutation = useMutation({
     mutationFn: async () => {
-      if (!cartId) throw new Error("No cart ID");
-      return createPaymentCollection(cartId);
+      const activeCartId = await ensureCart();
+      return createPaymentCollection(activeCartId);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -220,14 +229,15 @@ export function useCartQuery() {
     completeCart: completeCartMutation.mutateAsync,
     createPaymentCollection: createPaymentCollectionMutation.mutateAsync,
     createPaymentSession: createPaymentSessionMutation.mutateAsync,
-    isUpdating: 
-      updateAddressMutation.isPending || 
-      addShippingMethodMutation.isPending || 
+    isUpdating:
+      updateAddressMutation.isPending ||
+      addShippingMethodMutation.isPending ||
       completeCartMutation.isPending ||
       createPaymentCollectionMutation.isPending ||
       createPaymentSessionMutation.isPending,
     cartId,
-    setCartId
+    setCartId,
+    ensureCart
   };
 }
 

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { useUser } from '@/context/UserContext';
 import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
 import { useCartQuery } from '@/hooks/useCart';
+import { associateCartToCustomer } from '@/services/medusa';
 
 export interface CartItem {
   id: string;
@@ -166,9 +167,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (guestSlot.items.length > 0 && userSlot.items.length > 0) {
         finalItems = mergeCartItems(userSlot.items, guestSlot.items);
         finalCartId = userSlot.cartId;
+        
+        // Sync guest items to Medusa user cart
+        guestSlot.items.forEach(item => {
+          addItem({ variantId: item.id, quantity: item.quantity }).catch(console.error);
+        });
       } else if (guestSlot.items.length > 0) {
         finalItems = guestSlot.items;
-        finalCartId = null; 
+        finalCartId = guestSlot.cartId;
+        
+        // Associate guest cart with logged-in user
+        if (finalCartId) {
+          associateCartToCustomer(finalCartId).catch(console.error);
+        }
       } else {
         finalItems = userSlot.items;
         finalCartId = userSlot.cartId;
