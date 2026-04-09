@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'appealable-tyson-abstractedly.ngrok-free.dev',
+        pathname: '/static/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.unsplash.com',
       },
       {
