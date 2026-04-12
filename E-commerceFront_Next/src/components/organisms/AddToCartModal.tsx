@@ -66,11 +66,13 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 
     setIsAdding(true);
     try {
-      const addPromises = totalItemsToAdd.map(([variantId, qty]) => {
+      // Sequential execution to avoid race condition when creating cart:
+      // If we use Promise.all, multiple variants may try to create a new cart simultaneously.
+      // Sequential ensures the cart is created on the first call and reused for the rest.
+      for (const [variantId, qty] of totalItemsToAdd) {
         const variant = product.variants?.find(v => v.id === variantId);
-        
-        return addToCart({
-          id: variantId, 
+        await addToCart({
+          id: variantId,
           name: variant ? `${product.name} - ${variant.title}` : product.name,
           price: (variant?.prices?.[0]?.amount ?? product.price),
           image: product.image,
@@ -80,11 +82,9 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
           vendor: product.vendor,
           selectedSize: variant?.title,
           size: variant?.title,
-          category: product.tags?.[0] || 'General' // Using first tag as category for now, or use a real field if exists
+          category: product.tags?.[0] || 'General',
         });
-      });
-
-      await Promise.all(addPromises);
+      }
       setShowSuccess(true);
       setTimeout(() => {
         onClose();
