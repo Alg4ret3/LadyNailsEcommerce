@@ -68,10 +68,23 @@ export const Footer: React.FC = () => {
       <div className="max-w-[1400px] mx-auto border-t border-white/5 pt-8 sm:pt-12 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
         <Typography variant="detail" className="text-center md:text-left text-white/30">© 2026 Professional Beauty Dist. All Rights Reserved.</Typography>
         <div className="flex flex-wrap justify-center gap-6 sm:gap-12">
-           <Link href={ROUTES.privacy} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white">Privacidad</Link>
-           <Link href={ROUTES.terms} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white">Términos</Link>
-           <Link href={ROUTES.cookies} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white">Cookies</Link>
+           <Link href={ROUTES.privacy} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors">Privacidad</Link>
+           <Link href={ROUTES.terms} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors">Términos</Link>
+           <Link href={ROUTES.cookies} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors">Cookies</Link>
         </div>
+      </div>
+
+      <div className="w-full text-center mt-12 sm:mt-16">
+        <a 
+          href="https://tuplacore.vercel.app/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-block"
+        >
+          <Typography variant="detail" className="text-[8px] font-black uppercase tracking-[0.3em] text-white/10 hover:text-white/30 transition-colors cursor-pointer">
+            CREADO POR TUPLΛCORE
+          </Typography>
+        </a>
       </div>
     </footer>
   );
