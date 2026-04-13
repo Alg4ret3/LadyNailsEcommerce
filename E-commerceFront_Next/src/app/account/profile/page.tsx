@@ -28,6 +28,15 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  const hasChanges = React.useMemo(() => {
+    if (!user) return false;
+    return (
+      profileForm.firstName.trim() !== (user.firstName || '').trim() ||
+      profileForm.lastName.trim() !== (user.lastName || '').trim() ||
+      profileForm.phone.trim() !== (user.phone || '').trim()
+    );
+  }, [profileForm, user]);
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -165,7 +174,12 @@ export default function ProfilePage() {
                 <Button 
                   type="submit" 
                   label="Guardar Todo" 
-                  className="px-12 py-4 shadow-xl shadow-black/10 hover:shadow-black/20 active:scale-95 transition-all bg-black text-white" 
+                  disabled={!hasChanges}
+                  className={`px-12 py-4 transition-all text-white ${
+                    hasChanges 
+                      ? 'shadow-xl shadow-black/10 hover:shadow-black/20 active:scale-95 bg-black' 
+                      : 'bg-black/50 opacity-50 cursor-not-allowed'
+                  }`} 
                 />
                 <button 
                   type="button"

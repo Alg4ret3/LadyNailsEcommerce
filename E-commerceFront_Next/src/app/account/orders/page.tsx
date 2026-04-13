@@ -145,20 +145,20 @@ export default function OrdersPage() {
                 className="flex flex-col h-full bg-white border border-gray-200 hover:border-black hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 group relative overflow-hidden"
               >
                 {/* Header Strip - Premium Black Identity */}
-                <div className="bg-black p-4 sm:p-5 flex justify-between items-center text-white relative z-10 transition-colors group-hover:bg-black">
+                <div className="bg-gray-100 p-4 sm:p-5 flex justify-between items-center text-black relative z-10 transition-colors group-hover:bg-black group-hover:text-white">
                   <div className="space-y-0.5">
-                    <Typography variant="detail" className="text-[8px] text-white/40 font-black uppercase tracking-[0.2em]">
+                    <Typography variant="detail" className="text-[8px] text-black group-hover:text-gray-400 font-black uppercase tracking-[0.2em] transition-colors">
                       Código de Tracking
                     </Typography>
-                    <Typography variant="h4" className="text-sm sm:text-base font-black tracking-tighter">
+                    <Typography variant="h4" className="text-sm sm:text-base text-black group-hover:text-white font-black tracking-tighter transition-colors">
                       #{order.display_id}
                     </Typography>
                   </div>
                   <div className="text-right">
-                    <Typography variant="detail" className="text-[8px] text-white/40 font-black uppercase tracking-[0.2em] block mb-0.5">
+                    <Typography variant="detail" className="text-[8px] text-black group-hover:text-gray-400 font-black uppercase tracking-[0.2em] block mb-0.5 transition-colors">
                       Fecha
                     </Typography>
-                    <Typography variant="detail" className="text-[10px] text-white font-black">
+                    <Typography variant="detail" className="text-[10px] text-black group-hover:text-white font-black transition-colors">
                       {new Date(order.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }).toUpperCase()}
                     </Typography>
                   </div>

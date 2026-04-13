@@ -46,8 +46,10 @@ export default function AccountLayout({
       <section className="pt-44 pb-32 px-6 max-w-[1400px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           
-          {/* Persistent Sidebar */}
-          <AccountSidebar />
+          {/* Persistent Sidebar — solo desktop */}
+          <div className="hidden lg:block">
+            <AccountSidebar />
+          </div>
 
           {/* Dynamic Content Area */}
           <div className="flex-1 w-full min-h-[600px] relative">

@@ -91,7 +91,7 @@ export default function CartPage() {
                                  <Typography variant="detail" className="text-[9px]">{item.category}</Typography>
                                </div>
                                <Link href={`/product/${item.slug}`}>
-                                 <Typography variant="h3" className="text-xl sm:text-2xl hover:text-slate-500 transition-colors uppercase tracking-tight">{item.name}</Typography>
+                                 <Typography variant="h3" className="text-xl sm:text-2xl hover:text-gray-300 transition-colors uppercase tracking-tight">{item.name}</Typography>
                                </Link>
                                {(item.size || item.color) && (
                                  <div className="flex gap-4 pt-2">
@@ -143,10 +143,10 @@ export default function CartPage() {
 
              {/* Summary Side */}
              <div className="lg:col-span-4 lg:sticky lg:top-32 h-fit">
-                <div className="bg-slate-950 p-8 sm:p-12 text-white space-y-12">
+                <div className="bg-black p-8 sm:p-12 text-white space-y-12">
                    <div className="space-y-6">
                       <Typography variant="h3" className="text-3xl text-white">RESUMEN</Typography>
-                      <div className="space-y-4 text-white/40">
+                      <div className="space-y-4 text-gray-300">
                          <div className="flex justify-between border-b border-white/10 pb-4">
                             <span className="text-xs font-bold uppercase tracking-widest">Subtotal</span>
                             <span className="text-sm font-black text-white">${totalAmount.toLocaleString()}</span>
@@ -164,7 +164,7 @@ export default function CartPage() {
 
                    <div className="space-y-8">
                       <div className="flex justify-between items-end">
-                         <Typography variant="detail" className="text-slate-500">Total Final</Typography>
+                         <Typography variant="detail" className="text-gray-300">Total Final</Typography>
                          <Typography variant="h2" className="text-5xl text-white">${totalAmount.toLocaleString()}</Typography>
                       </div>
 
@@ -176,7 +176,7 @@ export default function CartPage() {
                          />
                          <Link 
                            href="/shop" 
-                           className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors py-4"
+                           className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-white transition-colors py-4"
                          >
                             Volver al Catálogo <ArrowRight size={14} />
                          </Link>
@@ -186,11 +186,11 @@ export default function CartPage() {
                    {/* Distribution Perks */}
                    <div className="pt-12 border-t border-white/10 grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                         <Typography variant="detail" className="text-slate-500 text-[8px]">Seguridad</Typography>
+                         <Typography variant="detail" className="text-gray-300 text-[8px]">Seguridad</Typography>
                          <Typography variant="body" className="text-[9px] text-white/60 leading-tight">Transacciones B2B <br /> protegidas con SSL.</Typography>
                       </div>
                       <div className="space-y-2">
-                         <Typography variant="detail" className="text-slate-500 text-[8px]">Garantía</Typography>
+                         <Typography variant="detail" className="text-gray-300 text-[8px]">Garantía</Typography>
                          <Typography variant="body" className="text-[9px] text-white/60 leading-tight">Respaldo oficial de las <br /> mejores marcas.</Typography>
                       </div>
                    </div>

@@ -574,7 +574,7 @@ export default function OrderDetailPage() {
         <div className="xl:col-span-5 space-y-6">
 
           {/* Total Balance Block */}
-          <div className="bg-slate-950 p-8 lg:p-10 shadow-sm relative overflow-hidden group border border-white/5">
+          <div className="bg-black p-8 lg:p-10 shadow-sm relative overflow-hidden group border border-white/5">
             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/10">
               <Typography variant="h3" className="text-xs font-black uppercase tracking-[0.2em] text-white">
                 Resumen de Compra
@@ -583,21 +583,21 @@ export default function OrderDetailPage() {
 
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm font-medium">
-                <span className="text-slate-400 uppercase tracking-widest text-[9px] font-black">Subtotal</span>
+                <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Subtotal</span>
                 <span className="font-black text-white">${order.subtotal?.toLocaleString() ?? 0}</span>
               </div>
               <div className="flex justify-between items-center text-sm font-medium">
-                <span className="text-slate-400 uppercase tracking-widest text-[9px] font-black">Costo de Domicilio</span>
+                <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Costo de Domicilio</span>
                 <span className="font-black text-white">${order.shipping_total?.toLocaleString() ?? 0}</span>
               </div>
-              <div className="flex justify-between items-center text-[9px] font-medium text-slate-500">
+              <div className="flex justify-between items-center text-[9px] font-medium text-gray-300">
                 <span className="uppercase tracking-widest font-black">Impuestos incluidos en precio</span>
-                <span className="font-bold text-slate-400">${order.tax_total?.toLocaleString() ?? 0}</span>
+                <span className="font-bold text-gray-300">${order.tax_total?.toLocaleString() ?? 0}</span>
               </div>
 
               <div className="pt-6 mt-4 border-t border-white/10">
                 <div className="flex flex-col items-end gap-1.5">
-                  <Typography variant="detail" className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] block">Total a Pagar</Typography>
+                  <Typography variant="detail" className="text-[9px] text-gray-300 font-bold uppercase tracking-[0.2em] block">Total a Pagar</Typography>
                   <Typography variant="h3" className="text-3xl sm:text-4xl font-black leading-none text-white">${order.total?.toLocaleString() ?? 0}</Typography>
                 </div>
               </div>

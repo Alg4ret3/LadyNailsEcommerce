@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { ShoppingCart, Menu, X, Truck, Phone, Heart, ChevronRight, LogOut, Package, UserIcon, MapPin } from 'lucide-react';
+import { ShoppingCart, Menu, X, Truck, Phone, Heart, ChevronRight, UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ export const Navbar: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [activeHoverCategory, setActiveHoverCategory] = useState<Category | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = React.useRef<HTMLDivElement>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>(['categories_root']);
   const { totalItems } = useCart();
@@ -31,6 +32,18 @@ export const Navbar: React.FC = () => {
 
   const { getRootCategories } = useCategories();
   const rootCategories = getRootCategories();
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleMobileSection = (section: string) => {
     setExpandedMobileSections((prev: string[]) => 
@@ -214,9 +227,8 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {user?.isLoggedIn ? (
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button 
-                onMouseEnter={() => setIsProfileOpen(true)}
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900"
               >
@@ -227,51 +239,56 @@ export const Navbar: React.FC = () => {
               <AnimatePresence>
                 {isProfileOpen && (
                   <motion.div 
+                    key="profile-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 top-[96px] bg-black/5 backdrop-blur-sm z-[40] lg:hidden" 
+                    onClick={() => setIsProfileOpen(false)}
+                  />
+                )}
+                {isProfileOpen && (
+                  <motion.div 
+                    key="profile-menu"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    onMouseEnter={() => setIsProfileOpen(true)}
-                    onMouseLeave={() => setIsProfileOpen(false)}
-                    className="absolute top-full right-0 w-64 bg-white border border-slate-100 shadow-2xl py-4 z-50 mt-2 rounded-2xl"
+                    className="fixed top-[96px] left-0 right-0 w-full bg-white border-b border-slate-100 shadow-2xl py-4 z-[50] lg:absolute lg:top-full lg:right-0 lg:w-56 lg:mt-2 lg:rounded-none lg:border lg:border-slate-200"
                   >
-                    <div className="px-6 py-4 border-b border-slate-50 mb-2">
-                      <Typography variant="detail" className="text-[8px] text-slate-400">Usuario Activo</Typography>
-                      <Typography variant="h4" className="text-xs truncate">{user.name}</Typography>
+                    <div className="px-10 py-5 lg:px-8 lg:py-4 border-b border-slate-100 mb-2">
+                      <Typography variant="detail" className="text-[10px] lg:text-[8px] text-slate-400 uppercase font-black tracking-[0.15em] block mb-0.5">Usuario Activo</Typography>
+                      <Typography variant="h4" className="text-sm lg:text-xs font-black truncate text-black">{user.name}</Typography>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col pb-4 lg:pb-2">
                       <Link 
                         href={ROUTES.profile} 
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                        className="block px-10 py-4 lg:px-8 lg:py-3 transition-all group"
                       >
-                        <UserIcon size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mi Perfil</span>
+                        <span className="text-[12px] lg:text-[9.5px] font-bold uppercase tracking-[0.25em] text-slate-400 group-hover:text-black transition-colors block">Mi Perfil</span>
                       </Link>
                       <Link 
                         href={ROUTES.orders} 
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                        className="block px-10 py-4 lg:px-8 lg:py-3 transition-all group"
                       >
-                        <Package size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Pedidos</span>
+                        <span className="text-[12px] lg:text-[9.5px] font-bold uppercase tracking-[0.25em] text-slate-400 group-hover:text-black transition-colors block">Mis Pedidos</span>
                       </Link>
                       <Link 
                         href={ROUTES.addresses} 
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-all text-slate-600 group"
+                        className="block px-10 py-4 lg:px-8 lg:py-3 transition-all group"
                       >
-                        <MapPin size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Mis Direcciones</span>
+                        <span className="text-[12px] lg:text-[9.5px] font-bold uppercase tracking-[0.25em] text-slate-400 group-hover:text-black transition-colors block">Mis Direcciones</span>
                       </Link>
                       <button 
                         onClick={() => {
                           setShowLogoutConfirm(true);
                           setIsProfileOpen(false);
                         }}
-                        className="flex items-center gap-4 px-6 py-3 hover:bg-red-50 text-red-400 mt-2 transition-all group"
+                        className="block text-left w-full px-10 py-4 lg:px-8 lg:py-3 lg:mt-2 lg:border-t lg:border-slate-100 transition-all group"
                       >
-                        <LogOut size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-red-600 transition-colors">Cerrar Sesión</span>
+                        <span className="text-[12px] lg:text-[9.5px] font-bold uppercase tracking-[0.25em] text-red-500 lg:text-red-400 group-hover:text-red-600 transition-colors block">Cerrar Sesión</span>
                       </button>
                     </div>
                   </motion.div>
