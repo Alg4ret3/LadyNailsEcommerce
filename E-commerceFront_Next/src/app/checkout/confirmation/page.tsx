@@ -8,6 +8,15 @@ import { Button } from '@/components/atoms/Button';
 import { CheckCircle2, Package, Truck, Calendar, Loader2 } from 'lucide-react';
 import { useOrderDetails } from '@/hooks/useOrders';
 
+const PAYMENT_STATUS_ES: Record<string, string> = {
+  captured:        'Capturado',
+  pending:         'Pendiente',
+  authorized:      'Autorizado',
+  refunded:        'Reembolsado',
+  canceled:        'Cancelado',
+  requires_action: 'Acción Requerida',
+};
+
 export default function ConfirmationPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
 
@@ -46,7 +55,9 @@ export default function ConfirmationPage() {
                 </div>
                 <div className="space-y-2">
                    <Typography variant="detail">Estado de Pago</Typography>
-                   <Typography variant="h4" className="text-lg text-slate-500 uppercase">{orderData.payment_status || 'En Verificación'}</Typography>
+                   <Typography variant="h4" className="text-lg text-slate-500 uppercase">
+                     {PAYMENT_STATUS_ES[orderData.payment_status ?? ''] ?? orderData.payment_status ?? 'En Verificación'}
+                   </Typography>
                 </div>
              </div>
            ) : (
@@ -73,7 +84,7 @@ export default function ConfirmationPage() {
            </div>
 
            <div className="pt-12 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button label="Seguir mis Pedidos" href="/account?tab=pedidos" variant="primary" className="px-12" />
+              <Button label="Seguir mis Pedidos" href="/account/orders" variant="primary" className="px-12" />
               <Button label="Volver al Catálogo" href="/shop" variant="outline" className="px-12" />
            </div>
         </div>
