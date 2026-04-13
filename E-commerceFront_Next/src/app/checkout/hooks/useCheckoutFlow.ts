@@ -7,7 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useCartQuery } from '@/hooks/useCart';
 import { useCustomerAddresses } from '@/hooks/useCurrentUser';
 import { getShippingOptions, ShippingOption, PaymentCollection } from '@/services/medusa';
-import { validatePassword, validateName, validatePhone } from '@/utils/validations';
+import { validatePassword, validateName, validatePhone, validateAddress } from '@/utils/validations';
 
 export type CheckoutStep = 'AUTH_CHOICE' | 'EMAIL_VERIFY' | 'SHIP_INFO' | 'SHIPPING' | 'PAYMENT';
 export type AuthMode = 'choice' | 'login' | 'register';
@@ -91,7 +91,7 @@ export function useCheckoutFlow() {
       validateName(guestFormData.firstName) &&
       validateName(guestFormData.lastName) &&
       validatePhone(guestFormData.phone) &&
-      guestFormData.street.length >= 10 &&
+      validateAddress(guestFormData.street) &&
       guestFormData.city.length > 2 &&
       isPasswordValid &&
       passwordsMatch
@@ -104,7 +104,7 @@ export function useCheckoutFlow() {
       newAddressFormData.firstName.trim().length >= 2 &&
       newAddressFormData.lastName.trim().length >= 2 &&
       validatePhone(newAddressFormData.phone) &&
-      newAddressFormData.street.trim().length >= 10 &&
+      validateAddress(newAddressFormData.street) &&
       newAddressFormData.city.length > 2 &&
       newAddressFormData.province.length > 2
     );

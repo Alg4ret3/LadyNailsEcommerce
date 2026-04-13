@@ -7,7 +7,7 @@ import { StepHeader } from './StepHeader';
 import { CountryCodeSelect } from '@/components/molecules/CountryCodeSelect';
 import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
 import { PasswordStrength } from '@/components/molecules/PasswordStrength';
-import { formatNameInput, formatPhoneInput } from '@/utils/validations';
+import { formatNameInput, formatPhoneInput, validateAddress } from '@/utils/validations';
 import { CheckoutStep } from '../hooks/useCheckoutFlow';
 
 interface DeliveryAddressSectionProps {
@@ -159,7 +159,10 @@ export const DeliveryAddressSection: React.FC<DeliveryAddressSectionProps> = ({
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega *</Typography>
-                          <input type="text" className="pro-input" required minLength={10} value={newAddressFormData.street} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
+                          <input type="text" className={`pro-input ${newAddressFormData.street.length > 0 && !validateAddress(newAddressFormData.street) ? 'border-red-400 focus:border-red-500' : ''}`} required minLength={10} value={newAddressFormData.street} onChange={(e) => setNewAddressFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
+                          {newAddressFormData.street.length > 0 && !validateAddress(newAddressFormData.street) && (
+                            <p className="text-[9px] text-red-500 uppercase tracking-widest font-bold mt-1">Debe incluir letras, números y mínimo 10 caracteres.</p>
+                          )}
                         </div>
                         <ColombiaLocationSelect
                           departamento={newAddressFormData.province}
@@ -211,7 +214,10 @@ export const DeliveryAddressSection: React.FC<DeliveryAddressSectionProps> = ({
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Typography variant="detail" className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dirección de Entrega Principal</Typography>
-                    <input type="text" className="pro-input" required minLength={10} value={guestFormData.street} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
+                    <input type="text" className={`pro-input ${guestFormData.street.length > 0 && !validateAddress(guestFormData.street) ? 'border-red-400 focus:border-red-500' : ''}`} required minLength={10} value={guestFormData.street} onChange={(e) => setGuestFormData((prev: any) => ({ ...prev, street: e.target.value }))} placeholder="Calle 123 #45-67" />
+                    {guestFormData.street.length > 0 && !validateAddress(guestFormData.street) && (
+                       <p className="text-[9px] text-red-500 uppercase tracking-widest font-bold mt-1">Debe incluir letras, números y mínimo 10 caracteres.</p>
+                    )}
                   </div>
                   <ColombiaLocationSelect
                     departamento={guestFormData.province}

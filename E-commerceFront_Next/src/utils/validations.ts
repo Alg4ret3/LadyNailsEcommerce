@@ -39,3 +39,11 @@ export const formatPhoneInput = (value: string) => {
 export const formatNameInput = (value: string) => {
   return value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
 };
+
+export const validateAddress = (address: string) => {
+  // Asegurar mínimo 10 caracteres, que tenga al menos una letra y, idealmente, contenga números (para el # o placa).
+  // Es una validación inclusiva pero suficiente para evitar basura como "asdfasdfasdf" o "123123123".
+  const hasLetters = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(address);
+  const hasNumbers = /\d/.test(address);
+  return address.trim().length >= 10 && hasLetters && hasNumbers;
+};

@@ -143,55 +143,58 @@ export default function CartPage() {
 
              {/* Summary Side */}
              <div className="lg:col-span-4 lg:sticky lg:top-32 h-fit">
-                <div className="bg-black p-8 sm:p-12 text-white space-y-12">
-                   <div className="space-y-6">
-                      <Typography variant="h3" className="text-3xl text-white">RESUMEN</Typography>
-                      <div className="space-y-4 text-gray-300">
-                         <div className="flex justify-between border-b border-white/10 pb-4">
-                            <span className="text-xs font-bold uppercase tracking-widest">Subtotal</span>
-                            <span className="text-sm font-black text-white">${totalAmount.toLocaleString()}</span>
-                         </div>
-                         <div className="flex justify-between border-b border-white/10 pb-4">
-                            <span className="text-xs font-bold uppercase tracking-widest">Logística Nacional</span>
-                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Calculado en Checkout</span>
-                         </div>
-                         <div className="flex justify-between border-b border-white/10 pb-4">
-                            <span className="text-xs font-bold uppercase tracking-widest">IVA (19%)</span>
-                            <span className="text-sm font-black text-white">Incluido</span>
-                         </div>
-                      </div>
+                <div className="bg-black p-8 lg:p-10 shadow-sm relative overflow-hidden group border border-white/5">
+                   <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/10">
+                     <Typography variant="h3" className="text-xs font-black uppercase tracking-[0.2em] text-white">
+                       Resumen de Compra
+                     </Typography>
                    </div>
 
-                   <div className="space-y-8">
-                      <div className="flex justify-between items-end">
-                         <Typography variant="detail" className="text-gray-300">Total Final</Typography>
-                         <Typography variant="h2" className="text-5xl text-white">${totalAmount.toLocaleString()}</Typography>
+                   <div className="space-y-4 relative z-10">
+                      <div className="flex justify-between items-center text-sm font-medium">
+                        <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Subtotal</span>
+                        <span className="font-black text-white">${totalAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-medium">
+                        <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Logística Nacional</span>
+                        <span className="text-[8px] font-black text-white uppercase tracking-widest">Calculado al Final</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[9px] font-medium text-gray-300">
+                        <span className="uppercase tracking-widest font-black">Impuestos (IVA 19%)</span>
+                        <span className="font-bold text-gray-300">Incluido en Precio</span>
                       </div>
 
-                      <div className="space-y-4">
-                         <Button 
-                           label={isFinishing ? "Sincronizando..." : "Finalizar Compra"} 
-                           onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
-                           className="w-full py-6 !bg-white !text-slate-950 border-none hover:bg-[#22c55e] hover:text-white transition-all text-sm" 
-                         />
-                         <Link 
-                           href="/shop" 
-                           className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-white transition-colors py-4"
-                         >
-                            Volver al Catálogo <ArrowRight size={14} />
-                         </Link>
+                      <div className="pt-6 mt-4 border-t border-white/10">
+                        <div className="flex flex-col items-end gap-1.5 mb-10">
+                          <Typography variant="detail" className="text-[9px] text-gray-300 font-bold uppercase tracking-[0.2em] block">Total a Pagar</Typography>
+                          <Typography variant="h3" className="text-4xl lg:text-5xl font-black leading-none text-white">${totalAmount.toLocaleString()}</Typography>
+                        </div>
+
+                        <div className="space-y-3 w-full">
+                           <Button 
+                             label={isFinishing ? "Sincronizando..." : "Realizar Pago"} 
+                             onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
+                             className="w-full py-5 !bg-white !text-slate-950 border-none hover:bg-neutral-200 transition-all text-[10px] font-black uppercase tracking-[0.2em]" 
+                           />
+                           <Link 
+                             href="/shop" 
+                             className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors py-4 w-full"
+                           >
+                              Volver al Catálogo <ArrowRight size={12} />
+                           </Link>
+                        </div>
                       </div>
                    </div>
 
                    {/* Distribution Perks */}
-                   <div className="pt-12 border-t border-white/10 grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <Typography variant="detail" className="text-gray-300 text-[8px]">Seguridad</Typography>
-                         <Typography variant="body" className="text-[9px] text-white/60 leading-tight">Transacciones B2B <br /> protegidas con SSL.</Typography>
+                   <div className="pt-8 mt-6 border-t border-white/10 grid grid-cols-2 gap-6 relative z-10">
+                      <div className="space-y-1.5">
+                         <Typography variant="detail" className="text-gray-400 text-[8px] font-black uppercase tracking-widest">Seguridad</Typography>
+                         <Typography variant="body" className="text-[9px] text-white/50 leading-relaxed font-medium tracking-wide">Transacciones garantizadas con SSL 256-bit.</Typography>
                       </div>
-                      <div className="space-y-2">
-                         <Typography variant="detail" className="text-gray-300 text-[8px]">Garantía</Typography>
-                         <Typography variant="body" className="text-[9px] text-white/60 leading-tight">Respaldo oficial de las <br /> mejores marcas.</Typography>
+                      <div className="space-y-1.5">
+                         <Typography variant="detail" className="text-gray-400 text-[8px] font-black uppercase tracking-widest">Garantía</Typography>
+                         <Typography variant="body" className="text-[9px] text-white/50 leading-relaxed font-medium tracking-wide">Distribuidores oficiales autorizados.</Typography>
                       </div>
                    </div>
                 </div>

@@ -27,83 +27,78 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   selectedShippingAmount,
 }) => {
   return (
-    <div className="sticky top-44 bg-slate-900 p-8 space-y-0 shadow-2xl">
+    <div className="bg-black p-8 lg:p-10 shadow-sm overflow-hidden group border border-white/5 sticky top-32">
       {/* Header */}
-      <div className="flex items-center justify-between pb-6 border-b border-white/10">
-        <Typography variant="h4" className="text-[11px] font-black uppercase tracking-[0.25em] text-white">Resumen</Typography>
-        <div className="px-2 py-1 bg-white/5 rounded-full">
-          <Typography variant="detail" className="text-[9px] text-white/40 font-bold uppercase tracking-widest">
-            {totalItems} {totalItems === 1 ? 'item' : 'items'}
-          </Typography>
-        </div>
+      <div className="flex items-center justify-between pb-4 mb-8 border-b border-white/10">
+        <Typography variant="h3" className="text-xs font-black uppercase tracking-[0.2em] text-white">
+          Resumen de Compra
+        </Typography>
+        <Typography variant="detail" className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+          {totalItems} {totalItems === 1 ? 'item' : 'items'}
+        </Typography>
       </div>
 
-      {/* Items */}
-      <div className="py-8 space-y-6 border-b border-white/10 max-h-[400px] overflow-y-auto custom-scrollbar">
+      {/* Product Items Summary Scrollable */}
+      <div className="space-y-4 mb-8 max-h-[220px] overflow-y-auto custom-scrollbar pr-2">
         {cartItems.map((item) => (
-          <div key={`${item.id}-${item.size}-${item.color}`} className="flex justify-between items-start gap-6">
-            <div className="flex-1 min-w-0 space-y-1">
-              <Typography variant="h4" className="text-[12px] font-bold text-white tracking-tight leading-tight truncate">
-                {item.name}
-              </Typography>
-              <div className="flex items-center gap-2">
-                <Typography variant="detail" className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                  {item.quantity} × ${item.price.toLocaleString()}
-                </Typography>
-                {item.size && (
-                  <>
-                    <div className="w-1 h-1 rounded-full bg-white/10"></div>
-                    <Typography variant="detail" className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                      {item.size}
-                    </Typography>
-                  </>
-                )}
-              </div>
-            </div>
-            <Typography variant="detail" className="text-[12px] font-black text-white shrink-0 mt-0.5">
-              ${(item.price * item.quantity).toLocaleString()}
-            </Typography>
+          <div key={`${item.id}-${item.size}-${item.color}`} className="flex justify-between items-start gap-4">
+             <div className="flex-1 min-w-0">
+               <Typography variant="h4" className="text-[10px] font-bold text-white tracking-tight leading-tight truncate">
+                 {item.name}
+               </Typography>
+               <Typography variant="detail" className="text-[9px] text-gray-400 font-medium uppercase tracking-widest block mt-0.5">
+                  {item.quantity} × ${item.price.toLocaleString()} {item.size ? `| TALLA: ${item.size}` : ''}
+               </Typography>
+             </div>
+             <Typography variant="detail" className="text-[10px] font-black text-white shrink-0">
+               ${(item.price * item.quantity).toLocaleString()}
+             </Typography>
           </div>
         ))}
       </div>
 
-      {/* Totals */}
-      <div className="py-8 space-y-4 border-b border-white/5">
-        <div className="flex justify-between items-center">
-          <Typography variant="detail" className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Subtotal Bruto</Typography>
-          <Typography variant="detail" className="text-[13px] font-bold text-white/80 tracking-tight">${totalAmount.toLocaleString()}</Typography>
+      <div className="space-y-4 relative z-10 border-t border-white/10 pt-6">
+        <div className="flex justify-between items-center text-sm font-medium">
+          <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Subtotal</span>
+          <span className="font-black text-white">${totalAmount.toLocaleString()}</span>
         </div>
-
-        <div className="flex justify-between">
-          <Typography variant="detail" className="text-[10px] font-black text-white/40 uppercase tracking-widest">Logística & Despacho</Typography>
-          <Typography variant="h4" className="font-bold text-emerald-400 italic">
-            {selectedShippingOptionId
-              ? `$${selectedShippingAmount.toLocaleString()}`
-              : 'Calculando...'}
-          </Typography>
+        <div className="flex justify-between items-center text-sm font-medium">
+           <span className="text-gray-300 uppercase tracking-widest text-[9px] font-black">Logística y Despacho</span>
+           <span className={`text-[9px] font-black uppercase tracking-widest ${selectedShippingOptionId ? 'text-white' : 'text-gray-500'}`}>
+              {selectedShippingOptionId ? `$${selectedShippingAmount.toLocaleString()}` : 'Calculado en destino'}
+           </span>
+        </div>
+        <div className="flex justify-between items-center text-[9px] font-medium text-gray-300">
+           <span className="uppercase tracking-widest font-black">Impuestos (IVA 19%)</span>
+           <span className="font-bold text-gray-300">Incluido en Precio</span>
+        </div>
+        
+        {/* Total a Pagar */}
+        <div className="pt-6 mt-4 border-t border-white/10">
+          <div className="flex flex-col items-end gap-1.5 mb-2">
+            <Typography variant="detail" className="text-[9px] text-gray-300 font-bold uppercase tracking-[0.2em] block">Total a Pagar</Typography>
+            <Typography variant="h3" className="text-4xl lg:text-5xl font-black leading-none text-white">
+               ${(totalAmount + selectedShippingAmount).toLocaleString()}
+            </Typography>
+          </div>
         </div>
       </div>
 
-      {/* Total */}
-      <div className="pt-6 flex justify-between items-center">
-        <Typography variant="h4" className="text-[11px] font-black uppercase tracking-[0.2em] text-white/30">Total</Typography>
-        <div className="flex flex-col items-end">
-          <Typography variant="h1" className="text-4xl font-black tracking-tighter text-white">
-            ${(totalAmount + selectedShippingAmount).toLocaleString()}
-          </Typography>
-          <Typography variant="detail" className="text-[9px] text-white/20 font-medium uppercase tracking-widest mt-1">IVA Incluido</Typography>
+      {/* Distribution Perks */}
+      <div className="pt-8 mt-6 border-t border-white/10 grid grid-cols-2 gap-6 relative z-10">
+        <div className="space-y-1.5">
+           <Typography variant="detail" className="text-gray-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
+             <ShieldCheck size={10} />
+             Seguridad
+           </Typography>
+           <Typography variant="body" className="text-[9px] text-white/50 leading-relaxed font-medium tracking-wide">Transacciones garantizadas con SSL 256-bit.</Typography>
         </div>
-      </div>
-
-      {/* Security footnote */}
-      <div className="pt-10 flex items-center justify-center gap-4 border-t border-white/5 mt-8">
-        <div className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity duration-300">
-          <ShieldCheck size={14} className="text-white" />
-          <Typography variant="detail" className="text-[9px] font-bold text-white uppercase tracking-widest">Pago Seguro</Typography>
-        </div>
-        <div className="w-1 h-1 rounded-full bg-white/10"></div>
-        <div className="opacity-40 hover:opacity-100 transition-opacity duration-300">
-          <Typography variant="detail" className="text-[9px] font-bold text-white uppercase tracking-widest">AES-256 bits</Typography>
+        <div className="space-y-1.5">
+           <Typography variant="detail" className="text-gray-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
+             <ShieldCheck size={10} />
+             Garantía
+           </Typography>
+           <Typography variant="body" className="text-[9px] text-white/50 leading-relaxed font-medium tracking-wide">Distribuidores oficiales autorizados.</Typography>
         </div>
       </div>
     </div>
