@@ -47,13 +47,10 @@ export const ACADEMY_LOCATIONS = [
 ];
 
 export const HOME_CATEGORIES = [
-  { name: 'Uñas y Geles', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580687/efnvpygjngh8ckqs5lxt.webp', count: '1.2k SKU' },
-
-  { name: 'Barberia', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580893/gqsgpkw2xnjbcg4e1amz.jpg', count: '850k SKU' },
-  { name: 'Maquillaje', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580891/gphgnidiphejo2daumep.jpg', count: '120 SKU' },
+  { name: 'Uñas y Geles', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580687/efnvpygjngh8ckqs5lxt.webp', count: '1.2k SKU', href: '/shop/uñas' },
+  { name: 'Barberia', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580893/gqsgpkw2xnjbcg4e1amz.jpg', count: '850k SKU', href: '/shop/barberia' },
+  { name: 'Maquillaje', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580891/gphgnidiphejo2daumep.jpg', count: '120 SKU', href: '/shop/maquillaje' },
 ];
-
-
 export const HOME_PARTNERS = [
   { 
     name: 'Bioaqua', 

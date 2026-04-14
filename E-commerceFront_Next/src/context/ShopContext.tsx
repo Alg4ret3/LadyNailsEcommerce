@@ -38,6 +38,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
   const { data: allProducts = [], isLoading: isProductsLoading } = useAllProducts();
 
   const [filters, setFiltersState] = useState<FilterState>(DEFAULT_FILTERS);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Sync initial state from URL on mount
   useEffect(() => {
@@ -52,17 +53,25 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
        }
 
        const q = params.get('q') || '';
-       const cats = params.get('categories')?.split(',') || [];
-       if (pathCategory && !cats.includes(pathCategory)) {
-          cats.push(pathCategory);
+       const cats = params.get('categories')?.split(',').filter(Boolean) || [];
+       
+       // Si venimos por ruta /shop/categoria, esta es LA categoría seleccionada y eliminamos el query param
+       if (pathCategory) {
+         params.delete('categories');
+         // Reemplazamos la lista completa por la categoría del path
+         cats.length = 0;
+         cats.push(pathCategory);
        }
-       const brs = params.get('brands')?.split(',') || [];
+       
+       const brs = params.get('brands')?.split(',').filter(Boolean) || [];
        
        setFiltersState({
          query: q,
          selectedCategories: cats,
          selectedBrands: brs
        });
+       
+       setIsInitialized(true);
     }
   }, []);
 
@@ -92,18 +101,34 @@ export const ShopProvider: React.FC<{ children: React.ReactNode; initialProducts
   }, []);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     const params = new URLSearchParams();
     if (filters.query) params.set('q', filters.query);
-    if (filters.selectedCategories.length) params.set('categories', filters.selectedCategories.join(','));
+    
+    // Si solo hay UNA categoría seleccionada, usamos la ruta limpia /shop/categoria
+    if (filters.selectedCategories.length === 1) {
+      params.delete('categories');
+    } else if (filters.selectedCategories.length > 1) {
+      params.set('categories', filters.selectedCategories.join(','));
+    }
+    
     if (filters.selectedBrands.length) params.set('brands', filters.selectedBrands.join(','));
 
     const search = params.toString();
-    const newUrl = search ? `/shop?${search}` : '/shop';
+    let basePath = '/shop';
+    
+    // Si solo tenemos una categoría seleccionada, usamos la ruta dinámica
+    if (filters.selectedCategories.length === 1) {
+      basePath = `/shop/${encodeURIComponent(filters.selectedCategories[0])}`;
+    }
+    
+    const newUrl = search ? `${basePath}?${search}` : basePath;
     
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', newUrl);
     }
-  }, [filters]);
+  }, [filters, isInitialized]);
 
   const resetFilters = useCallback(() => {
     setFiltersState(DEFAULT_FILTERS);

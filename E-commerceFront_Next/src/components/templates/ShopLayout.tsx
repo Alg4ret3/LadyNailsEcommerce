@@ -9,6 +9,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { MainLayout } from './MainLayout';
 import { Badge } from '@/components/atoms/Badge';
 import { useCategories } from '@/context/CategoriesContext';
+import { useShop } from '@/context/ShopContext';
 import { filterProducts } from '@/utils/shop-filters';
 
 interface ShopLayoutProps {
@@ -60,12 +61,13 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  // Initialize from URL params if available, otherwise from initialCategory
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
-    const fromQuery = searchParams.get('categories');
-    if (fromQuery) return fromQuery.split(',');
-    return initialCategory ? [initialCategory] : [];
-  });
+  // Usamos ShopContext como fuente única de verdad
+  const { filters, setFilters } = useShop();
+  const selectedCategories = filters.selectedCategories;
+  
+  const setSelectedCategories = (newCategories: string[]) => {
+    setFilters({ selectedCategories: newCategories });
+  };
   
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState(200000);
@@ -74,18 +76,7 @@ export const ShopLayout: React.FC<ShopLayoutProps> = ({ title, subtitle, initial
   const PRODUCTS_PER_PAGE = 6;
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Sync state if URL changes significantly
-  const queryCategories = searchParams.get('categories');
-  useEffect(() => {
-    if (queryCategories) {
-      if (queryCategories !== selectedCategories.join(',')) {
-        setSelectedCategories(queryCategories.split(','));
-      }
-    } else if (pathname === '/shop' && selectedCategories.length > 0 && !initialCategory) {
-      // Clear state when returning to the base shop route without query params
-      setSelectedCategories([]);
-    }
-  }, [queryCategories, pathname, initialCategory, selectedCategories]);
+
 
   // Scroll to results top when page or filters change
   useEffect(() => {
