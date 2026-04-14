@@ -11,9 +11,6 @@ const resendApiKey = process.env.RESEND_API_KEY;
 const redis = new Redis(redisUrl);
 const resend = new Resend(resendApiKey);
 
-const logoPath = path.join(process.cwd(), "static/logo.png");
-const logoBuffer = fs.readFileSync(logoPath);
-
 export const OtpService = {
     async generate(email: string): Promise<string> {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -66,14 +63,17 @@ export const OtpService = {
                 border-radius:2px;
             "></div>
 
-            <!-- LOGO -->
+            <!-- NOMBRE DE LA MARCA -->
             <div style="margin-bottom:30px;">
-                <img 
-                    src="cid:logo@ladynails"
-                    alt="LadyNails"
-                    width="170"
-                    style="display:block; margin:0 auto;"
-                />
+                <h1 style="
+                    font-size:32px;
+                    font-weight:700;
+                    color:#111111;
+                    margin:0;
+                    letter-spacing:2px;
+                ">
+                    LadyNails
+                </h1>
             </div>
 
             <h2 style="
@@ -137,18 +137,21 @@ export const OtpService = {
             </p>
 
             <!-- REDES SOCIALES -->
-            <div style="margin-top:10px;">
+            <div style="text-align:center; margin:25px 0;">
 
-                <a href="https://facebook.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" width="20" style="opacity:0.7;">
+                <a href="https://facebook.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                    <img src="https://s.magecdn.com/social/32w/mb-facebook.png"
+                        width="28" height="28" alt="Facebook" style="display:block; border:0;"/>
                 </a>
 
-                <a href="https://instagram.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="20" style="opacity:0.7;">
+                <a href="https://instagram.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                    <img src="https://s.magecdn.com/social/32w/mb-instagram.png"
+                        width="28" height="28" alt="Instagram" style="display:block; border:0;"/>
                 </a>
 
-                <a href="https://tiktok.com/@TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" width="20" style="opacity:0.7;">
+                <a href="https://tiktok.com/@ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                    <img src="https://s.magecdn.com/social/32w/mb-tiktok.png"
+                        width="28" height="28" alt="TikTok" style="display:block; border:0;"/>
                 </a>
 
             </div>
@@ -165,15 +168,7 @@ export const OtpService = {
         </div>
     </div>
 </div>
-                `,
-                attachments: [
-                    {
-                        filename: 'logo.png',
-                        content: logoBuffer.toString('base64'),
-                        contentType: 'image/png',
-                        contentId: 'logo@ladynails'
-                    }
-                ]
+                `
             });
         } catch (error) {
             console.error('Failed to send email:', error);

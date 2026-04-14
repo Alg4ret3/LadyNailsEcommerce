@@ -27,22 +27,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     const { name, email, subject, message } = validatedData
 
-    const logoPath = path.join(process.cwd(), "static/logo.png")
-    let attachments: any[] = []
     
-    try {
-      if (fs.existsSync(logoPath)) {
-        const logoBuffer = fs.readFileSync(logoPath)
-        attachments.push({
-          filename: 'logo.png',
-          content: logoBuffer.toString('base64'),
-          contentType: 'image/png',
-          contentId: 'logo@ladynails'
-        })
-      }
-    } catch (e) {
-      console.error("Could not load logo for email attachment", e)
-    }
 
     const CONTACT_EMAIL_DESTINATION = "tuplacore@gmail.com" // You can change this to your preferred inbox
 
@@ -67,18 +52,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
                     padding:45px 35px;
                     box-shadow:0 10px 30px rgba(0,0,0,0.04);
                 ">
-                  <!-- LOGO -->
-                  ${attachments.length > 0 ? `
+                  <!-- NOMBRE DE LA MARCA -->
                   <tr>
                     <td align="center" style="padding-bottom:30px;">
-                      <img 
-                        src="cid:logo@ladynails"
-                        alt="LadyNails"
-                        width="170"
-                        style="display:block; margin:0 auto;"
-                      />
+                      <h1 style="
+                          font-size:32px;
+                          font-weight:700;
+                          color:#111111;
+                          margin:0;
+                          letter-spacing:2px;
+                      ">
+                        LadyNails
+                      </h1>
                     </td>
-                  </tr>` : ''}
+                  </tr>
 
                   <!-- TITLE -->
                   <tr>
@@ -132,8 +119,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
             </tr>
           </table>
         </body>
-      `,
-      attachments
+      `
     })
 
     return res.status(200).json({ success: true, message: "Mensaje enviado con éxito." })

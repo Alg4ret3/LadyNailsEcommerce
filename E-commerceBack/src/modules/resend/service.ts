@@ -12,9 +12,6 @@ type Options = {
   from: string
 }
 
-const logoPath = path.join(process.cwd(), "static/logo.png");
-const logoBuffer = fs.readFileSync(logoPath);
-
 class ResendNotificationProviderService extends AbstractNotificationProviderService {
   static identifier = "resend"
 
@@ -77,15 +74,18 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
             </td>
           </tr>
 
-          <!-- LOGO -->
+          <!-- NOMBRE DE LA MARCA -->
           <tr>
             <td style="padding-bottom:30px;">
-              <img 
-                src="cid:logo@ladynails"
-                alt="LadyNails"
-                width="170"
-                style="display:block; margin:0 auto;"
-              />
+              <h1 style="
+                  font-size:32px;
+                  font-weight:700;
+                  color:#111111;
+                  margin:0;
+                  letter-spacing:2px;
+              ">
+                LadyNails
+              </h1>
             </td>
           </tr>
 
@@ -129,7 +129,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
                  style="
                     background-color:#111111;
                     color:#ffffff;
-                    padding:16px 32px;
+                    padding:16px 16px;
                     text-decoration:none;
                     border-radius:10px;
                     font-weight:500;
@@ -149,7 +149,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
                   width:40px;
                   height:2px;
                   background:#111111;
-                  margin:30px auto;
+                  margin:10px auto;
                   border-radius:2px;
               "></div>
             </td>
@@ -180,7 +180,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
 
           <!-- FALLBACK LINK -->
           <tr>
-            <td style="padding-bottom:25px;">
+            <td style="padding-bottom:15px;">
               <p style="
                   font-size:12px;
                   color:#999999;
@@ -200,25 +200,28 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
           </tr>
 
           <!-- REDES SOCIALES -->
-          <tr>
-            <td align="center" style="padding-top:10px;">
-              <a href="https://facebook.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" width="20" style="opacity:0.7;">
+          <div style="text-align:center; margin:25px 0;">
+
+              <a href="https://facebook.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                  <img src="https://s.magecdn.com/social/32w/mb-facebook.png"
+                      width="28" height="28" alt="Facebook" style="display:block; border:0;"/>
               </a>
 
-              <a href="https://instagram.com/TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="20" style="opacity:0.7;">
+              <a href="https://instagram.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                  <img src="https://s.magecdn.com/social/32w/mb-instagram.png"
+                      width="28" height="28" alt="Instagram" style="display:block; border:0;"/>
               </a>
 
-              <a href="https://tiktok.com/@TU_USUARIO" style="margin:0 12px; text-decoration:none;">
-                <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" width="20" style="opacity:0.7;">
+              <a href="https://tiktok.com/@ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+                  <img src="https://s.magecdn.com/social/32w/mb-tiktok.png"
+                      width="28" height="28" alt="TikTok" style="display:block; border:0;"/>
               </a>
-            </td>
-          </tr>
+
+          </div>
 
           <!-- FOOTER -->
           <tr>
-            <td align="center" style="padding-top:40px;">
+            <td align="center" style="padding-top:10px;">
               <p style="
                   font-size:11px;
                   color:#cccccc;
@@ -236,15 +239,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
   </table>
 
 </body>
-`,
-        attachments: [
-          {
-            filename: 'logo.png',
-            content: logoBuffer.toString('base64'),
-            contentType: 'image/png',
-            contentId: 'logo@ladynails'
-          }
-        ]
+`
       })
     } else if (template === "order-fulfillment") {
       const { order, fulfillment } = data
@@ -285,7 +280,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
     <!-- HEADER -->
     <tr>
       <td style="padding-bottom:20px;">
-        <h2 style="margin:0; font-size:20px; font-weight:600;">LadyNails</h2>
+        <h1 style="margin:0; font-size:28px; font-weight:700; color:#111111; letter-spacing:1px;">LadyNails</h1>
       </td>
     </tr>
 
@@ -410,13 +405,12 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
     <!-- INFO CLIENTE -->
     <tr>
       <td style="padding-top:40px;">
-        <h3 style="font-size:16px; margin-bottom:10px;">Información del cliente</h3>
+        <h3 style="font-size:16px; margin-bottom:10px;">Detalle del envío</h3>
       </td>
     </tr>
 
     <tr>
       <td style="font-size:13px; color:#444; line-height:1.6;">
-        <b>Dirección de envío</b><br/>
         ${order.shipping_address?.first_name} ${order.shipping_address?.last_name}<br/>
         ${order.shipping_address?.address_1}<br/>
         ${order.shipping_address?.city}<br/>
@@ -424,24 +418,36 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
       </td>
     </tr>
 
+    <!-- REDES SOCIALES -->
+    <div style="text-align:center; margin:25px 0;">
+
+      <a href="https://facebook.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+        <img src="https://s.magecdn.com/social/32w/mb-facebook.png"
+          width="28" height="28" alt="Facebook" style="display:block; border:0;"/>
+      </a>
+
+      <a href="https://instagram.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+        <img src="https://s.magecdn.com/social/32w/mb-instagram.png"
+          width="28" height="28" alt="Instagram" style="display:block; border:0;"/>
+      </a>
+
+      <a href="https://tiktok.com/@ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+        <img src="https://s.magecdn.com/social/32w/mb-tiktok.png"
+          width="28" height="28" alt="TikTok" style="display:block; border:0;"/>
+      </a>
+
+    </div>
+
     <!-- FOOTER -->
     <tr>
-      <td style="padding-top:40px; font-size:12px; color:#888;">
+      <td style="padding-top:20px; font-size:12px; color:#888;">
         Si tienes alguna pregunta, responde a este correo o contáctanos.
       </td>
     </tr>
 
   </table>
 </body>
-`,
-        attachments: [
-          {
-            filename: 'logo.png',
-            content: logoBuffer.toString('base64'),
-            contentType: 'image/png',
-            contentId: 'logo@ladynails'
-          }
-        ]
+`
       })
     }
 
