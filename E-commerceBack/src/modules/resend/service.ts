@@ -449,6 +449,175 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
 </body>
 `
       })
+    } else if (template === "payment-pending") {
+      const { order } = data
+
+      await this.resend.emails.send({
+        from: this.options_.from,
+        to,
+        subject: `¡Gracias! Tu pago está siendo verificado - Pedido #${order.display_id}`,
+        html: `
+<body style="margin:0; padding:40px 20px; background:#ffffff; border-radius:12px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#111;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:0 auto;">
+    
+    <!-- HEADER -->
+    <tr>
+      <td style="padding-bottom:25px;">
+        <h1 style="margin:0; font-size:32px; font-weight:700; color:#111111; letter-spacing:2px; text-align:center;">LadyNails</h1>
+      </td>
+    </tr>
+
+    <!-- MENSAJE PRINCIPAL -->
+    <tr>
+      <td style="padding:30px 25px; text-align:center;">
+        <div style="width:60px; height:3px; background:#111111; margin:0 auto 25px auto; border-radius:2px;"></div>
+        
+        <h2 style="font-size:22px; font-weight:600; color:#111111; margin:0 0 15px 0;">
+          ¡Gracias por tu compra!
+        </h2>
+        
+        <p style="font-size:15px; color:#555555; line-height:1.6; margin:0 0 20px 0;">
+          Tu pago ha sido recibido y está siendo <strong>verificado</strong> por nuestro equipo.
+        </p>
+        
+        <p style="font-size:14px; color:#666666; line-height:1.6; margin:0;">
+          En pocos minutos recibirás la confirmación de tu pago. Una vez aprobado, te enviaremos los detalles de envío de tu pedido.
+        </p>
+      </td>
+    </tr>
+
+    <!-- LINK A LA TIENDA -->
+    <tr>
+      <td style="padding:25px 0; text-align:center;">
+        <a href="${process.env.STORE_URL}" style="font-size:14px; color:#2d6cdf; text-decoration:none;">
+          → Visitar nuestra tienda
+        </a>
+      </td>
+    </tr>
+
+    <!-- DIVIDER -->
+    <tr>
+      <td><hr style="border:none; border-top:1px solid #e0e0e0; margin:15px 0;"></td>
+    </tr>
+
+    <!-- RESUMEN DEL PEDIDO -->
+    <tr>
+      <td style="padding:10px 0;">
+        <h3 style="font-size:16px; font-weight:600; margin-bottom:15px; color:#111111;">Resumen del pedido #${order.display_id}</h3>
+      </td>
+    </tr>
+
+    ${
+      (order.items || []).map(item => {
+        const itemQuantity = Number(item.quantity || 0);
+        const itemUnitPrice = Number(item.unit_price || 0);
+        const itemTotal = Number(item.total || (itemUnitPrice * itemQuantity));
+        
+        return `
+          <tr>
+            <td style="padding:8px 0; display:flex; align-items:center; border-bottom:1px solid #f0f0f0;">
+              ${item.thumbnail ? `<img src="${item.thumbnail}" width="45" style="border-radius:6px; margin-right:12px;" />` : '<div style="width:45px; height:45px; background:#eee; border-radius:6px; margin-right:12px;"></div>'}
+              <div style="font-size:14px; color:#333;">
+                ${item.title || item.product_title || 'Producto'} x ${itemQuantity}
+              </div>
+              <div style="margin-left:auto; font-size:14px; font-weight:500; color:#333;">
+                $${itemTotal.toLocaleString()} 
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('')
+    }
+
+    <!-- TOTALS -->
+    <tr>
+      <td style="padding-top:15px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="font-size:14px; padding:6px 0; color:#555;">Subtotal</td>
+            <td style="font-size:14px; padding:6px 0; text-align:right; color:#333;">$${Number(
+              order.item_subtotal || 
+              order.subtotal || 
+              order.summary?.subtotal || 
+              (order.total - (order.shipping_total || 0)) || 
+              0
+            ).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td style="font-size:14px; padding:6px 0; color:#555;">Envío</td>
+            <td style="font-size:14px; padding:6px 0; text-align:right; color:#333;">$${Number(
+              order.shipping_total || 
+              order.shipping_subtotal || 
+              order.summary?.shipping_total || 
+              5000
+            ).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td style="font-size:14px; padding:6px 0; color:#555;">Impuestos</td>
+            <td style="font-size:14px; padding:6px 0; text-align:right; color:#333;">$${Number(
+              order.tax_total || 
+              order.summary?.tax_total || 
+              0
+            ).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td style="font-size:16px; font-weight:700; padding:10px 0; color:#111;">Total</td>
+            <td style="font-size:16px; font-weight:700; padding:10px 0; text-align:right; color:#111;">$${Number(
+              order.total || 
+              order.summary?.original_order_total || 
+              order.summary?.paid_total || 
+              0
+            ).toLocaleString()} ${(order.currency_code || 'COP').toUpperCase()}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- NOTA DE PAGO PENDIENTE -->
+    <tr>
+      <td style="padding:25px 0;">
+        <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:20px; text-align:center;">
+          <p style="font-size:13px; color:#795548; margin:0;">
+            <strong>Estado:</strong> Pago en verificación
+          </p>
+        </div>
+      </td>
+    </tr>
+
+    <!-- REDES SOCIALES -->
+    <div style="text-align:center; margin:25px 0;">
+
+        <a href="https://facebook.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+            <img src="https://s.magecdn.com/social/32w/mb-facebook.png"
+                width="28" height="28" alt="Facebook" style="display:block; border:0;"/>
+        </a>
+
+        <a href="https://instagram.com/ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+            <img src="https://s.magecdn.com/social/32w/mb-instagram.png"
+                width="28" height="28" alt="Instagram" style="display:block; border:0;"/>
+        </a>
+
+        <a href="https://tiktok.com/@ladynails" style="display:inline-block; margin:0 8px; text-decoration:none;">
+            <img src="https://s.magecdn.com/social/32w/mb-tiktok.png"
+                width="28" height="28" alt="TikTok" style="display:block; border:0;"/>
+        </a>
+
+    </div>
+
+    <!-- FOOTER -->
+    <tr>
+      <td style="padding-top:15px; text-align:center;">
+        <p style="font-size:11px; color:#999999; letter-spacing:1px; margin:0;">
+          © 2026 LadyNails
+        </p>
+      </td>
+    </tr>
+
+  </table>
+</body>
+`
+      })
     }
 
     return {}
