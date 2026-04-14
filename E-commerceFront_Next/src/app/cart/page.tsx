@@ -12,19 +12,18 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useToast } from '@/context/ToastContext';
-
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems, medusaCartId, ensureCart } = useCart();
-  const { showToast } = useToast();
   const router = useRouter();
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showMinWarning, setShowMinWarning] = useState(false);
 
   const handleFinalizePurchase = async () => {
     if (cartItems.length === 0) return;
 
     if (totalAmount < 200000) {
-      showToast('La compra mínima es de $200.000 para proceder.', 'error');
+      setShowMinWarning(true);
+      setTimeout(() => setShowMinWarning(false), 3500);
       return;
     }
     
@@ -176,6 +175,21 @@ export default function CartPage() {
                              onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
                              className="w-full py-5 !bg-white !text-slate-950 border-none hover:bg-neutral-200 transition-all text-[10px] font-black uppercase tracking-[0.2em]" 
                            />
+
+                           {/* Minimum purchase warning banner */}
+                           <AnimatePresence>
+                             {showMinWarning && (
+                               <motion.div
+                                 initial={{ opacity: 0, y: -8 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 exit={{ opacity: 0, y: -8 }}
+                                 className="w-full bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest text-center px-4 py-3 rounded-xl"
+                               >
+                                 ⚠ No puedes hacer compras menores a $200.000 COP
+                               </motion.div>
+                             )}
+                           </AnimatePresence>
+
                            <Link 
                              href="/shop" 
                              className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors py-4 w-full"

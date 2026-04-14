@@ -7,8 +7,8 @@ export const COMPANY_INFO = {
     alt: "Ladynail Shop Logo",
   },
   contact: {
-    phone: "+57 (602) 000 0000",
-    phoneLink: "tel:+570000000",
+    phone: "+57 316 144 44 74",
+    phoneLink: "tel:+573161444474",
     whatsappPrefix: "57",
     email: "hola@ladynailshop.com",
     address: "Parque Industrial Sur, Bloque C-12, \nPasto, Nariño",

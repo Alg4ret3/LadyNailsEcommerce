@@ -7,10 +7,13 @@ import { useCart, CartItem } from '@/context/CartContext';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export const CartDrawer: React.FC = () => {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, isCartOpen, setIsCartOpen } = useCart();
+  const router = useRouter();
+  const [showMinWarning, setShowMinWarning] = useState(false);
 
   // Group items by vendor
   const groupedItems = cartItems.reduce((acc, item) => {
@@ -133,11 +136,33 @@ export const CartDrawer: React.FC = () => {
                 <Typography variant="body" className="text-[8px] sm:text-[9px] md:text-[10px] text-foreground/40 uppercase tracking-widest leading-relaxed font-medium">
                   Compra segura. Envío por cada tienda.
                 </Typography>
-                <Link href="/checkout" onClick={() => setIsCartOpen(false)} className="block">
-                  <button className="w-full bg-foreground text-background py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                    Tramitar Pedido <ChevronRight size={12} className="sm:size-3.5 md:size-3.5" />
-                  </button>
-                </Link>
+                <button
+                  onClick={() => {
+                    if (totalAmount < 200000) {
+                      setShowMinWarning(true);
+                      setTimeout(() => setShowMinWarning(false), 3500);
+                      return;
+                    }
+                    setIsCartOpen(false);
+                    router.push('/checkout');
+                  }}
+                  className="w-full bg-foreground text-background py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  Tramitar Pedido <ChevronRight size={12} className="sm:size-3.5 md:size-3.5" />
+                </button>
+
+                {/* Minimum purchase warning */}
+                {showMinWarning && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="w-full bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest text-center px-4 py-3 rounded-xl"
+                  >
+                    ⚠ No puedes hacer compras menores a $200.000 COP
+                  </motion.div>
+                )}
+
                 <button 
                    onClick={() => setIsCartOpen(false)}
                    className="w-full text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-foreground/40 hover:text-foreground transition-colors"

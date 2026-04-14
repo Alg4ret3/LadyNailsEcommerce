@@ -81,8 +81,8 @@ export const Footer: React.FC = () => {
           rel="noopener noreferrer"
           className="inline-block"
         >
-          <Typography variant="detail" className="text-[8px] font-black uppercase tracking-[0.3em] text-white/10 hover:text-white/30 transition-colors cursor-pointer">
-            CREADO POR TUPLΛCORE
+          <Typography variant="detail" className="text-[8px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white/90 transition-colors cursor-pointer">
+            DESARROLLADO POR TUPLΛCORE
           </Typography>
         </a>
       </div>
