@@ -38,6 +38,7 @@ interface CartContextType {
   stockError: { id: string; message: string } | null;
   clearStockError: () => void;
   pendingQuantityUpdates: Map<string, number>;
+  updatingItems: Map<string, boolean>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -99,6 +100,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [stockError, setStockError] = useState<{ id: string; message: string } | null>(null);
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, number>>(new Map());
+  const [updatingItems, setUpdatingItems] = useState<Map<string, boolean>>(new Map());
   const pendingUpdatesRef = useRef<Map<string, number>>(new Map());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -109,6 +111,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const processPendingUpdates = useCallback(async (updatesToProcess: Map<string, number>) => {
+    const variantIds = Array.from(updatesToProcess.keys());
+    setUpdatingItems(new Map(variantIds.map(id => [id, true])));
+
     for (const [variantId, quantity] of updatesToProcess) {
       try {
         const lineItem = cart?.items.find((li: any) => li.variant_id === variantId);
@@ -116,16 +121,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await updateQtyMutation({ lineItemId: lineItem.id, quantity });
         }
       } catch (error: any) {
-        if (error?.response?.status === 400) {
-          const errorMessage = error.response.data?.message || 'Stock insuficiente';
-          if (errorMessage.includes('inventory') || errorMessage.includes('stock')) {
-            setStockError({ id: variantId, message: errorMessage });
-            setCartItems(prev => prev.map(i => 
-              (i.id === variantId) ? { ...i, quantity: Math.max(1, quantity - 1) } : i
-            ));
-          }
-        }
         console.error('Error updating quantity:', error);
+        
+        const errorStatus = error?.response?.status || error?.status;
+        const errorMessage = error?.response?.data?.message || error?.message || error?.data?.message || 'Stock insuficiente';
+        
+        console.log('Error details:', { errorStatus, errorMessage });
+        
+        if (errorStatus === 400 && (errorMessage.toLowerCase().includes('inventory') || errorMessage.toLowerCase().includes('stock') || errorMessage.toLowerCase().includes('variant'))) {
+          setStockError({ id: variantId, message: 'No hay suficiente stock disponible' });
+          setCartItems(prev => prev.map(i => 
+            (i.id === variantId) ? { ...i, quantity: Math.max(1, quantity - 1) } : i
+          ));
+        }
+      } finally {
+        setUpdatingItems(prev => {
+          const updated = new Map(prev);
+          updated.delete(variantId);
+          return updated;
+        });
       }
     }
   }, [cart, updateQtyMutation]);
@@ -339,6 +353,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       stockError,
       clearStockError,
       pendingQuantityUpdates,
+      updatingItems,
     }}>
       {children}
     </CartContext.Provider>

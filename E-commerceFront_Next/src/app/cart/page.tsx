@@ -1,9 +1,9 @@
 'use client';
 
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CornerDownRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CornerDownRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -14,7 +14,7 @@ import { Button } from '@/components/atoms/Button';
 import { useCart } from '@/context/CartContext';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, commitQuantityUpdate, totalAmount, totalItems, medusaCartId, ensureCart, stockError, clearStockError, pendingQuantityUpdates } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, commitQuantityUpdate, totalAmount, totalItems, medusaCartId, ensureCart, stockError, clearStockError, pendingQuantityUpdates, updatingItems } = useCart();
   const router = useRouter();
   const [isFinishing, setIsFinishing] = useState(false);
   const [showMinWarning, setShowMinWarning] = useState(false);
@@ -95,63 +95,62 @@ export default function CartPage() {
                                     {item.color && <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color: {item.color}</span>}
                                  </div>
                                )}
-                            </div>
+</div>
 
-                            <div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-4">
-<AnimatePresence>
-                                   {stockError && stockError.id === item.id && (
-                                     <motion.div
-                                       initial={{ opacity: 0, height: 0 }}
-                                       animate={{ opacity: 1, height: 'auto' }}
-                                       exit={{ opacity: 0, height: 0 }}
-                                       className="overflow-hidden"
-                                     >
-                                       <div className="bg-red-600 text-white text-[8px] font-bold uppercase tracking-widest text-center px-2 py-1 rounded mt-1">
-                                         ⚠ {stockError.message}
-                                       </div>
-                                     </motion.div>
-                                   )}
-                                 </AnimatePresence>
-<div className="flex items-center border border-slate-200">
-                                    <button 
-                                      onClick={() => {
-                                        updateQuantity(item.id, item.quantity - 1, item.size);
-                                        commitQuantityUpdate(item.id, item.quantity - 1);
-                                      }}
-                                      className="p-3 hover:bg-slate-50 transition-colors border-r border-slate-200"
-                                    >
-                                      <Minus size={14} />
-                                    </button>
-                                    <input
-                                      type="number"
-                                      value={item.quantity}
-                                      onChange={(e) => {
-                                        const value = parseInt(e.target.value, 10);
-                                        if (value > 0) {
-                                          updateQuantity(item.id, value, item.size);
-                                        }
-                                      }}
-                                      onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
-                                      className="w-12 text-center font-black text-sm bg-transparent focus:outline-none"
-                                      min="1"
-                                    />
-                                    <button 
-                                      onClick={() => {
-                                        updateQuantity(item.id, item.quantity + 1, item.size);
-                                        commitQuantityUpdate(item.id, item.quantity + 1);
-                                      }}
-                                      className="p-3 hover:bg-slate-50 transition-colors border-l border-slate-200"
-                                    >
-                                      <Plus size={14} />
-                                    </button>
-                                 </div>
+<div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-4">
+                                {stockError && stockError.id === item.id && (
+                                  <div className="w-full bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest text-center px-3 py-2 rounded mb-2">
+                                    ⚠ {stockError.message}
+                                  </div>
+                                )}
+                                <div className="flex items-center border border-slate-200 relative">
+                                  <button 
+                                    onClick={() => {
+                                      updateQuantity(item.id, item.quantity - 1, item.size);
+                                      commitQuantityUpdate(item.id, item.quantity - 1);
+                                    }}
+                                    disabled={updatingItems.get(item.id)}
+                                    className="p-3 hover:bg-slate-50 transition-colors border-r border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <Minus size={14} />
+                                  </button>
+                                  <div className="w-12 flex items-center justify-center h-[42px]">
+                                    {updatingItems.get(item.id) ? (
+                                      <Loader2 size={18} className="animate-spin text-slate-400" />
+                                    ) : (
+                                      <input
+                                        type="number"
+                                        value={item.quantity}
+                                        onChange={(e) => {
+                                          const value = parseInt(e.target.value, 10);
+                                          if (value > 0) {
+                                            updateQuantity(item.id, value, item.size);
+                                          }
+                                        }}
+                                        onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
+                                        className="w-12 text-center font-black text-sm bg-transparent focus:outline-none"
+                                        min="1"
+                                      />
+                                    )}
+                                  </div>
+                                  <button 
+                                    onClick={() => {
+                                      updateQuantity(item.id, item.quantity + 1, item.size);
+                                      commitQuantityUpdate(item.id, item.quantity + 1);
+                                    }}
+                                    disabled={updatingItems.get(item.id)}
+                                    className="p-3 hover:bg-slate-50 transition-colors border-l border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                </div>
 
-                               <div className="flex flex-col">
+                                <div className="flex flex-col">
                                   <Typography variant="detail" className="text-[8px] text-slate-300">Precio Unitario</Typography>
                                   <Typography variant="h4" className="text-lg">${item.price.toLocaleString()}</Typography>
                                 </div>
-                            </div>
-                         </div>
+                              </div>
+                          </div>
 
                          <div className="absolute top-10 right-0 sm:static sm:text-right flex flex-col items-end gap-4 min-w-[12rem]">
                             <button 
