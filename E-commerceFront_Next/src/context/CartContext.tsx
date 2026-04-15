@@ -110,62 +110,83 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStockError(null);
   }, []);
 
-  const processPendingUpdates = useCallback(async (updatesToProcess: Map<string, number>) => {
-    const variantIds = Array.from(updatesToProcess.keys());
-    setUpdatingItems(new Map(variantIds.map(id => [id, true])));
+  // Sincronizamos la referencia del carrito para usarla en el loop de actualización sin cierres obsoletos
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
-    for (const [variantId, quantity] of updatesToProcess) {
-      try {
-        const lineItem = cart?.items.find((li: any) => li.variant_id === variantId);
-        if (lineItem) {
-          await updateQtyMutation({ lineItemId: lineItem.id, quantity });
-        }
-      } catch (error: any) {
-        console.error('Error updating quantity:', error);
-        
-        const errorStatus = error?.status || error?.response?.status;
-        const errorMessage = error?.message || 'Error de stock';
-        
-        console.log('Error details:', { errorStatus, errorMessage });
-        
-        // Medusa returns 400 for inventory issues. We check for status and keywords (including Spanish translation)
-        if (errorStatus === 400 || 
-            errorMessage.toLowerCase().includes('stock') || 
-            errorMessage.toLowerCase().includes('inventario') || 
-            errorMessage.toLowerCase().includes('insuficiente')) {
+  // Cola y bloqueo para procesamiento estrictamente secuencial
+  const isProcessingBatch = useRef(false);
+  const internalQueue = useRef<Map<string, number>>(new Map());
+
+  const processPendingUpdates = useCallback(async () => {
+    if (isProcessingBatch.current || internalQueue.current.size === 0) return;
+
+    isProcessingBatch.current = true;
+    
+    // Capturamos el estado actual de la cola y la vaciamos para nuevos cambios
+    const updatesToProcess = new Map(internalQueue.current);
+    internalQueue.current = new Map();
+    setPendingUpdates(new Map());
+
+    const variantIds = Array.from(updatesToProcess.keys());
+    
+    setUpdatingItems(prev => {
+      const next = new Map(prev);
+      variantIds.forEach(id => next.set(id, true));
+      return next;
+    });
+
+    try {
+      for (const [variantId, quantity] of updatesToProcess) {
+        try {
+          const lineItem = cartRef.current?.items.find((li: any) => li.variant_id === variantId);
+          if (lineItem) {
+            await updateQtyMutation({ lineItemId: lineItem.id, quantity });
+          }
+        } catch (error: any) {
+          console.error('Error updating quantity:', error);
+          const errorStatus = error?.status || error?.response?.status;
+          const errorMessage = error?.message || 'Error de stock';
           
-          setStockError({ id: variantId, message: errorMessage.includes('Error') ? 'No hay suficiente stock disponible' : errorMessage });
-          
-          // The product will naturally revert because TanStack Query will invalidate the cache, 
-          // but we can help it by resetting the local state to the last known good value if possible.
-          // Since we don't track the "last good" here easily, TanStack Query's refetch is better.
+          if (errorStatus === 400 || 
+              errorMessage.toLowerCase().includes('stock') || 
+              errorMessage.toLowerCase().includes('inventario') || 
+              errorMessage.toLowerCase().includes('insuficiente')) {
+            setStockError({ id: variantId, message: errorMessage.includes('Error') ? 'No hay suficiente stock disponible' : errorMessage });
+          }
+        } finally {
+          setUpdatingItems(prev => {
+            const updated = new Map(prev);
+            updated.delete(variantId);
+            return updated;
+          });
         }
-      } finally {
-        setUpdatingItems(prev => {
-          const updated = new Map(prev);
-          updated.delete(variantId);
-          return updated;
-        });
+      }
+    } finally {
+      isProcessingBatch.current = false;
+      // Si se agregaron más cosas a la cola mientras procesábamos, seguimos procesando
+      if (internalQueue.current.size > 0) {
+        processPendingUpdates();
       }
     }
-  }, [cart, updateQtyMutation]);
+  }, [updateQtyMutation]);
 
   useEffect(() => {
     if (pendingUpdates.size === 0) return;
 
-    pendingUpdatesRef.current = new Map(pendingUpdates);
+    // Sincronizamos con nuestra cola interna
+    pendingUpdates.forEach((qty, id) => {
+      internalQueue.current.set(id, qty);
+    });
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      const updates = new Map(pendingUpdatesRef.current);
-      pendingUpdatesRef.current = new Map();
-      setPendingUpdates(new Map());
-      if (updates.size > 0) {
-        processPendingUpdates(updates);
-      }
+      processPendingUpdates();
     }, 400);
 
     return () => {
@@ -181,11 +202,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync cartItems with TanStack Query data
   useEffect(() => {
-    if (cart) {
+    // IMPORTANTE: Solo sincronizamos si NO hay actualizaciones pendientes ni en curso
+    // Esto evita que el estado local se pise con datos viejos del servidor mientras mutamos
+    if (cart && pendingUpdates.size === 0 && updatingItems.size === 0) {
       const mapped = cart.items.map(mapMedusaLineItemToCartItem);
       setCartItems(mapped);
     }
-  }, [cart]);
+  }, [cart, pendingUpdates.size, updatingItems.size]);
 
   // ── Helpers ──
   const readSlot = useCallback((slotUserId: string | null): { items: CartItem[], cartId: string | null } => {
