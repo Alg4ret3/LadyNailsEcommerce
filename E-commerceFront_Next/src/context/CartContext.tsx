@@ -8,6 +8,7 @@ import { associateCartToCustomer } from '@/services/medusa';
 
 export interface CartItem {
   id: string;
+  productId?: string;
   name: string;
   price: number;
   image: string;
@@ -69,6 +70,7 @@ function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem
 function mapMedusaLineItemToCartItem(li: any): CartItem {
   return {
     id: li.variant_id,
+    productId: li.variant?.product?.id || li.product_id,
     name: li.title,
     price: li.unit_price,
     image: li.thumbnail,

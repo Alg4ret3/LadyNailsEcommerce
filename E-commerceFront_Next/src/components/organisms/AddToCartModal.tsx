@@ -73,6 +73,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
         const variant = product.variants?.find(v => v.id === variantId);
         await addToCart({
           id: variantId,
+          productId: product.id,
           name: variant ? `${product.name} - ${variant.title}` : product.name,
           price: (variant?.prices?.[0]?.amount ?? product.price),
           image: product.image,

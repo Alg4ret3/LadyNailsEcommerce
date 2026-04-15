@@ -86,7 +86,7 @@ export default function CartPage() {
                                  <CornerDownRight size={10} className="opacity-20" />
                                  <Typography variant="detail" className="text-[9px]">{item.category}</Typography>
                                </div>
-                               <Link href={`/product/${item.slug}`}>
+                               <Link href={`/product/${item.productId || item.slug}`}>
                                  <Typography variant="h3" className="text-xl sm:text-2xl hover:text-gray-300 transition-colors uppercase tracking-tight">{item.name}</Typography>
                                </Link>
                                {(item.size || item.color) && (

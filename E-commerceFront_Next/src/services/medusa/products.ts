@@ -184,9 +184,13 @@ export async function getProductsByCategoryHandle(handle: string) {
   return sortProductsBySuggested(products)
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(idOrHandle: string) {
+  // If it looks like a Medusa product ID, search by id; otherwise search by handle
+  const isProductId = idOrHandle.startsWith('prod_');
+  const queryParam = isProductId ? `id=${idOrHandle}` : `handle=${idOrHandle}`;
+
   const data = await medusaFetch<MedusaProductsResponse>(
-    `/store/products?id=${id}`,
+    `/store/products?${queryParam}`,
     { method: "GET" }
   )
 
