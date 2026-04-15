@@ -97,18 +97,13 @@ export default function CartPage() {
                                )}
                             </div>
 
-                            <AnimatePresence>
+                            <div className="relative">
                               {stockError && stockError.id === item.id && (
-                                <motion.div 
-                                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                  animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
-                                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                  className="w-full bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold uppercase tracking-widest px-4 py-3 rounded-lg flex items-center gap-2 overflow-hidden"
-                                >
-                                  <span className="shrink-0">⚠</span> {stockError.message}
-                                </motion.div>
+                                <div className="absolute -top-1 left-0 w-full z-10 text-red-600 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 py-1 bg-white">
+                                  <span className="shrink-0 text-xs">⚠</span> {stockError.message}
+                                </div>
                               )}
-                            </AnimatePresence>
+                            </div>
 
                             <div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-2">
                                 <div className="flex items-center border border-slate-200 relative">
