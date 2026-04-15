@@ -201,10 +201,12 @@ export default function CartPage() {
                         </div>
 
                         <div className="space-y-3 w-full">
+                           {/* Botón de Pago deshabilitado si hay actualizaciones en curso */}
                            <Button 
-                             label={isFinishing ? "Sincronizando..." : "Realizar Pago"} 
-                             onClick={handleFinalizePurchase} disabled={isFinishing || cartItems.length === 0} 
-                             className="w-full py-5 !bg-white !text-slate-950 border-none hover:bg-neutral-200 transition-all text-[10px] font-black uppercase tracking-[0.2em]" 
+                             label={isFinishing ? "Sincronizando..." : (updatingItems.size > 0 || pendingQuantityUpdates.size > 0) ? "Actualizando..." : "Realizar Pago"} 
+                             onClick={handleFinalizePurchase} 
+                             disabled={isFinishing || cartItems.length === 0 || updatingItems.size > 0 || pendingQuantityUpdates.size > 0} 
+                             className="w-full py-5 !bg-white !text-slate-950 border-none hover:bg-neutral-200 transition-all text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed" 
                            />
 
                            {/* Minimum purchase warning banner */}
