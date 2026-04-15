@@ -38,6 +38,11 @@ export const translateError = (message: string): string => {
     return "El enlace de recuperación es inválido o ha expirado.";
   }
 
+  // Inventory / Stock Errors
+  if (lowMessage.includes("inventory") || lowMessage.includes("stock") || lowMessage.includes("insufficient")) {
+    return "No hay suficiente stock disponible para este producto.";
+  }
+
   // System / Connection Errors
   if (lowMessage.includes("failed to fetch") || lowMessage.includes("no se pudo conectar")) {
     return "Error de conexión. Verifique su internet o intente más tarde.";

@@ -57,7 +57,9 @@ export async function medusaFetch<T>(
       } catch {
         errorMessage = text || errorMessage;
       }
-      throw new Error(translateError(errorMessage));
+      const error: any = new Error(translateError(errorMessage));
+      error.status = res.status;
+      throw error;
     }
 
     try {

@@ -95,14 +95,22 @@ export default function CartPage() {
                                     {item.color && <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color: {item.color}</span>}
                                  </div>
                                )}
-</div>
+                            </div>
 
-<div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-4">
-                                {stockError && stockError.id === item.id && (
-                                  <div className="w-full bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest text-center px-3 py-2 rounded mb-2">
-                                    ⚠ {stockError.message}
-                                  </div>
-                                )}
+                            <AnimatePresence>
+                              {stockError && stockError.id === item.id && (
+                                <motion.div 
+                                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                  animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
+                                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                  className="w-full bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold uppercase tracking-widest px-4 py-3 rounded-lg flex items-center gap-2 overflow-hidden"
+                                >
+                                  <span className="shrink-0">⚠</span> {stockError.message}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            <div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-2">
                                 <div className="flex items-center border border-slate-200 relative">
                                   <button 
                                     onClick={() => {

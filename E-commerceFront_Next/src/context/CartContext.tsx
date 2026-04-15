@@ -123,16 +123,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error: any) {
         console.error('Error updating quantity:', error);
         
-        const errorStatus = error?.response?.status || error?.status;
-        const errorMessage = error?.response?.data?.message || error?.message || error?.data?.message || 'Stock insuficiente';
+        const errorStatus = error?.status || error?.response?.status;
+        const errorMessage = error?.message || 'Error de stock';
         
         console.log('Error details:', { errorStatus, errorMessage });
         
-        if (errorStatus === 400 && (errorMessage.toLowerCase().includes('inventory') || errorMessage.toLowerCase().includes('stock') || errorMessage.toLowerCase().includes('variant'))) {
-          setStockError({ id: variantId, message: 'No hay suficiente stock disponible' });
-          setCartItems(prev => prev.map(i => 
-            (i.id === variantId) ? { ...i, quantity: Math.max(1, quantity - 1) } : i
-          ));
+        // Medusa returns 400 for inventory issues. We check for status and keywords (including Spanish translation)
+        if (errorStatus === 400 || 
+            errorMessage.toLowerCase().includes('stock') || 
+            errorMessage.toLowerCase().includes('inventario') || 
+            errorMessage.toLowerCase().includes('insuficiente')) {
+          
+          setStockError({ id: variantId, message: errorMessage.includes('Error') ? 'No hay suficiente stock disponible' : errorMessage });
+          
+          // The product will naturally revert because TanStack Query will invalidate the cache, 
+          // but we can help it by resetting the local state to the last known good value if possible.
+          // Since we don't track the "last good" here easily, TanStack Query's refetch is better.
         }
       } finally {
         setUpdatingItems(prev => {
