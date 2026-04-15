@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { useUser } from '@/context/UserContext';
 import { getCartIdKey, getCartItemsKey, migrateLegacyCartKeys } from '@/utils/cartKeys';
 import { useCartQuery } from '@/hooks/useCart';
+import { useAllProducts } from '@/hooks/useProducts';
 import { associateCartToCustomer } from '@/services/medusa';
 
 export interface CartItem {
@@ -21,6 +22,7 @@ export interface CartItem {
   selectedSize?: string;
   selectedColor?: string;
   category?: string;
+  inventoryQuantity?: number;
 }
 
 interface CartContextType {
@@ -81,12 +83,16 @@ function mapMedusaLineItemToCartItem(li: any): CartItem {
     tags: li.variant?.product?.tags?.map((t: any) => t.value) || [],
     vendor: li.variant?.product?.vendor,
     category: li.variant?.product?.categories?.[0]?.name,
+    inventoryQuantity: li.variant?.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? li.variant?.inventory_quantity,
   };
 }
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useUser();
   const userId = user?.id ?? null;
+
+  // ── Hook de Productos para obtener stock actualizado ──
+  const { data: allProducts } = useAllProducts();
 
   // ── Hook de TanStack Query ──
   const { 
@@ -207,10 +213,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // IMPORTANTE: Solo sincronizamos si NO hay actualizaciones pendientes ni en curso
     // Esto evita que el estado local se pise con datos viejos del servidor mientras mutamos
     if (cart && pendingUpdates.size === 0 && updatingItems.size === 0) {
-      const mapped = cart.items.map(mapMedusaLineItemToCartItem);
+      const mapped = cart.items.map((li: any) => {
+        const item = mapMedusaLineItemToCartItem(li);
+        
+        // Enriquecemos con el stock del master de productos si está disponible
+        if (allProducts) {
+          for (const product of allProducts) {
+            const variant = product.variants.find(v => v.id === li.variant_id);
+            if (variant) {
+              item.inventoryQuantity = variant.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? variant.inventory_quantity;
+              break;
+            }
+          }
+        }
+        return item;
+      });
       setCartItems(mapped);
     }
-  }, [cart, pendingUpdates.size, updatingItems.size]);
+  }, [cart, pendingUpdates.size, updatingItems.size, allProducts]);
 
   // ── Helpers ──
   const readSlot = useCallback((slotUserId: string | null): { items: CartItem[], cartId: string | null } => {

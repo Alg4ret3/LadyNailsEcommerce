@@ -27,6 +27,14 @@ interface MedusaVariant {
     calculated_amount: number
   }
   prices: MedusaPrice[]
+  inventory_items?: {
+    inventory?: {
+      location_levels?: {
+        available_quantity: number
+        stocked_quantity: number
+      }[]
+    }
+  }[]
 }
 
 interface MedusaCollection {

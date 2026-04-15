@@ -87,6 +87,11 @@ export const CartDrawer: React.FC = () => {
                                 <Typography variant="h4" className="text-[9px] sm:text-[10px] md:text-[11px] font-bold text-foreground mb-0.5 sm:mb-1 leading-tight line-clamp-2">{item.name}</Typography>
                                 <div className="flex gap-1 sm:gap-1.5 items-center flex-wrap">
                                    <Typography variant="small" className="text-[7px] sm:text-[8px] md:text-[9px] text-foreground/40 bg-muted px-1 sm:px-1.5 rounded">Talla: {item.size || 'Unica'}</Typography>
+                                   {item.inventoryQuantity !== undefined && (
+                                     <Typography variant="small" className={`text-[7px] sm:text-[8px] md:text-[9px] font-bold px-1 sm:px-1.5 rounded ${item.inventoryQuantity > 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                       {item.inventoryQuantity > 0 ? `${item.inventoryQuantity} disp.` : 'Sin stock'}
+                                     </Typography>
+                                   )}
                                 </div>
                               </div>
                               <button 
