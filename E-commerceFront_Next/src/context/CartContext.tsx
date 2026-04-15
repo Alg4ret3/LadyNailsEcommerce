@@ -27,6 +27,7 @@ interface CartContextType {
   addToCart: (item: CartItem) => Promise<void>;
   removeFromCart: (id: string, size?: string) => void;
   updateQuantity: (id: string, quantity: number, size?: string) => void;
+  commitQuantityUpdate: (id: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalAmount: number;
@@ -34,6 +35,9 @@ interface CartContextType {
   setIsCartOpen: (isOpen: boolean) => void;
   medusaCartId: string | null;
   ensureCart: () => Promise<string>;
+  stockError: { id: string; message: string } | null;
+  clearStockError: () => void;
+  pendingQuantityUpdates: Map<string, number>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -93,6 +97,63 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [stockError, setStockError] = useState<{ id: string; message: string } | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<Map<string, number>>(new Map());
+  const pendingUpdatesRef = useRef<Map<string, number>>(new Map());
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const pendingQuantityUpdates = useMemo(() => pendingUpdates, [pendingUpdates]);
+
+  const clearStockError = useCallback(() => {
+    setStockError(null);
+  }, []);
+
+  const processPendingUpdates = useCallback(async (updatesToProcess: Map<string, number>) => {
+    for (const [variantId, quantity] of updatesToProcess) {
+      try {
+        const lineItem = cart?.items.find((li: any) => li.variant_id === variantId);
+        if (lineItem) {
+          await updateQtyMutation({ lineItemId: lineItem.id, quantity });
+        }
+      } catch (error: any) {
+        if (error?.response?.status === 400) {
+          const errorMessage = error.response.data?.message || 'Stock insuficiente';
+          if (errorMessage.includes('inventory') || errorMessage.includes('stock')) {
+            setStockError({ id: variantId, message: errorMessage });
+            setCartItems(prev => prev.map(i => 
+              (i.id === variantId) ? { ...i, quantity: Math.max(1, quantity - 1) } : i
+            ));
+          }
+        }
+        console.error('Error updating quantity:', error);
+      }
+    }
+  }, [cart, updateQtyMutation]);
+
+  useEffect(() => {
+    if (pendingUpdates.size === 0) return;
+
+    pendingUpdatesRef.current = new Map(pendingUpdates);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      const updates = new Map(pendingUpdatesRef.current);
+      pendingUpdatesRef.current = new Map();
+      setPendingUpdates(new Map());
+      if (updates.size > 0) {
+        processPendingUpdates(updates);
+      }
+    }, 400);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [pendingUpdates, processPendingUpdates]);
 
   // Track previous userId to detect login/logout transitions
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
@@ -236,20 +297,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateQuantity = async (id: string, quantity: number, size?: string) => {
+  const updateQuantity = (id: string, quantity: number, size?: string) => {
     const newQuantity = Math.max(1, quantity);
-    try {
-      const lineItem = cart?.items.find((li: any) => li.variant_id === id);
-      if (lineItem) {
-        await updateQtyMutation({ lineItemId: lineItem.id, quantity: newQuantity });
-      } else {
-         setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
-      }
-    } catch (error) {
-      console.error('Error updating Medusa cart quantity:', error);
-      setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
-    }
+    setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
+    setStockError(null);
+    pendingUpdatesRef.current.set(id, newQuantity);
   };
+
+  const commitQuantityUpdate = useCallback((id: string, quantity: number) => {
+    const finalQuantity = Math.max(1, quantity);
+    setPendingUpdates(prev => {
+      const updated = new Map(prev);
+      updated.set(id, finalQuantity);
+      return updated;
+    });
+  }, []);
 
   const clearCart = () => {
     setCartItems([]);
@@ -266,13 +328,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addToCart,
       removeFromCart,
       updateQuantity,
+      commitQuantityUpdate,
       clearCart,
       totalItems,
       totalAmount,
       isCartOpen,
       setIsCartOpen,
       medusaCartId,
-      ensureCart: async () => medusaCartId || '', // Simplified since hook handles creation
+      ensureCart: async () => medusaCartId || '',
+      stockError,
+      clearStockError,
+      pendingQuantityUpdates,
     }}>
       {children}
     </CartContext.Provider>

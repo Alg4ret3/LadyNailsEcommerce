@@ -1,19 +1,20 @@
 'use client';
 
-import React from 'react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CornerDownRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useState, useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+
 import { Navbar } from '@/components/organisms/Navbar';
 import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CornerDownRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems, medusaCartId, ensureCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, commitQuantityUpdate, totalAmount, totalItems, medusaCartId, ensureCart, stockError, clearStockError, pendingQuantityUpdates } = useCart();
   const router = useRouter();
   const [isFinishing, setIsFinishing] = useState(false);
   const [showMinWarning, setShowMinWarning] = useState(false);
@@ -30,10 +31,6 @@ export default function CartPage() {
     setIsFinishing(true);
     try {
       await ensureCart();
-
-      // Ya no sincronizamos aquí porque ahora se hace en CartContext.addToCart
-      // Esto evita duplicados al navegar entre carrito y checkout.
-      
       router.push('/checkout');
     } catch (error) {
       console.error("Error al finalizar la compra:", error);
@@ -101,21 +98,53 @@ export default function CartPage() {
                             </div>
 
                             <div className="flex items-center justify-between sm:justify-start gap-8 sm:gap-16 pt-4">
-                               <div className="flex items-center border border-slate-200">
-                                  <button 
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
-                                    className="p-3 hover:bg-slate-50 transition-colors border-r border-slate-200"
-                                  >
-                                    <Minus size={14} />
-                                  </button>
-                                  <span className="w-12 text-center font-black text-sm">{item.quantity}</span>
-                                  <button 
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
-                                    className="p-3 hover:bg-slate-50 transition-colors border-l border-slate-200"
-                                  >
-                                    <Plus size={14} />
-                                  </button>
-                               </div>
+<AnimatePresence>
+                                   {stockError && stockError.id === item.id && (
+                                     <motion.div
+                                       initial={{ opacity: 0, height: 0 }}
+                                       animate={{ opacity: 1, height: 'auto' }}
+                                       exit={{ opacity: 0, height: 0 }}
+                                       className="overflow-hidden"
+                                     >
+                                       <div className="bg-red-600 text-white text-[8px] font-bold uppercase tracking-widest text-center px-2 py-1 rounded mt-1">
+                                         ⚠ {stockError.message}
+                                       </div>
+                                     </motion.div>
+                                   )}
+                                 </AnimatePresence>
+<div className="flex items-center border border-slate-200">
+                                    <button 
+                                      onClick={() => {
+                                        updateQuantity(item.id, item.quantity - 1, item.size);
+                                        commitQuantityUpdate(item.id, item.quantity - 1);
+                                      }}
+                                      className="p-3 hover:bg-slate-50 transition-colors border-r border-slate-200"
+                                    >
+                                      <Minus size={14} />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      value={item.quantity}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value, 10);
+                                        if (value > 0) {
+                                          updateQuantity(item.id, value, item.size);
+                                        }
+                                      }}
+                                      onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
+                                      className="w-12 text-center font-black text-sm bg-transparent focus:outline-none"
+                                      min="1"
+                                    />
+                                    <button 
+                                      onClick={() => {
+                                        updateQuantity(item.id, item.quantity + 1, item.size);
+                                        commitQuantityUpdate(item.id, item.quantity + 1);
+                                      }}
+                                      className="p-3 hover:bg-slate-50 transition-colors border-l border-slate-200"
+                                    >
+                                      <Plus size={14} />
+                                    </button>
+                                 </div>
 
                                <div className="flex flex-col">
                                   <Typography variant="detail" className="text-[8px] text-slate-300">Precio Unitario</Typography>
