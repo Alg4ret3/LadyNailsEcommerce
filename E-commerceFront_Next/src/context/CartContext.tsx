@@ -193,9 +193,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearTimeout(debounceTimerRef.current);
     }
 
-    debounceTimerRef.current = setTimeout(() => {
-      processPendingUpdates();
-    }, 400);
+   debounceTimerRef.current = setTimeout(() => {
+     processPendingUpdates();
+   }, 350);
 
     return () => {
       if (debounceTimerRef.current) {
@@ -208,29 +208,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
   const isInitializedRef = useRef(false);
 
-  // Sync cartItems with TanStack Query data
-  useEffect(() => {
-    // IMPORTANTE: Solo sincronizamos si NO hay actualizaciones pendientes ni en curso
-    // Esto evita que el estado local se pise con datos viejos del servidor mientras mutamos
-    if (cart && pendingUpdates.size === 0 && updatingItems.size === 0) {
-      const mapped = cart.items.map((li: any) => {
-        const item = mapMedusaLineItemToCartItem(li);
-        
-        // Enriquecemos con el stock del master de productos si está disponible
-        if (allProducts) {
-          for (const product of allProducts) {
-            const variant = product.variants.find(v => v.id === li.variant_id);
-            if (variant) {
-              item.inventoryQuantity = variant.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? variant.inventory_quantity;
-              break;
-            }
-          }
-        }
-        return item;
-      });
-      setCartItems(mapped);
-    }
-  }, [cart, pendingUpdates.size, updatingItems.size, allProducts]);
+   // Sync cartItems with TanStack Query data
+   useEffect(() => {
+     if (cart) {
+       const mapped = cart.items.map((li: any) => {
+         const item = mapMedusaLineItemToCartItem(li);
+         
+         // Enriquecemos con el stock del master de productos si está disponible
+         if (allProducts) {
+           for (const product of allProducts) {
+             const variant = product.variants.find(v => v.id === li.variant_id);
+             if (variant) {
+               item.inventoryQuantity = variant.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? variant.inventory_quantity;
+               break;
+             }
+           }
+         }
+         
+         // Aplicamos actualizaciones optimistas pendientes
+         if (pendingUpdates.has(li.variant_id)) {
+           item.quantity = pendingUpdates.get(li.variant_id)!;
+         }
+         
+         return item;
+       });
+       
+       // Mantenemos los items que aun no fueron sincronizados con el backend
+       const existingOptimisticItems = cartItems.filter(localItem => 
+         !mapped.some(serverItem => serverItem.id === localItem.id && serverItem.size === localItem.size)
+       );
+       
+       setCartItems([...mapped, ...existingOptimisticItems]);
+     }
+   }, [cart, allProducts]);
 
   // ── Helpers ──
   const readSlot = useCallback((slotUserId: string | null): { items: CartItem[], cartId: string | null } => {
@@ -343,40 +353,74 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const removeFromCart = async (id: string, size?: string) => {
-    try {
-      const item = cartItems.find(i => i.id === id && i.size === size);
-      if (!item) return;
+   const removeFromCart = async (id: string, size?: string) => {
+     try {
+       const item = cartItems.find(i => i.id === id && i.size === size);
+       if (!item) return;
 
-      // Buscamos el lineItemId en el cart de Medusa
-      const lineItem = cart?.items.find((li: any) => li.variant_id === id);
-      if (lineItem) {
-        await removeMutation(lineItem.id);
-      } else {
-        // Fallback local
-        setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
-      }
-    } catch (error) {
-      console.error('Error removing from Medusa cart:', error);
-      setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
-    }
-  };
+       // UI OPTIMISTA: Eliminamos inmediatamente de la UI
+       setCartItems(prev => prev.filter(i => !(i.id === id && i.size === size)));
 
-  const updateQuantity = (id: string, quantity: number, size?: string) => {
-    const newQuantity = Math.max(1, quantity);
-    setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
-    setStockError(null);
-    pendingUpdatesRef.current.set(id, newQuantity);
-  };
+       // Buscamos el lineItemId en el cart de Medusa
+       const lineItem = cart?.items.find((li: any) => li.variant_id === id);
+       if (lineItem) {
+         await removeMutation(lineItem.id);
+       }
+     } catch (error) {
+       console.error('Error removing from Medusa cart:', error);
+       // Si hay error lo volvemos a agregar
+       const item = cartItems.find(i => i.id === id && i.size === size);
+       if (item) {
+         setCartItems(prev => [...prev, item]);
+       }
+     }
+   };
 
-  const commitQuantityUpdate = useCallback((id: string, quantity: number) => {
-    const finalQuantity = Math.max(1, quantity);
-    setPendingUpdates(prev => {
-      const updated = new Map(prev);
-      updated.set(id, finalQuantity);
-      return updated;
-    });
-  }, []);
+   const updateQuantity = (id: string, quantity: number, size?: string) => {
+     // Primero validamos stock para no permitir pasar el limite
+     const item = cartItems.find(i => i.id === id && i.size === size);
+     let newQuantity = Math.max(1, quantity);
+     
+     // Limite estricto de stock
+     if (item && item.inventoryQuantity !== undefined) {
+       newQuantity = Math.min(newQuantity, item.inventoryQuantity);
+       
+       if (quantity > item.inventoryQuantity) {
+         setStockError({ 
+           id: id, 
+           message: `Solo hay ${item.inventoryQuantity} unidades disponibles` 
+         });
+       } else {
+         setStockError(null);
+       }
+     }
+     
+     // Actualizamos INMEDIATAMENTE la UI
+     setCartItems(prev => prev.map(i => (i.id === id && i.size === size) ? { ...i, quantity: newQuantity } : i));
+     
+     // Agregamos a la cola de pendientes
+     pendingUpdatesRef.current.set(id, newQuantity);
+   };
+
+   const commitQuantityUpdate = useCallback((id: string, quantity: number) => {
+     const finalQuantity = Math.max(1, quantity);
+     
+     // Validacion de stock inmediata
+     const item = cartItems.find(i => i.id === id);
+     if (item && item.inventoryQuantity !== undefined && finalQuantity > item.inventoryQuantity) {
+       setStockError({ 
+         id: id, 
+         message: `Solo hay ${item.inventoryQuantity} unidades disponibles` 
+       });
+       return;
+     }
+     
+     setPendingUpdates(prev => {
+       const updated = new Map(prev);
+       updated.set(id, finalQuantity);
+       return updated;
+     });
+   }, [cartItems]);
 
   const clearCart = () => {
     setCartItems([]);

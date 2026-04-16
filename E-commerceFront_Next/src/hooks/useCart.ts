@@ -22,6 +22,45 @@ import { useUser } from '@/context/UserContext';
 
 export const CART_QUERY_KEY = ['cart'];
 
+// Cola FIFO GLOBAL SECUENCIAL - Soluciona el bug de items perdidos en Medusa
+const mutationQueue: Array<() => Promise<any>> = [];
+let isProcessingQueue = false;
+
+// Evento global para notificar cuando la cola se vacia completamente
+const cartQueueEmptyEvent = new Event('cart:queue:empty');
+
+const processMutationQueue = async () => {
+  if (isProcessingQueue || mutationQueue.length === 0) return;
+  
+  isProcessingQueue = true;
+  
+  while (mutationQueue.length > 0) {
+    const mutation = mutationQueue.shift()!;
+    try {
+      await mutation();
+    } catch (e) {
+      console.warn('Cola de mutaciones: Error, reintentando una vez', e);
+      try {
+        await mutation();
+      } catch (retryError) {
+        console.error('Cola de mutaciones: Fallo permanente', retryError);
+      }
+    }
+  }
+  
+  isProcessingQueue = false;
+
+  // ✅ Notificamos que se termino de procesar TODA la cola
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('cart:queue:empty'));
+  }
+};
+
+const enqueueMutation = (mutation: () => Promise<any>) => {
+  mutationQueue.push(mutation);
+  processMutationQueue();
+};
+
 export function useCartQuery() {
   const queryClient = useQueryClient();
   const { user } = useUser();
@@ -79,8 +118,17 @@ export function useCartQuery() {
   // Mutation: Add Item
   const addItemMutation = useMutation({
     mutationFn: async ({ variantId, quantity }: { variantId: string, quantity: number }) => {
-      const activeCartId = await ensureCart();
-      return addItemToCart(activeCartId, variantId, quantity);
+      return new Promise((resolve, reject) => {
+        enqueueMutation(async () => {
+          try {
+            const activeCartId = await ensureCart();
+            const result = await addItemToCart(activeCartId, variantId, quantity);
+            resolve(result);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
     },
     onMutate: async ({ variantId, quantity }) => {
       await queryClient.cancelQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -98,16 +146,25 @@ export function useCartQuery() {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
-    },
+    // ✅ No invalidamos mas: tenemos UI optimista 100% funcional
+    // Ahorramos una peticion GET innecesaria a Medusa por cada operacion
+    onSettled: () => {},
   });
 
   // Mutation: Update Quantity
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ lineItemId, quantity }: { lineItemId: string, quantity: number }) => {
-      const activeCartId = await ensureCart();
-      return updateLineItem(activeCartId, lineItemId, quantity);
+      return new Promise((resolve, reject) => {
+        enqueueMutation(async () => {
+          try {
+            const activeCartId = await ensureCart();
+            const result = await updateLineItem(activeCartId, lineItemId, quantity);
+            resolve(result);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
     },
     onMutate: async ({ lineItemId, quantity }) => {
       await queryClient.cancelQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -130,16 +187,25 @@ export function useCartQuery() {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
-    },
+    // ✅ No invalidamos mas: tenemos UI optimista 100% funcional
+    // Ahorramos una peticion GET innecesaria a Medusa por cada operacion
+    onSettled: () => {},
   });
 
   // Mutation: Remove Item
   const removeItemMutation = useMutation({
     mutationFn: async (lineItemId: string) => {
-      const activeCartId = await ensureCart();
-      return deleteLineItem(activeCartId, lineItemId);
+      return new Promise((resolve, reject) => {
+        enqueueMutation(async () => {
+          try {
+            const activeCartId = await ensureCart();
+            const result = await deleteLineItem(activeCartId, lineItemId);
+            resolve(result);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
     },
     onMutate: async (lineItemId) => {
       await queryClient.cancelQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
@@ -160,9 +226,9 @@ export function useCartQuery() {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [...CART_QUERY_KEY, cartId] });
-    },
+    // ✅ No invalidamos mas: tenemos UI optimista 100% funcional
+    // Ahorramos una peticion GET innecesaria a Medusa por cada operacion
+    onSettled: () => {},
   });
 
   // ── MUTATIONS DE CHECKOUT ──

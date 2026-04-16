@@ -3,7 +3,7 @@
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CornerDownRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,12 +12,38 @@ import { Footer } from '@/components/organisms/Footer';
 import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { useCart } from '@/context/CartContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, commitQuantityUpdate, totalAmount, totalItems, medusaCartId, ensureCart, stockError, clearStockError, pendingQuantityUpdates, updatingItems } = useCart();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isFinishing, setIsFinishing] = useState(false);
   const [showMinWarning, setShowMinWarning] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(true);
+
+  // ✅ SINCRONIZACION AUTOMATICA CUANDO LA PAGINA GANA FOCO
+  React.useEffect(() => {
+    const syncCartOnEnter = async () => {
+      setIsSyncing(true);
+      // Esperamos a que termine cualquier operacion pendiente en la cola
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Sincronizamos una sola vez con Medusa para garantizar consistencia
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
+      setIsSyncing(false);
+    };
+
+    // Primera sincronizacion al entrar
+    syncCartOnEnter();
+
+    // ✅ Sincronizamos cada vez que el usuario vuelve a esta pestaña
+    const handleFocus = () => syncCartOnEnter();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [queryClient]);
   const handleFinalizePurchase = async () => {
     if (cartItems.length === 0) return;
 
@@ -30,6 +56,10 @@ export default function CartPage() {
     setIsFinishing(true);
     try {
       await ensureCart();
+      // ✅ Solo cuando va a pagar SINCRONIZAMOS UNA VEZ CON MEDUSA
+      // Esto garantiza que el checkout tenga exactamente los valores correctos
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
+      
       router.push('/checkout');
     } catch (error) {
       console.error("Error al finalizar la compra:", error);
@@ -52,7 +82,11 @@ export default function CartPage() {
           </div>
         </header>
 
-        {cartItems.length === 0 ? (
+        {isSyncing ? (
+          <div className="py-24 sm:py-40 flex flex-col items-center justify-center border-t border-slate-100">
+            <Loader2 size={32} className="animate-spin text-slate-300" />
+          </div>
+        ) : cartItems.length === 0 ? (
           <div className="py-24 sm:py-40 flex flex-col items-center justify-center border-t border-slate-100 space-y-8">
             <div className="w-16 h-16 bg-slate-50 flex items-center justify-center rounded-full text-slate-300">
               <ShoppingBag size={32} />
@@ -67,13 +101,22 @@ export default function CartPage() {
               <div className="border-t border-slate-950">
                 <AnimatePresence mode="popLayout">
                   {cartItems.map((item) => (
-                    <motion.div
-                      key={`${item.id}-${item.size}-${item.color}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="py-10 border-b border-slate-100 flex flex-col sm:flex-row gap-8 items-start sm:items-center relative group"
-                    >
+                     <motion.div
+                       key={`${item.id}-${item.size}-${item.color}`}
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       exit={{ 
+                         opacity: 0, 
+                         x: 80, 
+                         height: 0, 
+                         paddingTop: 0, 
+                         paddingBottom: 0,
+                         marginBottom: 0,
+                         transition: { duration: 0.35, ease: [0.25, 1, 0.5, 1] }
+                       }}
+                       transition={{ duration: 0.25 }}
+                       className="py-10 border-b border-slate-100 flex flex-col sm:flex-row gap-8 items-start sm:items-center relative group overflow-hidden"
+                     >
                       <div className="relative w-32 h-40 bg-slate-50 overflow-hidden shrink-0 rounded-lg">
                         <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
                       </div>
@@ -127,19 +170,9 @@ export default function CartPage() {
                                  {updatingItems.get(item.id) ? (
                                    <Loader2 size={14} className="animate-spin text-slate-400" />
                                  ) : (
-                                   <input
-                                     type="number"
-                                     value={item.quantity}
-                                     onChange={(e) => {
-                                       const value = parseInt(e.target.value, 10);
-                                       if (value > 0) {
-                                         updateQuantity(item.id, value, item.size);
-                                       }
-                                     }}
-                                     onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
-                                     className="w-8 text-center font-medium text-sm bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                     min="1"
-                                   />
+                                   <span className="w-8 text-center font-medium text-sm select-none">
+                                 {item.quantity}
+                               </span>
                                  )}
                                </div>
                                <button
