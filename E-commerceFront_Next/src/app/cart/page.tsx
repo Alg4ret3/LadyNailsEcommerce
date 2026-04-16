@@ -112,47 +112,47 @@ export default function CartPage() {
                                 : 'Stock'
                               }
                             </Typography>
-                            <div className="flex items-center border border-slate-200 relative w-fit">
-                              <button
-                                onClick={() => {
-                                  updateQuantity(item.id, item.quantity - 1, item.size);
-                                  commitQuantityUpdate(item.id, item.quantity - 1);
-                                }}
-                                disabled={updatingItems.get(item.id)}
-                                className="p-3 hover:bg-slate-50 transition-colors border-r border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <Minus size={14} />
-                              </button>
-                              <div className="w-12 flex items-center justify-center h-[42px]">
-                                {updatingItems.get(item.id) ? (
-                                  <Loader2 size={18} className="animate-spin text-slate-400" />
-                                ) : (
-                                  <input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) => {
-                                      const value = parseInt(e.target.value, 10);
-                                      if (value > 0) {
-                                        updateQuantity(item.id, value, item.size);
-                                      }
-                                    }}
-                                    onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
-                                    className="w-12 text-center font-black text-sm bg-transparent focus:outline-none"
-                                    min="1"
-                                  />
-                                )}
-                              </div>
-                              <button
-                                onClick={() => {
-                                  updateQuantity(item.id, item.quantity + 1, item.size);
-                                  commitQuantityUpdate(item.id, item.quantity + 1);
-                                }}
-                                disabled={updatingItems.get(item.id)}
-                                className="p-3 hover:bg-slate-50 transition-colors border-l border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <Plus size={14} />
-                              </button>
-                            </div>
+                             <div className="flex items-center relative w-fit">
+                               <button
+                                 onClick={() => {
+                                   updateQuantity(item.id, item.quantity - 1, item.size);
+                                   commitQuantityUpdate(item.id, item.quantity - 1);
+                                 }}
+                                 disabled={updatingItems.get(item.id)}
+                                 className="w-10 h-10 flex items-center justify-center hover:text-slate-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                               >
+                                 <Minus size={12} strokeWidth={1.5} />
+                               </button>
+                               <div className="w-10 flex items-center justify-center h-10">
+                                 {updatingItems.get(item.id) ? (
+                                   <Loader2 size={14} className="animate-spin text-slate-400" />
+                                 ) : (
+                                   <input
+                                     type="number"
+                                     value={item.quantity}
+                                     onChange={(e) => {
+                                       const value = parseInt(e.target.value, 10);
+                                       if (value > 0) {
+                                         updateQuantity(item.id, value, item.size);
+                                       }
+                                     }}
+                                     onBlur={() => commitQuantityUpdate(item.id, item.quantity)}
+                                     className="w-8 text-center font-medium text-sm bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                     min="1"
+                                   />
+                                 )}
+                               </div>
+                               <button
+                                 onClick={() => {
+                                   updateQuantity(item.id, item.quantity + 1, item.size);
+                                   commitQuantityUpdate(item.id, item.quantity + 1);
+                                 }}
+                                 disabled={updatingItems.get(item.id)}
+                                 className="w-10 h-10 flex items-center justify-center hover:text-slate-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                               >
+                                 <Plus size={12} strokeWidth={1.5} />
+                               </button>
+                             </div>
                           </div>
 
                           <div className="flex flex-col gap-2">
