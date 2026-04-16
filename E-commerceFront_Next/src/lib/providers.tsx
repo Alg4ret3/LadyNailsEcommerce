@@ -12,9 +12,16 @@ import { CompareProvider } from '@/context/CompareContext'
 import { WishlistProvider } from '@/context/WishlistContext'
 import { CategoriesProvider } from '@/context/CategoriesContext'
 
+import { preloadCategoriesCache } from '@/services/medusa/products';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   // useState garantiza que el mismo QueryClient se reutiliza en re-renders
   const [queryClient] = useState(() => makeQueryClient())
+
+  // ✅ Precargamos el cache de categorias UNA SOLA VEZ al iniciar la app
+  React.useEffect(() => {
+    preloadCategoriesCache();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

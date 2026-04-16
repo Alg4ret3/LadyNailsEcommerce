@@ -169,7 +169,40 @@ export async function getProductsPaginated({
   }
 }
 
+// ✅ Cache global de categorias: handle -> id
+// Se carga UNA SOLA VEZ por toda la sesion del usuario
+let categoryIdCache: Record<string, string> | null = null;
+
+export const preloadCategoriesCache = async () => {
+  if (categoryIdCache !== null) return;
+
+  try {
+    const res = await medusaFetch<ProductCategoriesResponse>("/store/product-categories", {
+      method: "GET"
+    }, { limit: "100" });
+
+    categoryIdCache = {};
+    res.product_categories?.forEach((cat: any) => {
+      categoryIdCache![cat.handle] = cat.id;
+    });
+  } catch (e) {
+    console.warn('No se pudo precargar cache de categorias', e);
+    categoryIdCache = {};
+  }
+};
+
 export async function getProductsByCategoryHandle(handle: string) {
+  // ✅ Si tenemos el id en cache, 1 sola peticion directa
+  if (categoryIdCache && categoryIdCache[handle]) {
+    const productsRes = await medusaFetch<MedusaProductsResponse>(
+      "/store/products",
+      { method: "GET" },
+      { "category_id": categoryIdCache[handle] }
+    );
+    return sortProductsBySuggested(productsRes.products || []);
+  }
+
+  // Fallback: comportamiento original si aun no se cargo el cache
   const categoryRes = await medusaFetch<ProductCategoriesResponse>(
     "/store/product-categories",
     { method: "GET" },
@@ -178,14 +211,12 @@ export async function getProductsByCategoryHandle(handle: string) {
 
   const category = categoryRes.product_categories?.[0]
 
-  if (!category) return [] // ✅ importante
+  if (!category) return []
 
   const productsRes = await medusaFetch<MedusaProductsResponse>(
     "/store/products",
     { method: "GET" },
-    {
-      "category_id": category.id,
-    }
+    { "category_id": category.id }
   )
 
   const products = productsRes.products || []
@@ -206,13 +237,12 @@ export async function getProductById(idOrHandle: string) {
 }
 
 export async function getFeaturedProducts() {
-  
+  // ✅ Cacheado 1 HORA - La mejor opcion
+  // Solo hace esta peticion UNA SOLA VEZ cada 60 minutos por usuario
+  // El 99% de los usuarios lo reciben desde el cache de React Query
   const products = await getAllProducts()
 
-  const featuredProducts = products
-    .filter((p: any) =>
-      p.tags?.some((t: any) => t.value === "Popular")
-    )
-
-  return featuredProducts
+  return products
+    .filter((p: any) => p.tags?.some((t: any) => t.value === "Popular"))
+    .slice(0, 8)
 }

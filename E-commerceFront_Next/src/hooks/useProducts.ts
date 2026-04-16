@@ -85,7 +85,7 @@ export function useFeaturedProducts() {
   return useQuery<MedusaProduct[]>({
     queryKey: productKeys.featured(),
     queryFn: getFeaturedProducts,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // ✅ 1 HORA DE CACHE
+    gcTime: 120 * 60 * 1000,
   })
 }
