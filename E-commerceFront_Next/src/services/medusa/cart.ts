@@ -18,8 +18,8 @@ export interface CreateCartResponse {
 export async function createCart(): Promise<CreateCartResponse> {
   try {
     const body = {
-      region_id: "reg_01KHMA1TDSX5N1PNXX04K3ZJGC",
-      sales_channel_id: "sc_01KK9QJ37HY07F3A59DNZJXR6F",
+      region_id: process.env.MEDUSA_REGION_ID,
+      sales_channel_id: process.env.MEDUSA_SALES_CHANNEL_ID,
     };
 
     const response = await medusaFetch<CreateCartResponse>("/store/carts", {

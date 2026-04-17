@@ -118,7 +118,13 @@ export default function CartPage() {
                        className="py-10 border-b border-slate-100 flex flex-col sm:flex-row gap-8 items-start sm:items-center relative group overflow-hidden"
                      >
                       <div className="relative w-32 h-40 bg-slate-50 overflow-hidden shrink-0 rounded-lg">
-                        <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                        {item.image ? (
+                          <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                            <ShoppingBag size={24} />
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex-1 space-y-4">

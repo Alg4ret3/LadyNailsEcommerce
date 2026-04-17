@@ -79,7 +79,13 @@ export const CartDrawer: React.FC = () => {
                       {groupedItems[vendor].map((item) => (
                         <div key={`${item.id}-${item.size}`} className="flex gap-3 sm:gap-4 md:gap-6 group">
                           <div className="relative w-14 sm:w-16 md:w-20 aspect-3/4 bg-muted rounded-lg sm:rounded-xl overflow-hidden border border-border shrink-0">
-                            <Image src={item.image} alt={item.name} fill className="object-cover" />
+                            {item.image ? (
+                              <Image src={item.image} alt={item.name} fill className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted text-foreground/20">
+                                <ShoppingBag size={16} />
+                              </div>
+                            )}
                           </div>
                             <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
                             <div className="flex justify-between items-start gap-1">

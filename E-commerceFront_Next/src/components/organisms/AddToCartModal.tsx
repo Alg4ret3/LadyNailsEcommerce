@@ -156,8 +156,14 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 
             {/* Product Info */}
             <div className="mb-8 flex gap-5 items-center">
-              <div className="relative w-20 h-20 bg-zinc-50 rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-100">
-                <Image src={product.image} alt={product.name} fill className="object-contain p-2" />
+              <div className="relative w-20 h-20 bg-zinc-50 rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-100 flex items-center justify-center">
+                {product.image ? (
+                  <Image src={product.image} alt={product.name} fill className="object-contain p-2" />
+                ) : (
+                  <span className="text-zinc-200">
+                    <Plus size={24} />
+                  </span>
+                )}
               </div>
               <div className="flex flex-col gap-0.5">
                 <Typography variant="detail" className="text-zinc-400 tracking-wider overflow-visible">{product.vendor}</Typography>
