@@ -44,7 +44,10 @@ class CloudinaryFileProvider {
       const uploadStream = cloudinary.uploader.upload_stream(
         { 
           folder: "ladynails-products",
-          resource_type: "auto"
+          resource_type: "auto",
+          fetch_format: "auto",
+          quality: "auto",
+          flags: "lossy"
         },
         (error, result) => {
           if (error) {
