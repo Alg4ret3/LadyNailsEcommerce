@@ -100,7 +100,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
       id: p.id,
       name: p.title,
       price: p.variants?.[0]?.prices?.[0]?.amount ?? 0,
-      image: p.thumbnail || "/placeholder.jpg",
+      image: p.thumbnail || "/products/uv-lamp-2.png",
       tags: p.tags?.map((t: any) => t.value) || [],
       description: p.description,
       categories: p.categories || [],

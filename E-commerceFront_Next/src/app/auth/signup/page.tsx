@@ -9,11 +9,13 @@ import { ClipboardCheck, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react
 import Link from 'next/link';
 import { PasswordStrength } from '@/components/molecules/PasswordStrength';
 import { CountryCodeSelect } from '@/components/molecules/CountryCodeSelect';
+import { ColombiaLocationSelect } from '@/components/molecules/ColombiaLocationSelect';
 import { validatePassword, formatPhoneInput, formatNameInput, validateName, validatePhone } from '@/utils/validations';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/navigation';
+import { MapPin } from 'lucide-react';
 
 export default function SignupPage() {
   const [step, setStep] = React.useState(1);
@@ -29,9 +31,16 @@ export default function SignupPage() {
     password: '',
     confirmPassword: ''
   });
+  const [addressForm, setAddressForm] = React.useState({
+    addressName: 'Hogar',
+    street: '',
+    city: '',
+    province: '',
+    postalCode: '',
+  });
   const [error, setError] = React.useState('');
 
-  const { sendOtp, verifyOtp, register, isLoading, error: contextError, clearError } = useUser();
+  const { sendOtp, verifyOtp, register, createAddress, isLoading, error: contextError, clearError } = useUser();
   const router = useRouter();
 
   const isPasswordValid = React.useMemo(() => {
@@ -106,10 +115,34 @@ export default function SignupPage() {
         lastName: formData.lastName,
         phone: `${countryCode}${formData.phone}`
       });
-      router.push('/account');
+      // Prellenar datos de dirección con lo que ya tenemos
+      setAddressForm(prev => ({
+        ...prev,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: `${countryCode}${formData.phone}`,
+        country: 'CO'
+      }));
+      setStep(4);
     } catch (err) {
       // Error is propagated through context
     }
+  };
+
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setError('');
+      await createAddress(addressForm);
+      router.push('/account');
+    } catch (err) {
+      // Si falla igual seguimos adelante, el usuario lo puede agregar luego
+      router.push('/account');
+    }
+  };
+
+  const handleSkipAddress = () => {
+    router.push('/account');
   };
 
   return (
@@ -119,17 +152,19 @@ export default function SignupPage() {
         <div className="max-w-2xl w-full bg-white border border-slate-200 p-8 sm:p-16 space-y-12 shadow-xl">
           <div className="text-center space-y-4">
             <div className="w-16 h-16 bg-slate-100 text-slate-900 mx-auto flex items-center justify-center border border-slate-200">
-              <ClipboardCheck size={24} />
+              {step === 4 ? <MapPin size={24} /> : <ClipboardCheck size={24} />}
             </div>
             <Typography variant="h2" className="text-3xl uppercase tracking-tighter sm:text-4xl">
               {step === 1 && 'Crear Cuenta'}
               {step === 2 && 'Verificación de Correo'}
               {step === 3 && 'Completar Perfil'}
+              {step === 4 && 'Añade tu dirección'}
             </Typography>
             <Typography variant="body" className="text-slate-400 max-w-md mx-auto">
               {step === 1 && 'Inicie su registro ingresando su correo electrónico.'}
               {step === 2 && `Hemos enviado un código a ${email}. Ingréselo para continuar.`}
               {step === 3 && 'Defina sus datos de acceso y contacto.'}
+              {step === 4 && 'Agrega tu dirección de envío ahora para agilizar todas tus compras futuras.'}
             </Typography>
           </div>
 
@@ -178,7 +213,7 @@ export default function SignupPage() {
             </form>
           )}
 
-          {step === 3 && (
+           {step === 3 && (
             <form className="space-y-12" onSubmit={handleStep3}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -294,10 +329,69 @@ export default function SignupPage() {
               <div className="flex flex-col items-center gap-6">
                 <Button 
                   type="submit" 
-                  label={isLoading ? "Finalizando..." : "Finalizar Registro"} 
+                  label={isLoading ? "Finalizando..." : "Continuar"} 
                   className="w-full py-5" 
                   disabled={isLoading || !isFormValid} 
                 />
+              </div>
+            </form>
+          )}
+
+          {step === 4 && (
+            <form className="space-y-8" onSubmit={handleSaveAddress}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2 md:col-span-2">
+                  <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Etiqueta (Ej: Hogar, Oficina)</Typography>
+                  <input 
+                    value={addressForm.addressName} 
+                    onChange={e => setAddressForm({...addressForm, addressName: e.target.value})} 
+                    className="pro-input" 
+                    placeholder="Nombre para esta dirección" 
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dirección de Envío</Typography>
+                  <input 
+                    required 
+                    value={addressForm.street} 
+                    onChange={e => setAddressForm({...addressForm, street: e.target.value})} 
+                    className="pro-input" 
+                    placeholder="Ej: Calle 45 # 12-34 Torre 1 Apto 502" 
+                  />
+                </div>
+
+                <ColombiaLocationSelect
+                  departamento={addressForm.province}
+                  ciudad={addressForm.city}
+                  onDepartamentoChange={(val) => setAddressForm(prev => ({ ...prev, province: val }))}
+                  onCiudadChange={(val) => setAddressForm(prev => ({ ...prev, city: val }))}
+                />
+
+                <div className="space-y-2">
+                  <Typography variant="detail" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Código Postal (Opcional)</Typography>
+                  <input 
+                    value={addressForm.postalCode} 
+                    onChange={e => setAddressForm({...addressForm, postalCode: e.target.value})} 
+                    className="pro-input" 
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 flex flex-col gap-4">
+                <Button 
+                  type="submit" 
+                  label={isLoading ? 'Guardando dirección...' : 'Guardar y continuar'} 
+                  className="w-full py-5"
+                  disabled={isLoading}
+                />
+                <button 
+                  type="button" 
+                  onClick={handleSkipAddress} 
+                  className="w-full text-xs uppercase font-black tracking-widest text-slate-400 hover:text-slate-900 transition-colors py-3"
+                >
+                  Hacerlo después
+                </button>
               </div>
             </form>
           )}

@@ -54,7 +54,7 @@ export default function ProductPage() {
     ? product.images.map(img => img.url)
     : product.thumbnail
     ? [product.thumbnail]
-    : ['/placeholder.png'];
+    : ['/products/placeholder.jpg'];
 
   const category = product.categories?.[0]?.name ?? '';
   const sku = product.variants?.[0]?.id ?? product.id;
