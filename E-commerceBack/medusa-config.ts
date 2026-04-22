@@ -48,6 +48,13 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
+            resolve: "@medusajs/notification-local",
+            id: "local",
+            options: {
+              channels: ["feed"],
+            },
+          },
+          {
             resolve: "./src/modules/resend",
             id: "resend",
             options: {
