@@ -255,7 +255,7 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
         trackingLinkHTML = `
           <div style="margin: 25px 0;">
             ${trackingNumStr}
-            <a href="${urlToUse}" style="background-color:#111111; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:10px; font-weight:500; font-size:14px; display:inline-block; letter-spacing:0.5px;">Rastrear Pedido</a>
+            <a href="${urlToUse}" style="background-color:#000000; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:10px; font-weight:500; font-size:14px; display:inline-block; letter-spacing:0.5px;">Rastrear Pedido</a>
           </div>
         `
       } else {
