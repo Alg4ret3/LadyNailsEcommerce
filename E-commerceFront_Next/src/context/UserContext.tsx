@@ -54,8 +54,8 @@ interface UserContextType {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-  login: (data: LoginData) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (data: LoginData) => Promise<User | undefined>;
+  register: (data: RegisterData) => Promise<User | undefined>;
   sendOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, code: string) => Promise<{ verified: boolean }>;
   logout: () => Promise<void>;
@@ -152,12 +152,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
 
-      const { token } = await loginCustomer(data);
+      const { token, customer } = await loginCustomer(data);
 
       localStorage.setItem("auth_token", token);
 
       // Invalida la query para que TanStack refetchee el customer actualizado
       await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+      
+      return customerToUser(customer);
     } catch (err: Error | any) {
       setError(err.message || "Error desconocido");
       throw err;
@@ -175,7 +177,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await registerCustomer(data);
 
       // After registration, login automatically
-      await login({ email: data.email, password: data.password });
+      return await login({ email: data.email, password: data.password });
     } catch (err: Error | any) {
       setError(err.message);
       throw err;

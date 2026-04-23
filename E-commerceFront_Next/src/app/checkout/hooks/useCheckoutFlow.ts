@@ -161,7 +161,13 @@ export function useCheckoutFlow() {
     try {
       setLocalError('');
       clearError();
-      await login({ email: loginEmail, password: loginPassword });
+      const guestCartId = medusaCartId;
+      const loggedUser = await login({ email: loginEmail, password: loginPassword });
+      
+      if (guestCartId && loggedUser) {
+        await associateCart(guestCartId, loggedUser.id);
+      }
+      
       setCheckoutStep('SHIP_INFO');
     } catch (err) {
       console.error('Login error:', err);
@@ -212,7 +218,7 @@ export function useCheckoutFlow() {
       // 0. Get the guest cart ID before registration (auth token change)
       const guestCartId = medusaCartId;
 
-      await register({
+      const newUser = await register({
         email,
         password: guestFormData.password,
         firstName: guestFormData.firstName,
@@ -221,8 +227,8 @@ export function useCheckoutFlow() {
       });
 
       // 1. Associate guest cart with new customer if it exists
-      if (guestCartId) {
-        await associateCart(guestCartId);
+      if (guestCartId && newUser) {
+        await associateCart(guestCartId, newUser.id);
       }
 
       await createCustomerAddressMutation({
