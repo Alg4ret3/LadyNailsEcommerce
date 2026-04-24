@@ -1,0 +1,255 @@
+import { 
+  Container, 
+  Heading, 
+  Button, 
+  Table, 
+  Text,
+  StatusBadge,
+  toast
+} from "@medusajs/ui"
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { ArrowDownTray, ArrowUpTray, CircleStack, Spinner, ArrowPath } from "@medusajs/icons"
+import { useEffect, useState, useRef } from "react"
+
+type Backup = {
+  name: string
+  url: string
+  created_at: string
+  size: number
+}
+
+export default function BackupsPage() {
+  const [backups, setBackups] = useState<Backup[]>([])
+  const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [restoring, setRestoring] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const loadBackups = async () => {
+    setRefreshing(true)
+    try {
+      const res = await fetch("/admin/backups")
+      const data = await res.json()
+      if (data.backups) {
+        setBackups(data.backups.sort((a: Backup, b: Backup) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ))
+      }
+    } catch (error: any) {
+      toast.error("Error", {
+        description: "No se pudieron cargar los backups"
+      })
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    loadBackups()
+  }, [])
+
+  const triggerBackup = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/admin/backups", { method: "POST" })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success("Éxito", {
+          description: `Backup generado: ${data.backup?.filename || 'Completado'}`
+        })
+        loadBackups()
+      } else {
+        throw new Error(data.message)
+      }
+    } catch (error: any) {
+      toast.error("Error", {
+        description: "Falló la generación del backup: " + error.message
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!confirm("¿Estás seguro de que deseas restaurar la base de datos? Esto sobrescribirá los datos actuales.")) {
+      return
+    }
+
+    setRestoring(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1]
+        const res = await fetch("/admin/backups/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: base64, filename: file.name })
+        })
+        const data = await res.json()
+        if (res.ok) {
+          toast.success("Éxito", {
+            description: "Base de datos restaurada correctamente"
+          })
+        } else {
+          throw new Error(data.message)
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error: any) {
+      toast.error("Error", {
+        description: "Error al restaurar: " + error.message
+      })
+    } finally {
+      setRestoring(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  const handleRestoreFromUrl = async (url: string, name: string) => {
+    if (!confirm(`¿Estás seguro de que deseas restaurar la base de datos usando el backup "${name}"? Esto sobrescribirá los datos actuales.`)) {
+      return
+    }
+
+    setRestoring(true)
+    try {
+      const res = await fetch("/admin/backups/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, filename: name })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success("Éxito", {
+          description: "Base de datos restaurada correctamente desde la nube"
+        })
+      } else {
+        throw new Error(data.message)
+      }
+    } catch (error: any) {
+      toast.error("Error", {
+        description: "Error al restaurar: " + error.message
+      })
+    } finally {
+      setRestoring(false)
+    }
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  return (
+    <Container className="divide-y p-0">
+      <div className="flex items-center justify-between px-6 py-4">
+        <div>
+          <Heading level="h1">Backups de Base de Datos</Heading>
+          <Text className="text-ui-fg-subtle">
+            Gestiona las copias de seguridad de toda tu tienda Lady Nails.
+          </Text>
+        </div>
+
+        <div className="flex gap-2">
+          <input 
+            type="file" 
+            accept=".sql" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload}
+          />
+          <Button 
+            variant="secondary" 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={restoring}
+          >
+            {restoring ? <Spinner className="animate-spin" /> : <ArrowUpTray />}
+            Importar SQL
+          </Button>
+          
+          <Button onClick={triggerBackup} disabled={loading}>
+            {loading ? <Spinner className="animate-spin" /> : <CircleStack />}
+            Generar Backup Ahora
+          </Button>
+        </div>
+      </div>
+
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <Heading level="h2">Historial de Backups (Cloudinary)</Heading>
+          <Button variant="transparent" onClick={loadBackups} disabled={refreshing}>
+            {refreshing ? "Cargando..." : "Refrescar"}
+          </Button>
+        </div>
+
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Nombre del Archivo</Table.HeaderCell>
+              <Table.HeaderCell>Fecha</Table.HeaderCell>
+              <Table.HeaderCell>Tamaño</Table.HeaderCell>
+              <Table.HeaderCell>Estado</Table.HeaderCell>
+              <Table.HeaderCell />
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {backups.map((backup) => (
+              <Table.Row key={backup.name}>
+                <Table.Cell className="font-mono text-xs">{backup.name}</Table.Cell>
+                <Table.Cell>{new Date(backup.created_at).toLocaleString()}</Table.Cell>
+                <Table.Cell>{formatSize(backup.size)}</Table.Cell>
+                <Table.Cell>
+                  <StatusBadge color="green">Almacenado</StatusBadge>
+                </Table.Cell>
+                <Table.Cell className="text-right">
+                  <div className="flex gap-2 justify-end">
+                    <Button 
+                      variant="secondary" 
+                      size="small"
+                      onClick={() => handleRestoreFromUrl(backup.url, backup.name)}
+                      disabled={restoring}
+                    >
+                      {restoring ? <Spinner className="animate-spin" /> : <ArrowPath />}
+                      Restaurar
+                    </Button>
+                    <a href={backup.url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="secondary" size="small">
+                        <ArrowDownTray />
+                        Descargar
+                      </Button>
+                    </a>
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+            {backups.length === 0 && !refreshing && (
+              <Table.Row>
+                <Table.Cell {...({ colSpan: 5 } as any)} className="text-center py-8">
+                  <Text className="text-ui-fg-muted">No se encontraron backups en la nube.</Text>
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        </Table>
+      </div>
+
+      <div className="px-6 py-4 bg-ui-bg-subtle">
+        <Heading level="h3" className="mb-2">Información del Sistema</Heading>
+        <Text className="text-sm">
+          Los backups automáticos se realizan cada domingo a las 00:00 y se guardan en la carpeta 
+          <strong> backups</strong> de Cloudinary. El proceso incluye toda la base de datos PostgreSQL.
+        </Text>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Backups",
+  icon: CircleStack,
+})
