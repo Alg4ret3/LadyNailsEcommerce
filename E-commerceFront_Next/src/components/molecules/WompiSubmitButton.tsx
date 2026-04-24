@@ -64,55 +64,36 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
     <button
       onClick={handlePay}
       disabled={isActuallyDisabled || isLoadingData}
-      className="wompi-pay-btn group relative w-full overflow-hidden rounded-xl px-8 py-5 font-black uppercase tracking-[0.15em] text-[12px] transition-all duration-300 ease-out disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 cursor-pointer"
-      style={{
-        background: (isActuallyDisabled || isLoadingData)
-          ? '#94a3b8'
-          : 'linear-gradient(135deg, #059669 0%, #10b981 40%, #34d399 100%)',
-        color: '#fff',
-        boxShadow: (isActuallyDisabled || isLoadingData)
-          ? 'none'
-          : '0 8px 32px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(0,0,0,0.08)',
-      }}
+      className="wompi-pay-btn group relative w-full overflow-hidden px-6 sm:px-10 py-4 sm:py-6 font-black uppercase tracking-[0.3em] text-[10px] sm:text-[11px] transition-all duration-500 ease-out disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100 cursor-pointer bg-slate-900 text-white"
     >
-      {/* Shimmer effect */}
-      {!isActuallyDisabled && !isLoadingData && (
-        <span
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)',
-            animation: 'wompi-shimmer 2.5s ease-in-out infinite',
-          }}
-        />
-      )}
+      {/* Subtle overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      
+      {/* Animated underline effect */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-white/30 group-hover:w-1/2 transition-all duration-700 ease-in-out" />
 
-      <span className="relative z-10 flex items-center justify-center gap-3">
+      <span className="relative z-10 flex items-center justify-center gap-4">
         {isLoadingData ? (
           <>
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>Preparando Pago Seguro...</span>
+            <span className="w-3 h-3 border border-white/20 border-t-white rounded-full animate-spin"></span>
+            <span className="opacity-50">Sincronizando Pasarela...</span>
           </>
         ) : (
           <>
-            <Lock size={16} className="transition-transform duration-300 group-hover:scale-110" />
-            <span>Pagar Seguro con Wompi</span>
-            <ShieldCheck size={16} className="transition-transform duration-300 group-hover:scale-110" />
+            <Lock size={14} strokeWidth={1.5} className="transition-transform duration-500 group-hover:-translate-y-0.5" />
+            <span className="group-hover:tracking-[0.4em] transition-all duration-700">Pagar con Wompi</span>
+            <ShieldCheck size={14} strokeWidth={1.5} className="transition-transform duration-500 group-hover:translate-y-0.5" />
           </>
         )}
       </span>
 
-      {/* Inline keyframes */}
       <style dangerouslySetInnerHTML={{ __html: `
         .wompi-pay-btn:not(:disabled):hover {
-          transform: translateY(-2px) scale(1.01);
-          box-shadow: 0 12px 40px rgba(16, 185, 129, 0.45), 0 4px 12px rgba(0,0,0,0.1);
+          background-color: #000;
+          letter-spacing: 0.4em;
         }
         .wompi-pay-btn:not(:disabled):active {
-          transform: translateY(0) scale(0.99);
-        }
-        @keyframes wompi-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+          transform: scale(0.98);
         }
       `}} />
     </button>

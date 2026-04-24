@@ -130,18 +130,20 @@ export const Navbar: React.FC = () => {
           </div>
         </button>
 
-        {/* Logo */}
-        <Link href={ROUTES.home} className="flex items-center group py-2 lg:static absolute left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0">
-          <div className="relative w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
-            <Image 
-              src={COMPANY_INFO.logo.src} 
-              alt={COMPANY_INFO.logo.alt} 
-              fill
-              className="object-contain group-hover:scale-105 transition-transform"
-              priority
-            />
-          </div>
-        </Link>
+        {/* Logo - Responsivo: Se oculta en pantallas < 430px para evitar solapamientos */}
+        <div className="hidden min-[430px]:flex items-center justify-center absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 lg:justify-start z-10">
+          <Link href={ROUTES.home} className="group py-2">
+            <div className="relative w-20 h-20 lg:w-30 lg:h-30 flex items-center justify-center">
+              <Image 
+                src={COMPANY_INFO.logo.src} 
+                alt={COMPANY_INFO.logo.alt} 
+                fill
+                className="object-contain group-hover:scale-105 transition-transform"
+                priority
+              />
+            </div>
+          </Link>
+        </div>
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-8">
@@ -214,7 +216,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 lg:gap-6">
+        <div className="flex items-center gap-1.5 lg:gap-4">
 
           
           <Link href={ROUTES.favorites} className="p-2.5 hover:bg-slate-50 rounded-full transition-colors relative group text-slate-900">

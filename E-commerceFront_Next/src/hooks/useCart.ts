@@ -136,18 +136,49 @@ export function useCartQuery() {
 
       // Optimistically update the cart (if we have it)
       if (previousCart) {
-        // ... (as before)
+        // We look for the item in the cart to see if we should increment quantity or add a new one
+        const existingItem = previousCart.cart.items.find((item: any) => item.variant_id === variantId);
+        
+        let updatedItems;
+        if (existingItem) {
+          updatedItems = previousCart.cart.items.map((item: any) =>
+            item.variant_id === variantId 
+              ? { ...item, quantity: item.quantity + quantity } 
+              : item
+          );
+        } else {
+          // If it doesn't exist, we add a placeholder item (it will be replaced by the real one from the server)
+          const newItem = {
+            id: `temp_${Date.now()}`,
+            variant_id: variantId,
+            quantity: quantity,
+            title: 'Cargando...',
+            unit_price: 0,
+            thumbnail: '',
+          };
+          updatedItems = [...previousCart.cart.items, newItem];
+        }
+
+        queryClient.setQueryData([...CART_QUERY_KEY, cartId], {
+          ...previousCart,
+          cart: { ...previousCart.cart, items: updatedItems }
+        });
       }
 
       return { previousCart };
+    },
+    onSuccess: (data: any) => {
+      // ✅ Actualizamos el cache con la respuesta real del servidor inmediatamente
+      if (data && data.cart) {
+        queryClient.setQueryData([...CART_QUERY_KEY, cartId], data);
+      }
     },
     onError: (err, variables, context) => {
       if (context?.previousCart) {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
       }
     },
-    // ✅ No invalidamos mas: tenemos UI optimista 100% funcional
-    // Ahorramos una peticion GET innecesaria a Medusa por cada operacion
+    // No invalidamos para mantener la fluidez, ya actualizamos el cache en onSuccess
     onSettled: () => {},
   });
 
@@ -187,6 +218,11 @@ export function useCartQuery() {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
       }
     },
+    onSuccess: (data: any) => {
+      if (data && data.cart) {
+        queryClient.setQueryData([...CART_QUERY_KEY, cartId], data);
+      }
+    },
     // ✅ No invalidamos mas: tenemos UI optimista 100% funcional
     // Ahorramos una peticion GET innecesaria a Medusa por cada operacion
     onSettled: () => {},
@@ -224,6 +260,11 @@ export function useCartQuery() {
     onError: (err, variables, context) => {
       if (context?.previousCart) {
         queryClient.setQueryData([...CART_QUERY_KEY, cartId], context.previousCart);
+      }
+    },
+    onSuccess: (data: any) => {
+      if (data && data.cart) {
+        queryClient.setQueryData([...CART_QUERY_KEY, cartId], data);
       }
     },
     // ✅ No invalidamos mas: tenemos UI optimista 100% funcional

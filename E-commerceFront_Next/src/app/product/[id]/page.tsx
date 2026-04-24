@@ -189,9 +189,6 @@ export default function ProductPage() {
                   </span>
                 )}
               </div>
-              <Typography variant="detail" className="text-slate-400 text-[10px]">
-                SKU: {sku}
-              </Typography>
             </div>
 
             {product.description && (
