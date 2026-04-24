@@ -41,14 +41,27 @@ class CloudinaryFileProvider {
     })
 
     return new Promise((resolve, reject) => {
-      const isRaw = file.filename?.match(/\.(csv|txt|pdf|zip|xlsx|json)$/i) || file.mimeType?.includes('csv') || file.mimeType?.includes('json');
+      const isRaw = file.filename?.match(/\.(csv|txt|pdf|zip|xlsx|json|sql)$/i) || file.mimeType?.includes('csv') || file.mimeType?.includes('json') || file.mimeType?.includes('sql');
       
-      const cleanFilename = file.filename?.replace(/^ladynails-products\//, "") || "";
+      let folder = "ladynails-products";
+      let cleanFilename = file.filename || "";
+
+      // Check if filename has a folder prefix (e.g. "backups/my-backup.sql")
+      if (cleanFilename.includes("/")) {
+        const parts = cleanFilename.split("/");
+        folder = parts[0];
+        cleanFilename = parts.slice(1).join("/");
+      }
+
       const uploadOptions: any = {
-        folder: "ladynails-products",
+        folder: folder,
         resource_type: isRaw ? "raw" : "auto",
-        public_id: cleanFilename,
+        public_id: cleanFilename.replace(/\.[^/.]+$/, ""), // remove extension for non-raw if needed, but Cloudinary handles it
       };
+
+      if (isRaw) {
+        uploadOptions.public_id = cleanFilename; // keep extension for raw
+      }
 
       if (!isRaw) {
         uploadOptions.fetch_format = "auto";
@@ -105,15 +118,16 @@ class CloudinaryFileProvider {
     for (const file of fileArray) {
       const fileKey = file.fileKey || file.file_key || file.key
       if (fileKey) {
-        await cloudinary.uploader.destroy(fileKey)
+        // We need to know the resource type to delete. Default to image but check extension.
+        const isRaw = fileKey.match(/\.(csv|txt|pdf|zip|xlsx|json|sql)$/i);
+        await cloudinary.uploader.destroy(fileKey, { resource_type: isRaw ? "raw" : "image" })
       }
     }
   }
 
   async getPresignedDownloadUrl(fileData: any): Promise<string> {
-    // fileData can be a plain string (from import workflow) or an object
     if (typeof fileData === "string") {
-      const isRaw = fileData.match(/\.(csv|txt|pdf|zip|xlsx|json)$/i);
+      const isRaw = fileData.match(/\.(csv|txt|pdf|zip|xlsx|json|sql)$/i);
       const resourceType = isRaw ? "raw" : "image";
       const url = `https://res.cloudinary.com/${this.options_.cloud_name}/${resourceType}/upload/${fileData}`;
       console.log("DEBUG: getPresignedDownloadUrl (string)", url);
@@ -123,8 +137,7 @@ class CloudinaryFileProvider {
     if (fileData.url) return fileData.url;
 
     const fileKey = fileData.fileKey || fileData.file_key || fileData.key || "";
-    // CSV exports and other non-image files are uploaded as 'raw' resource type in Cloudinary
-    const isRaw = fileKey.match(/\.(csv|txt|pdf|zip|xlsx|json)$/i);
+    const isRaw = fileKey.match(/\.(csv|txt|pdf|zip|xlsx|json|sql)$/i);
     const resourceType = isRaw ? "raw" : "image";
     const url = `https://res.cloudinary.com/${this.options_.cloud_name}/${resourceType}/upload/${fileKey}`;
     console.log("DEBUG: getPresignedDownloadUrl (object)", url);
@@ -137,9 +150,18 @@ class CloudinaryFileProvider {
     url: string;
     fileKey: string;
   }> {
-    const fileKey = fileData.filename;
+    let fileKey = fileData.filename;
     const isImage = fileData.mimeType?.startsWith("image/");
     
+    let folder = "ladynails-products";
+    let cleanFilename = fileKey || "";
+
+    if (cleanFilename.includes("/")) {
+      const parts = cleanFilename.split("/");
+      folder = parts[0];
+      cleanFilename = parts.slice(1).join("/");
+    }
+
     let resolvePromise: any;
     let rejectPromise: any;
 
@@ -148,11 +170,13 @@ class CloudinaryFileProvider {
       rejectPromise = reject;
     });
 
+    const isRaw = cleanFilename.match(/\.(csv|txt|pdf|zip|xlsx|json|sql)$/i);
+
     const writeStream = cloudinary.uploader.upload_stream(
       { 
-        folder: "ladynails-products",
-        resource_type: isImage ? "image" : "raw",
-        public_id: fileKey
+        folder: folder,
+        resource_type: isRaw ? "raw" : (isImage ? "image" : "auto"),
+        public_id: isRaw ? cleanFilename : cleanFilename.replace(/\.[^/.]+$/, "")
       },
       (error, result) => {
         if (error) {
@@ -170,11 +194,13 @@ class CloudinaryFileProvider {
       }
     );
 
+    const resourceType = isRaw ? "raw" : (isImage ? "image" : "upload");
+
     return {
       writeStream,
       promise,
-      url: `https://res.cloudinary.com/${this.options_.cloud_name}/${isImage ? "image" : "raw"}/upload/v1/ladynails-products/${fileKey}`,
-      fileKey: `ladynails-products/${fileKey}`
+      url: `https://res.cloudinary.com/${this.options_.cloud_name}/${resourceType}/upload/${folder}/${cleanFilename}`,
+      fileKey: `${folder}/${cleanFilename}`
     };
   }
 
