@@ -60,10 +60,10 @@ export default function UsagesPage() {
 
     return (
         <Container className="divide-y p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
                 <Heading level="h1">Modos de uso</Heading>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row">
                     <Input
                         placeholder="Modo de uso"
                         value={name}
@@ -84,46 +84,48 @@ export default function UsagesPage() {
                 />
             </div>
 
-            <Table>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Nombre</Table.HeaderCell>
-                        <Table.HeaderCell>Creado</Table.HeaderCell>
-                        <Table.HeaderCell>Actualizado</Table.HeaderCell>
-                        <Table.HeaderCell />
-                    </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                    {filtered.map((usage) => (
-                        <Table.Row key={usage.id}>
-                            <Table.Cell>{usage.name}</Table.Cell>
-
-                            <Table.Cell>
-                                {usage.created_at
-                                    ? new Date(usage.created_at).toLocaleDateString()
-                                    : "-"}
-                            </Table.Cell>
-
-                            <Table.Cell>
-                                {usage.updated_at
-                                    ? new Date(usage.updated_at).toLocaleDateString()
-                                    : "-"}
-                            </Table.Cell>
-
-                            <Table.Cell className="text-right">
-                                <Button
-                                    size="small"
-                                    variant="secondary"
-                                    onClick={() => deleteUsage(usage.id)}
-                                >
-                                    Eliminar
-                                </Button>
-                            </Table.Cell>
+            <div className="overflow-x-auto">
+                <Table>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Nombre</Table.HeaderCell>
+                            <Table.HeaderCell>Creado</Table.HeaderCell>
+                            <Table.HeaderCell>Actualizado</Table.HeaderCell>
+                            <Table.HeaderCell />
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
+                    </Table.Header>
+
+                    <Table.Body>
+                        {filtered.map((usage) => (
+                            <Table.Row key={usage.id}>
+                                <Table.Cell className="whitespace-nowrap">{usage.name}</Table.Cell>
+
+                                <Table.Cell className="whitespace-nowrap">
+                                    {usage.created_at
+                                        ? new Date(usage.created_at).toLocaleDateString()
+                                        : "-"}
+                                </Table.Cell>
+
+                                <Table.Cell className="whitespace-nowrap">
+                                    {usage.updated_at
+                                        ? new Date(usage.updated_at).toLocaleDateString()
+                                        : "-"}
+                                </Table.Cell>
+
+                                <Table.Cell className="text-right">
+                                    <Button
+                                        size="small"
+                                        variant="secondary"
+                                        onClick={() => deleteUsage(usage.id)}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
+            </div>
         </Container>
     )
 }

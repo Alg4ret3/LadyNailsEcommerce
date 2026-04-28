@@ -84,91 +84,94 @@ export default function ReviewsPage() {
 
   return (
     <Container className="divide-y p-0 overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <Heading level="h1">Reseñas de la Página</Heading>
       </div>
 
-      <Table>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Cliente</Table.HeaderCell>
-            <Table.HeaderCell>Calificación</Table.HeaderCell>
-            <Table.HeaderCell>Comentario</Table.HeaderCell>
-            <Table.HeaderCell>Estado</Table.HeaderCell>
-            <Table.HeaderCell>Fecha</Table.HeaderCell>
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {loading ? (
+      <div className="overflow-x-auto">
+        <Table>
+          <Table.Header>
             <Table.Row>
-              <Table.Cell className="text-center py-10">
-                <Text>Cargando reseñas...</Text>
-              </Table.Cell>
-              <Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
+              <Table.HeaderCell>Cliente</Table.HeaderCell>
+              <Table.HeaderCell>Calificación</Table.HeaderCell>
+              <Table.HeaderCell>Comentario</Table.HeaderCell>
+              <Table.HeaderCell>Estado</Table.HeaderCell>
+              <Table.HeaderCell>Fecha</Table.HeaderCell>
+              <Table.HeaderCell />
             </Table.Row>
-          ) : reviews.length === 0 ? (
-            <Table.Row>
-              <Table.Cell className="text-center py-10">
-                <Text>No hay reseñas registradas.</Text>
-              </Table.Cell>
-              <Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell /><Table.Cell />
-            </Table.Row>
-          ) : (
-            reviews.map((review) => (
-              <Table.Row key={review.id}>
-                <Table.Cell className="font-medium text-ui-fg-base">
-                  {review.customer_name}
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex items-center gap-1">
-                    <Text>{review.rating}</Text>
-                    <Star className="text-yellow-400" />
-                  </div>
-                </Table.Cell>
-                <Table.Cell className="max-w-[300px]">
-                  <Text className="truncate">{review.content}</Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <StatusBadge color={getStatusColor(review.status)}>
-                    {review.status === "pending" ? "Pendiente" : 
-                     review.status === "approved" ? "Aprobado" : "Rechazado"}
-                  </StatusBadge>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text>
-                    {review.created_at ? new Date(review.created_at).toLocaleDateString() : "-"}
-                  </Text>
-                </Table.Cell>
-                <Table.Cell className="text-right">
-                  <div className="flex items-center justify-end gap-x-2">
-                    <Select 
-                      size="small"
-                      onValueChange={(value) => updateStatus(review.id, value)}
-                      value={review.status}
-                    >
-                      <Select.Trigger>
-                        <Select.Value placeholder="Cambiar Estado" />
-                      </Select.Trigger>
-                      <Select.Content>
-                        <Select.Item value="pending">Pendiente</Select.Item>
-                        <Select.Item value="approved">Aprobar</Select.Item>
-                        <Select.Item value="rejected">Rechazar</Select.Item>
-                      </Select.Content>
-                    </Select>
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => deleteReview(review.id)}
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell className="text-center py-10" {...({ colSpan: 6 } as any)}>
+                  <Text>Cargando reseñas...</Text>
                 </Table.Cell>
               </Table.Row>
-            ))
-          )}
-        </Table.Body>
-      </Table>
+            ) : reviews.length === 0 ? (
+              <Table.Row>
+                <Table.Cell className="text-center py-10" {...({ colSpan: 6 } as any)}>
+                  <Text>No hay reseñas registradas.</Text>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              reviews.map((review) => (
+                <Table.Row key={review.id}>
+                  <Table.Cell className="font-medium text-ui-fg-base whitespace-nowrap">
+                    {review.customer_name}
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <Text>{review.rating}</Text>
+                      <Star className="text-yellow-400" />
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell className="max-w-[200px] md:max-w-[300px]">
+                    <Text className="truncate" title={review.content}>{review.content}</Text>
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">
+                    <StatusBadge color={getStatusColor(review.status)}>
+                      {review.status === "pending" ? "Pendiente" : 
+                       review.status === "approved" ? "Aprobado" : "Rechazado"}
+                    </StatusBadge>
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">
+                    <Text>
+                      {review.created_at ? new Date(review.created_at).toLocaleDateString() : "-"}
+                    </Text>
+                  </Table.Cell>
+                  <Table.Cell className="text-right">
+                    <div className="flex items-center justify-end gap-x-2">
+                      <div className="w-[120px]">
+                        <Select 
+                          size="small"
+                          onValueChange={(value) => updateStatus(review.id, value)}
+                          value={review.status}
+                        >
+                          <Select.Trigger>
+                            <Select.Value placeholder="Estado" />
+                          </Select.Trigger>
+                          <Select.Content>
+                            <Select.Item value="pending">Pendiente</Select.Item>
+                            <Select.Item value="approved">Aprobar</Select.Item>
+                            <Select.Item value="rejected">Rechazar</Select.Item>
+                          </Select.Content>
+                        </Select>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        size="small"
+                        onClick={() => deleteReview(review.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            )}
+          </Table.Body>
+        </Table>
+      </div>
     </Container>
   )
 }

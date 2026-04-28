@@ -60,10 +60,10 @@ export default function WarrantiesPage() {
 
     return (
         <Container className="divide-y p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
                 <Heading level="h1">Garantías</Heading>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row">
                     <Input
                         placeholder="Nombre de la garantía"
                         value={name}
@@ -84,46 +84,48 @@ export default function WarrantiesPage() {
                 />
             </div>
 
-            <Table>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Nombre</Table.HeaderCell>
-                        <Table.HeaderCell>Creado</Table.HeaderCell>
-                        <Table.HeaderCell>Actualizado</Table.HeaderCell>
-                        <Table.HeaderCell />
-                    </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                    {filtered.map((warranty) => (
-                        <Table.Row key={warranty.id}>
-                            <Table.Cell>{warranty.name}</Table.Cell>
-
-                            <Table.Cell>
-                                {warranty.created_at
-                                    ? new Date(warranty.created_at).toLocaleDateString()
-                                    : "-"}
-                            </Table.Cell>
-
-                            <Table.Cell>
-                                {warranty.updated_at
-                                    ? new Date(warranty.updated_at).toLocaleDateString()
-                                    : "-"}
-                            </Table.Cell>
-
-                            <Table.Cell className="text-right">
-                                <Button
-                                    size="small"
-                                    variant="secondary"
-                                    onClick={() => deleteWarranty(warranty.id)}
-                                >
-                                    Eliminar
-                                </Button>
-                            </Table.Cell>
+            <div className="overflow-x-auto">
+                <Table>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Nombre</Table.HeaderCell>
+                            <Table.HeaderCell>Creado</Table.HeaderCell>
+                            <Table.HeaderCell>Actualizado</Table.HeaderCell>
+                            <Table.HeaderCell />
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
+                    </Table.Header>
+
+                    <Table.Body>
+                        {filtered.map((warranty) => (
+                            <Table.Row key={warranty.id}>
+                                <Table.Cell className="whitespace-nowrap">{warranty.name}</Table.Cell>
+
+                                <Table.Cell className="whitespace-nowrap">
+                                    {warranty.created_at
+                                        ? new Date(warranty.created_at).toLocaleDateString()
+                                        : "-"}
+                                </Table.Cell>
+
+                                <Table.Cell className="whitespace-nowrap">
+                                    {warranty.updated_at
+                                        ? new Date(warranty.updated_at).toLocaleDateString()
+                                        : "-"}
+                                </Table.Cell>
+
+                                <Table.Cell className="text-right">
+                                    <Button
+                                        size="small"
+                                        variant="secondary"
+                                        onClick={() => deleteWarranty(warranty.id)}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
+            </div>
         </Container>
     )
 }

@@ -64,10 +64,10 @@ export default function BrandsPage() {
     <Container className="divide-y p-0">
 
       {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <Heading level="h1">Marcas</Heading>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row">
           <Input
             placeholder="Nombre de la marca"
             value={name}
@@ -75,61 +75,63 @@ export default function BrandsPage() {
           />
 
           <Button onClick={createBrand}>
-            Create
+            Crear
           </Button>
         </div>
       </div>
 
       {/* SEARCH */}
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <Input
-          placeholder="Search"
+          placeholder="Buscar"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {/* TABLE */}
-      <Table>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Created</Table.HeaderCell>
-            <Table.HeaderCell>Updated</Table.HeaderCell>
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
-          {filtered.map((brand) => (
-            <Table.Row key={brand.id}>
-              <Table.Cell>{brand.name}</Table.Cell>
-
-              <Table.Cell>
-                {brand.created_at
-                  ? new Date(brand.created_at).toLocaleDateString()
-                  : "-"}
-              </Table.Cell>
-
-              <Table.Cell>
-                {brand.updated_at
-                  ? new Date(brand.updated_at).toLocaleDateString()
-                  : "-"}
-              </Table.Cell>
-
-              <Table.Cell className="text-right">
-                <Button
-                  size="small"
-                  variant="secondary"
-                  onClick={() => deleteBrand(brand.id)}
-                >
-                  Delete
-                </Button>
-              </Table.Cell>
+      <div className="overflow-x-auto">
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Nombre</Table.HeaderCell>
+              <Table.HeaderCell>Creado</Table.HeaderCell>
+              <Table.HeaderCell>Actualizado</Table.HeaderCell>
+              <Table.HeaderCell />
             </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
+          </Table.Header>
+
+          <Table.Body>
+            {filtered.map((brand) => (
+              <Table.Row key={brand.id}>
+                <Table.Cell className="whitespace-nowrap">{brand.name}</Table.Cell>
+
+                <Table.Cell className="whitespace-nowrap">
+                  {brand.created_at
+                    ? new Date(brand.created_at).toLocaleDateString()
+                    : "-"}
+                </Table.Cell>
+
+                <Table.Cell className="whitespace-nowrap">
+                  {brand.updated_at
+                    ? new Date(brand.updated_at).toLocaleDateString()
+                    : "-"}
+                </Table.Cell>
+
+                <Table.Cell className="text-right">
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => deleteBrand(brand.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      </div>
 
     </Container>
   )

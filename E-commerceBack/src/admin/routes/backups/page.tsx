@@ -147,7 +147,7 @@ export default function BackupsPage() {
 
   return (
     <Container className="divide-y p-0">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <div>
           <Heading level="h1">Backups de Base de Datos</Heading>
           <Text className="text-ui-fg-subtle">
@@ -155,7 +155,7 @@ export default function BackupsPage() {
           </Text>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row">
           <input 
             type="file" 
             accept=".sql" 
@@ -180,62 +180,64 @@ export default function BackupsPage() {
       </div>
 
       <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-y-2 md:flex-row md:items-center md:justify-between mb-4">
           <Heading level="h2">Historial de Backups (Cloudinary)</Heading>
           <Button variant="transparent" onClick={loadBackups} disabled={refreshing}>
             {refreshing ? "Cargando..." : "Refrescar"}
           </Button>
         </div>
 
-        <Table>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Nombre del Archivo</Table.HeaderCell>
-              <Table.HeaderCell>Fecha</Table.HeaderCell>
-              <Table.HeaderCell>Tamaño</Table.HeaderCell>
-              <Table.HeaderCell>Estado</Table.HeaderCell>
-              <Table.HeaderCell />
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {backups.map((backup) => (
-              <Table.Row key={backup.name}>
-                <Table.Cell className="font-mono text-xs">{backup.name}</Table.Cell>
-                <Table.Cell>{new Date(backup.created_at).toLocaleString()}</Table.Cell>
-                <Table.Cell>{formatSize(backup.size)}</Table.Cell>
-                <Table.Cell>
-                  <StatusBadge color="green">Almacenado</StatusBadge>
-                </Table.Cell>
-                <Table.Cell className="text-right">
-                  <div className="flex gap-2 justify-end">
-                    <Button 
-                      variant="secondary" 
-                      size="small"
-                      onClick={() => handleRestoreFromUrl(backup.url, backup.name)}
-                      disabled={restoring}
-                    >
-                      {restoring ? <Spinner className="animate-spin" /> : <ArrowPath />}
-                      Restaurar
-                    </Button>
-                    <a href={backup.url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="secondary" size="small">
-                        <ArrowDownTray />
-                        Descargar
-                      </Button>
-                    </a>
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-            {backups.length === 0 && !refreshing && (
+        <div className="overflow-x-auto">
+          <Table>
+            <Table.Header>
               <Table.Row>
-                <Table.Cell {...({ colSpan: 5 } as any)} className="text-center py-8">
-                  <Text className="text-ui-fg-muted">No se encontraron backups en la nube.</Text>
-                </Table.Cell>
+                <Table.HeaderCell>Nombre del Archivo</Table.HeaderCell>
+                <Table.HeaderCell>Fecha</Table.HeaderCell>
+                <Table.HeaderCell>Tamaño</Table.HeaderCell>
+                <Table.HeaderCell>Estado</Table.HeaderCell>
+                <Table.HeaderCell />
               </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
+            </Table.Header>
+            <Table.Body>
+              {backups.map((backup) => (
+                <Table.Row key={backup.name}>
+                  <Table.Cell className="font-mono text-xs whitespace-nowrap">{backup.name}</Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">{new Date(backup.created_at).toLocaleString()}</Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">{formatSize(backup.size)}</Table.Cell>
+                  <Table.Cell>
+                    <StatusBadge color="green">Almacenado</StatusBadge>
+                  </Table.Cell>
+                  <Table.Cell className="text-right">
+                    <div className="flex gap-2 justify-end">
+                      <Button 
+                        variant="secondary" 
+                        size="small"
+                        onClick={() => handleRestoreFromUrl(backup.url, backup.name)}
+                        disabled={restoring}
+                      >
+                        {restoring ? <Spinner className="animate-spin" /> : <ArrowPath />}
+                        <span className="hidden sm:inline">Restaurar</span>
+                      </Button>
+                      <a href={backup.url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="secondary" size="small">
+                          <ArrowDownTray />
+                          <span className="hidden sm:inline">Descargar</span>
+                        </Button>
+                      </a>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+              {backups.length === 0 && !refreshing && (
+                <Table.Row>
+                  <Table.Cell {...({ colSpan: 5 } as any)} className="text-center py-8">
+                    <Text className="text-ui-fg-muted">No se encontraron backups en la nube.</Text>
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table>
+        </div>
       </div>
 
       <div className="px-6 py-4 bg-ui-bg-subtle">

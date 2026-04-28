@@ -144,7 +144,7 @@ const ProductAttributesWidget = (props: any) => {
 
   return (
     <Container className="p-0 overflow-hidden shadow-elevation-card-rest">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-ui-bg-base">
+      <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4 border-b bg-ui-bg-base">
         <div className="flex flex-col">
           <Heading level="h2" className="text-ui-fg-base">Atributos del Producto</Heading>
           <Text className="text-ui-fg-subtle text-small">Relaciones personalizadas para Lady Nails</Text>
