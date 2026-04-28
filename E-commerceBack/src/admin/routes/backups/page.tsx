@@ -5,7 +5,8 @@ import {
   Table, 
   Text,
   StatusBadge,
-  toast
+  toast,
+  Prompt
 } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { ArrowDownTray, ArrowUpTray, CircleStack, Spinner, ArrowPath } from "@medusajs/icons"
@@ -23,6 +24,11 @@ export default function BackupsPage() {
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [restoring, setRestoring] = useState(false)
+  const [confirmRestore, setConfirmRestore] = useState<{
+    show: boolean,
+    type: "file" | "url",
+    data?: any
+  }>({ show: false, type: "file" })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const loadBackups = async () => {
@@ -74,10 +80,14 @@ export default function BackupsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!confirm("¿Estás seguro de que deseas restaurar la base de datos? Esto sobrescribirá los datos actuales.")) {
-      return
-    }
+    setConfirmRestore({
+      show: true,
+      type: "file",
+      data: file
+    })
+  }
 
+  const executeFileRestore = async (file: File) => {
     setRestoring(true)
     try {
       const reader = new FileReader()
@@ -105,14 +115,19 @@ export default function BackupsPage() {
     } finally {
       setRestoring(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
+      setConfirmRestore(prev => ({ ...prev, show: false }))
     }
   }
 
-  const handleRestoreFromUrl = async (url: string, name: string) => {
-    if (!confirm(`¿Estás seguro de que deseas restaurar la base de datos usando el backup "${name}"? Esto sobrescribirá los datos actuales.`)) {
-      return
-    }
+  const handleRestoreFromUrl = (url: string, name: string) => {
+    setConfirmRestore({
+      show: true,
+      type: "url",
+      data: { url, name }
+    })
+  }
 
+  const executeUrlRestore = async (url: string, name: string) => {
     setRestoring(true)
     try {
       const res = await fetch("/admin/backups/import", {
@@ -134,6 +149,7 @@ export default function BackupsPage() {
       })
     } finally {
       setRestoring(false)
+      setConfirmRestore(prev => ({ ...prev, show: false }))
     }
   }
 
@@ -247,6 +263,38 @@ export default function BackupsPage() {
           <strong> backups</strong> de Cloudinary. El proceso incluye toda la base de datos PostgreSQL.
         </Text>
       </div>
+
+      <Prompt open={confirmRestore.show} onOpenChange={(open) => !open && setConfirmRestore(p => ({ ...p, show: false }))}>
+        <Prompt.Content>
+          <Prompt.Header>
+            <Prompt.Title>Confirmar Restauración</Prompt.Title>
+            <Prompt.Description>
+              {confirmRestore.type === "file" 
+                ? "¿Estás seguro de que deseas restaurar la base de datos desde este archivo? Esto sobrescribirá todos los datos actuales."
+                : `¿Estás seguro de que deseas restaurar la base de datos usando el backup "${confirmRestore.data?.name}"? Esto sobrescribirá todos los datos actuales.`
+              }
+            </Prompt.Description>
+          </Prompt.Header>
+          <Prompt.Footer>
+            <Prompt.Cancel onClick={() => {
+              if (fileInputRef.current) fileInputRef.current.value = ""
+            }}>
+              Cancelar
+            </Prompt.Cancel>
+            <Prompt.Action 
+              onClick={() => {
+                if (confirmRestore.type === "file") {
+                  executeFileRestore(confirmRestore.data)
+                } else {
+                  executeUrlRestore(confirmRestore.data.url, confirmRestore.data.name)
+                }
+              }}
+            >
+              Restaurar Ahora
+            </Prompt.Action>
+          </Prompt.Footer>
+        </Prompt.Content>
+      </Prompt>
     </Container>
   )
 }

@@ -3,7 +3,8 @@ import {
   Heading, 
   Button, 
   Table, 
-  Input 
+  Input,
+  Prompt
 } from "@medusajs/ui"
 
 import { defineRouteConfig } from "@medusajs/admin-sdk"
@@ -119,13 +120,30 @@ export default function BrandsPage() {
                 </Table.Cell>
 
                 <Table.Cell className="text-right">
-                  <Button
-                    size="small"
-                    variant="secondary"
-                    onClick={() => deleteBrand(brand.id)}
-                  >
-                    Eliminar
-                  </Button>
+                  <Prompt>
+                    <Prompt.Trigger asChild>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                      >
+                        Eliminar
+                      </Button>
+                    </Prompt.Trigger>
+                    <Prompt.Content>
+                      <Prompt.Header>
+                        <Prompt.Title>Confirmar Eliminación</Prompt.Title>
+                        <Prompt.Description>
+                          ¿Estás seguro de que deseas eliminar la marca <strong>{brand.name}</strong>? Esta acción no se puede deshacer.
+                        </Prompt.Description>
+                      </Prompt.Header>
+                      <Prompt.Footer>
+                        <Prompt.Cancel>Cancelar</Prompt.Cancel>
+                        <Prompt.Action onClick={() => deleteBrand(brand.id)}>
+                          Eliminar
+                         </Prompt.Action>
+                      </Prompt.Footer>
+                    </Prompt.Content>
+                  </Prompt>
                 </Table.Cell>
               </Table.Row>
             ))}

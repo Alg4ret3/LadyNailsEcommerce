@@ -5,7 +5,8 @@ import {
   Table, 
   StatusBadge,
   Select,
-  Text
+  Text,
+  Prompt
 } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { Star } from "@medusajs/icons"
@@ -59,7 +60,6 @@ export default function ReviewsPage() {
   }
 
   const deleteReview = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta reseña?")) return
     try {
       const res = await fetch(`/admin/reviews/${id}`, {
         method: "DELETE",
@@ -157,13 +157,30 @@ export default function ReviewsPage() {
                           </Select.Content>
                         </Select>
                       </div>
-                      <Button 
-                        variant="secondary" 
-                        size="small"
-                        onClick={() => deleteReview(review.id)}
-                      >
-                        Eliminar
-                      </Button>
+                      <Prompt>
+                        <Prompt.Trigger asChild>
+                          <Button 
+                            variant="secondary" 
+                            size="small"
+                          >
+                            Eliminar
+                          </Button>
+                        </Prompt.Trigger>
+                        <Prompt.Content>
+                          <Prompt.Header>
+                            <Prompt.Title>Confirmar Eliminación</Prompt.Title>
+                            <Prompt.Description>
+                              ¿Estás seguro de que deseas eliminar la reseña de <strong>{review.customer_name}</strong>? Esta acción no se puede deshacer.
+                            </Prompt.Description>
+                          </Prompt.Header>
+                          <Prompt.Footer>
+                            <Prompt.Cancel>Cancelar</Prompt.Cancel>
+                            <Prompt.Action onClick={() => deleteReview(review.id)}>
+                              Eliminar
+                            </Prompt.Action>
+                          </Prompt.Footer>
+                        </Prompt.Content>
+                      </Prompt>
                     </div>
                   </Table.Cell>
                 </Table.Row>
