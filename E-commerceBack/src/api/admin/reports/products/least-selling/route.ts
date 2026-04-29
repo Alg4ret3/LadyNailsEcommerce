@@ -22,11 +22,9 @@ export async function GET(
       ]
     }) as { data: any[] };
 
-    // Filter completed orders
+    // Filter completed or pending orders
     const completedOrderItems = orderItems.filter(item =>
-      item.order?.status === 'completed' ||
-      item.order?.status === 'shipped' ||
-      item.order?.status === 'delivered'
+      ['pending', 'completed', 'archived'].includes(item.order?.status)
     );
 
     // Aggregate sales by product

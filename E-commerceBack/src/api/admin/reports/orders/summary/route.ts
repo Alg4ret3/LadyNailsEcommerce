@@ -21,7 +21,7 @@ export async function GET(
       };
     }
 
-    // Get orders with payments
+    // Get orders with summary
     const { data: orders } = await query.graph({
       entity: "order",
       fields: [
@@ -29,12 +29,11 @@ export async function GET(
         "status",
         "created_at",
         "total",
-        "payments.status",
-        "payments.amount"
+        "summary.*"
       ],
       filters: {
         status: {
-          $in: ["completed", "shipped", "delivered"]
+          $in: ["pending", "completed", "archived"]
         },
         ...dateFilter
       }
@@ -68,12 +67,8 @@ export async function GET(
 
       ordersByPeriod.set(periodKey, ordersByPeriod.get(periodKey) + 1);
 
-      // Calculate total revenue from captured payments
-      for (const payment of (order.payments || [])) {
-        if (payment.status === 'captured') {
-          totalRevenue += payment.amount || 0;
-        }
-      }
+      // Calculate total revenue from paid_total in summary
+      totalRevenue += Number(order.summary?.paid_total || 0);
     }
 
     // Convert to array and sort by period
