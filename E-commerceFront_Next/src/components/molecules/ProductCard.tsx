@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingBag, ArrowLeftRight, XIcon as X, Heart } from '@/components/icons';
+import { ShoppingBag, ArrowLeftRight, Heart } from '@/components/icons';
 import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
 import type { CompareItem } from '@/context/CompareContext';
@@ -192,19 +192,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           );
         })()}
 
-        {alreadyInCompare && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              removeFromCompare(id);
-            }}
-            className="absolute top-12 right-2 sm:hidden bg-red-500 text-white p-1.5 rounded-full shadow-md z-30"
-            aria-label="Eliminar de comparación"
-          >
-            <X size={14} />
-          </button>
-        )}
+
         
         <div className="absolute bottom-3 sm:bottom-6 inset-x-3 sm:inset-x-6 z-30 translate-y-0 opacity-100 sm:translate-y-4 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 transition-all duration-500 flex gap-1 sm:gap-2">
            <button 
