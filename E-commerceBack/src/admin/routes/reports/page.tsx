@@ -84,7 +84,7 @@ export default function ReportsPage() {
     primary: isDark ? '#8884d8' : '#8884d8',
     secondary: isDark ? '#82ca9d' : '#82ca9d',
     text: isDark ? '#ffffff' : '#374151',
-    background: isDark ? '#1f2937' : '#ffffff',
+    background: isDark ? '#1f2937ff' : '#ffffff',
     border: isDark ? '#374151' : '#d1d5db',
     card: isDark ? '#111827' : '#ffffff',
     muted: isDark ? '#9ca3af' : '#6b7280',
@@ -150,7 +150,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <Container className={`divide-y p-0 overflow-hidden ${isDark ? 'bg-gray-900 text-white' : ''}`}>
+    <Container className="divide-y p-0 overflow-hidden">
       <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <Heading level="h1">Reportes de la Tienda</Heading>
         <div className="flex items-center gap-2">
@@ -180,52 +180,52 @@ export default function ReportsPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Total Orders */}
-            <div className={`border rounded-lg p-4 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <ShoppingCart className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>Órdenes Totales</Text>
+                  <Text className="text-sm text-ui-fg-subtle">Órdenes Totales</Text>
                   <Text className="text-2xl font-bold">{orderSummary?.totalOrders || 0}</Text>
                 </div>
               </div>
             </div>
 
             {/* Total Revenue */}
-            <div className={`border rounded-lg p-4 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <CurrencyDollar className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>Ingresos Totales</Text>
+                  <Text className="text-sm text-ui-fg-subtle">Ingresos Totales</Text>
                   <Text className="text-2xl font-bold text-green-400">{formatCurrency(orderSummary?.totalRevenue || 0)}</Text>
                 </div>
               </div>
             </div>
 
             {/* New Customers */}
-            <div className={`border rounded-lg p-4 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/20 rounded-lg">
                   <Users className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>Nuevos Clientes</Text>
+                  <Text className="text-sm text-ui-fg-subtle">Nuevos Clientes</Text>
                   <Text className="text-2xl font-bold text-purple-400">{customerRegistrations?.totalNewCustomers || 0}</Text>
                 </div>
               </div>
             </div>
 
             {/* Products Sold */}
-            <div className={`border rounded-lg p-4 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-500/20 rounded-lg">
                   <BarsThree className="w-5 h-5 text-orange-400" />
                 </div>
                 <div>
-                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>Productos Vendidos</Text>
+                  <Text className="text-sm text-ui-fg-subtle">Productos Vendidos</Text>
                   <Text className="text-2xl font-bold text-orange-400">
                     {(topSelling?.products || []).reduce((sum, p) => sum + p.total_quantity, 0)}
                   </Text>
@@ -237,7 +237,7 @@ export default function ReportsPage() {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Orders Over Time */}
-            <div className={`border rounded-lg p-6 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
                 <Heading level="h3">Órdenes por {period === 'day' ? 'Día' : period === 'month' ? 'Mes' : 'Año'}</Heading>
               </div>
@@ -271,7 +271,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Customer Registrations */}
-            <div className={`border rounded-lg p-6 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
                 <Heading level="h3">Nuevos Clientes por {period === 'day' ? 'Día' : period === 'month' ? 'Mes' : 'Año'}</Heading>
               </div>
@@ -308,20 +308,20 @@ export default function ReportsPage() {
           {/* Products Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Selling Products */}
-            <div className={`border rounded-lg p-6 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
                 <Heading level="h3">Productos Más Vendidos</Heading>
               </div>
               <div className="space-y-3">
                 {topSelling?.products.map((product, index) => (
-                  <div key={product.product_id} className={`flex items-center justify-between p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div key={product.product_id} className="flex items-center justify-between p-3 rounded-lg bg-ui-bg-subtle">
                     <div className="flex items-center gap-3">
                       <Badge color="grey" className="w-6 h-6 rounded-full flex items-center justify-center text-xs">
                         {index + 1}
                       </Badge>
                       <div>
-                        <Text className={`font-medium ${isDark ? 'text-white' : ''}`}>{product.title}</Text>
-                        <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>{product.total_quantity} unidades</Text>
+                        <Text className="font-medium">{product.title}</Text>
+                        <Text className="text-sm text-ui-fg-subtle">{product.total_quantity} unidades</Text>
                       </div>
                     </div>
                   </div>
@@ -330,20 +330,20 @@ export default function ReportsPage() {
             </div>
 
             {/* Least Selling Products */}
-            <div className={`border rounded-lg p-6 shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
                 <Heading level="h3">Productos Menos Vendidos</Heading>
               </div>
               <div className="space-y-3">
                 {leastSelling?.products.map((product, index) => (
-                  <div key={product.product_id} className={`flex items-center justify-between p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div key={product.product_id} className="flex items-center justify-between p-3 rounded-lg bg-ui-bg-subtle">
                     <div className="flex items-center gap-3">
                       <Badge color="grey" className="w-6 h-6 rounded-full flex items-center justify-center text-xs">
                         {index + 1}
                       </Badge>
                       <div>
-                        <Text className={`font-medium ${isDark ? 'text-white' : ''}`}>{product.title}</Text>
-                        <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-ui-fg-subtle'}`}>{product.total_quantity} unidades</Text>
+                        <Text className="font-medium">{product.title}</Text>
+                        <Text className="text-sm text-ui-fg-subtle">{product.total_quantity} unidades</Text>
                       </div>
                     </div>
                   </div>

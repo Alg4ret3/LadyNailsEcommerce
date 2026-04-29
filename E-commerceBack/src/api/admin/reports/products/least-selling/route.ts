@@ -10,41 +10,46 @@ export async function GET(
   try {
     const query = req.scope.resolve("query");
 
-    // Get order items with product information
-    const { data: orderItems } = await query.graph({
-      entity: "order_item",
+    // Get orders with items
+    const { data: orders } = await query.graph({
+      entity: "order",
       fields: [
-        "quantity",
-        "product_id",
-        "product.title",
-        "product.thumbnail",
-        "order.status"
-      ]
+        "status",
+        "items.*",
+        "items.variant.product.title",
+        "items.variant.product.thumbnail"
+      ],
+      filters: {
+        status: {
+          $in: ["pending", "completed", "archived"]
+        }
+      }
     }) as { data: any[] };
-
-    // Filter completed or pending orders
-    const completedOrderItems = orderItems.filter(item =>
-      ['pending', 'completed', 'archived'].includes(item.order?.status)
-    );
 
     // Aggregate sales by product
     const productSales = new Map();
 
-    for (const item of completedOrderItems) {
-      const productId = item.product_id;
-      const quantity = item.quantity || 1;
+    for (const order of orders) {
+      for (const item of (order.items || [])) {
+        const productId = item.product_id;
+        if (!productId) continue;
 
-      if (!productSales.has(productId)) {
-        productSales.set(productId, {
-          product_id: productId,
-          title: item.product?.title || 'Unknown Product',
-          thumbnail: item.product?.thumbnail,
-          total_quantity: 0
-        });
+        const quantity = Number(item.quantity || 0);
+        const title = item.variant?.product?.title || item.title || 'Unknown Product';
+        const thumbnail = item.variant?.product?.thumbnail;
+
+        if (!productSales.has(productId)) {
+          productSales.set(productId, {
+            product_id: productId,
+            title: title,
+            thumbnail: thumbnail,
+            total_quantity: 0
+          });
+        }
+
+        const product = productSales.get(productId);
+        product.total_quantity += quantity;
       }
-
-      const product = productSales.get(productId);
-      product.total_quantity += quantity;
     }
 
     // Sort by least selling and limit results
