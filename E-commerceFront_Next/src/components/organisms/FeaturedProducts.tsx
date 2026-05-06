@@ -16,6 +16,13 @@ interface TransformedProduct {
   tags: string[];
   slug: string;
   rating: number;
+  variants: any[];
+  brand?: any;
+  usage?: any;
+  warranty?: any;
+  shipping?: any;
+  categories?: any[];
+  description?: string;
 }
 
 
@@ -38,7 +45,13 @@ export const FeaturedProducts: React.FC = () => {
           tags: product.tags?.map(tag => tag.value) || [],
           slug: product.handle,
           rating: (product.metadata?.rating as number) || 5.0,
-          variants: product.variants || []
+          variants: product.variants || [],
+          brand: product.brand,
+          usage: product.usage,
+          warranty: product.warranty,
+          shipping: product.shipping,
+          categories: product.categories,
+          description: product.description
         }));
  
         setProducts(transformed);

@@ -209,6 +209,7 @@ export default function ComparePage() {
             color: selectedProductForCart.color,
             colors: selectedProductForCart.colors,
             sizes: selectedProductForCart.sizes,
+            variants: selectedProductForCart.variants,
           }}
         />
       )}

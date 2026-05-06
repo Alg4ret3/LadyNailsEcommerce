@@ -28,7 +28,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
   onClose,
   product,
 }) => {
-  const { addToCart } = useCart();
+  const { addToCart, setIsCartOpen } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -74,6 +74,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
     setTimeout(() => {
       onClose();
       setShowSuccess(false);
+      setIsCartOpen(true);
     }, 1500);
 
     // Procesamos en background sin bloquear la UI

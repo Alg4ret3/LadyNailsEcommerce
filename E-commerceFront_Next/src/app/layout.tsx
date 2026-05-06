@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { CompareDrawer } from "@/components/organisms/CompareDrawer";
+import { CartDrawer } from "@/components/organisms/CartDrawer";
 import { WhatsAppButton } from "@/components/atoms/WhatsAppButton";
 
 const outfit = Outfit({
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className={`${outfit.variable} antialiased font-sans`}>
         <Providers>
           {children}
+          <CartDrawer />
           <CompareDrawer />
           <WhatsAppButton />
         </Providers>

@@ -15,6 +15,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCompare, type CompareItem } from '@/context/CompareContext';
 import { Heart, ArrowLeftRight } from '@/components/icons';
 import { useProductById } from '@/hooks/useProducts';
+import { RelatedProducts } from '@/components/organisms/RelatedProducts';
 
 export default function ProductPage() {
   const params = useParams();
@@ -291,6 +292,11 @@ export default function ProductPage() {
           </div>
         </div>
       </section>
+
+      <RelatedProducts 
+        categoryHandle={product.categories?.[0]?.handle} 
+        currentProductId={productId} 
+      />
 
       <AddToCartModal
         isOpen={isModalOpen}

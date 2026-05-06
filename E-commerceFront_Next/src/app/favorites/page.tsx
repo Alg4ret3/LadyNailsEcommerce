@@ -222,6 +222,7 @@ export default function FavoritesPage() {
             color: selectedProductForCart.color,
             colors: selectedProductForCart.colors,
             sizes: selectedProductForCart.sizes,
+            variants: selectedProductForCart.variants,
           }}
         />
       )}

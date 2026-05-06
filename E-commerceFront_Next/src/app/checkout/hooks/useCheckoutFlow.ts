@@ -264,7 +264,7 @@ export function useCheckoutFlow() {
       }
 
       setCheckoutStep('SHIPPING');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
     } finally {
       setIsUpdatingCart(false);

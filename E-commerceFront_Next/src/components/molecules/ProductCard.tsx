@@ -71,6 +71,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
+  const totalStock = variants?.reduce((sum, v: any) => {
+    const qty = v.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0;
+    return sum + qty;
+  }, 0) ?? 0;
+  const isOutOfStock = variants && variants.length > 0 ? totalStock <= 0 : false;
+
   const gallery = images.length > 0 ? images : (hoverImage ? [image, hoverImage] : [image]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -167,7 +173,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping });
+               toggleFavorite({ id, name, price: price ?? 0, image, slug, tags, vendor, description, categories, brand, warranty, usage, shipping, variants });
              }}
              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border ${alreadyInWishlist ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-zinc-100 text-zinc-900 hover:bg-zinc-50'}`}
              aria-label={alreadyInWishlist ? 'Eliminar de favoritos' : 'Añadir de favoritos'}
@@ -182,6 +188,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           const visibleTag = tags.find(t => !SYSTEM_TAGS.includes(t.toLowerCase()) && !t.includes(':'));
           return (
             <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-20">
+              {isOutOfStock && (
+                <span className="bg-red-500 text-white text-[7px] sm:text-[9px] font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg animate-pulse">Agotado</span>
+              )}
               {isWholesale && (
                 <span className="bg-zinc-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
               )}
@@ -195,22 +204,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         
         <div className="absolute bottom-3 sm:bottom-6 inset-x-3 sm:inset-x-6 z-30 translate-y-0 opacity-100 sm:translate-y-4 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 transition-all duration-500 flex gap-1 sm:gap-2">
-           <button 
+            <button 
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
-               setIsModalOpen(true);
+               if (!isOutOfStock) setIsModalOpen(true);
              }}
-             className="flex-1 bg-black text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl hover:bg-neutral-800 transition-all flex items-center justify-center gap-1 sm:gap-2"
+             disabled={isOutOfStock}
+             className={`flex-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-2xl transition-all flex items-center justify-center gap-1 sm:gap-2 ${isOutOfStock ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-black text-white hover:bg-neutral-800'}`}
            >
-             <ShoppingBag size={12} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Añadir</span>
+             <ShoppingBag size={12} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">{isOutOfStock ? 'Agotado' : 'Añadir'}</span>
            </button>
             <button
              onClick={(e) => {
                e.preventDefault();
                e.stopPropagation();
 
-               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating, description, categories, brand, warranty, usage, shipping };
+               const compareItem: CompareItem = { id, name, price: price ?? 0, image, tags, slug, vendor: vendor ?? 'Ladynail Shop', rating, description, categories, brand, warranty, usage, shipping, variants };
                if (alreadyInCompare) {
                  removeFromCompare(id);
                } else {
@@ -238,8 +248,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Typography variant="body" className="text-xs sm:text-sm font-black text-black! opacity-100 tracking-tighter subpixel-antialiased">
             ${(price ?? 0).toLocaleString()}
           </Typography>
-          <div className="text-[7px] sm:text-[9px] text-foreground/40 font-bold uppercase tracking-widest whitespace-nowrap">
-            Disponible
+          <div className={`text-[7px] sm:text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${isOutOfStock ? 'text-red-500' : 'text-foreground/40'}`}>
+            {isOutOfStock ? 'Agotado' : 'Disponible'}
           </div>
         </div>
       </div>

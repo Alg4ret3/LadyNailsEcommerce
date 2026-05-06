@@ -19,6 +19,7 @@ export interface CompareItem {
   warranty?: { id: string; name: string };
   usage?: { id: string; name: string };
   shipping?: { id: string; name: string };
+  variants?: any[];
 }
 
 
