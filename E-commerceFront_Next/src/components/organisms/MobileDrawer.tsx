@@ -3,24 +3,30 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { ROUTES, COMPANY_INFO } from '@/constants';
 import { Instagram, Facebook, TikTok } from '@/components/icons';
+import type { Category } from '@/context/CategoriesContext';
 
 interface MobileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  categories: any[];
+  categories: Category[];
   expandedSections: string[];
   onToggleSection: (section: string) => void;
 }
 
-export const MobileDrawer: React.FC<MobileDrawerProps> = ({ 
-  isOpen, 
-  onClose 
+export const MobileDrawer: React.FC<MobileDrawerProps> = ({
+  isOpen,
+  onClose,
+  categories,
+  expandedSections,
+  onToggleSection,
 }) => {
-  const menuItems = [
+  const isCatalogoExpanded = expandedSections.includes('categories_root');
+
+  const staticItems = [
     { name: 'Inicio', href: ROUTES.home },
-    { name: 'Catálogo', href: ROUTES.shop },
     { name: 'Favoritos', href: ROUTES.favorites },
     { name: 'Pedidos', href: ROUTES.login },
     { name: 'Contacto', href: ROUTES.contact },
@@ -31,31 +37,170 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 top-[96px] bg-black/5 backdrop-blur-sm z-30 lg:hidden" 
+            className="fixed inset-0 top-[96px] bg-black/5 backdrop-blur-sm z-30 lg:hidden"
             onClick={onClose}
           />
-          
-          <motion.div 
-             initial={{ y: -20, opacity: 0 }} 
-             animate={{ y: 0, opacity: 1 }} 
-             exit={{ y: -20, opacity: 0 }}
-             transition={{ duration: 0.3, ease: "easeOut" }}
-             className="fixed left-0 right-0 top-[96px] bg-white z-40 lg:hidden border-b border-slate-100 flex flex-col shadow-xl"
+
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed left-0 right-0 top-[96px] bg-white z-40 lg:hidden border-b border-slate-100 flex flex-col shadow-xl max-h-[calc(100dvh-96px)] overflow-y-auto"
           >
             {/* Links */}
             <nav className="flex flex-col pt-6 pb-4">
-              {menuItems.map((item, idx) => (
+              {/* Inicio */}
+              <motion.div
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.03 }}
+              >
+                <Link
+                  href={staticItems[0].href}
+                  onClick={onClose}
+                  className="flex items-center px-10 py-4 group transition-colors"
+                >
+                  <span className="text-[12px] font-bold uppercase tracking-[0.25em] text-slate-400 group-hover:text-slate-950 transition-colors">
+                    {staticItems[0].name}
+                  </span>
+                </Link>
+              </motion.div>
+
+              {/* Catálogo — expandable section */}
+              <motion.div
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.06 }}
+              >
+                {/* Toggle header */}
+                <button
+                  onClick={() => onToggleSection('categories_root')}
+                  className="w-full flex items-center justify-between px-10 py-4 group transition-colors"
+                >
+                  <span className={`text-[12px] font-bold uppercase tracking-[0.25em] transition-colors ${isCatalogoExpanded ? 'text-slate-950' : 'text-slate-400 group-hover:text-slate-950'
+                    }`}>
+                    Catálogo
+                  </span>
+                  <motion.span
+                    animate={{ rotate: isCatalogoExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: [0.65, 0, 0.35, 1] }}
+                  >
+                    <ChevronDown size={14} strokeWidth={2.5} className={`transition-colors ${isCatalogoExpanded ? 'text-slate-950' : 'text-slate-300'
+                      }`} />
+                  </motion.span>
+                </button>
+
+                {/* Category branches */}
+                <AnimatePresence>
+                  {isCatalogoExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.65, 0, 0.35, 1] }}
+                      className="overflow-hidden"
+                    >
+                      {/* Scrollable category container */}
+                      <div className="max-h-[50vh] overflow-y-auto overscroll-contain relative" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        {/* "Ver todo" link */}
+                        <Link
+                          href={ROUTES.shop}
+                          onClick={onClose}
+                          className="flex items-center pl-14 pr-10 py-3 group transition-colors sticky top-0 bg-white z-[1] border-b border-slate-50"
+                        >
+                          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-950/50 group-hover:text-slate-950 transition-colors">
+                            Ver todo el catálogo
+                          </span>
+                        </Link>
+
+                        {/* Root categories */}
+                        {categories.map((cat) => {
+                          const hasChildren = cat.category_children && cat.category_children.length > 0;
+                          const isExpanded = expandedSections.includes(`cat_${cat.id}`);
+
+                          return (
+                            <div key={cat.id}>
+                              {/* Root category row */}
+                              <div className="flex items-center">
+                                <Link
+                                  href={`/shop/${cat.handle}`}
+                                  onClick={onClose}
+                                  className="flex-1 flex items-center pl-14 pr-4 py-3 group transition-colors"
+                                >
+                                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 group-hover:text-slate-950 transition-colors">
+                                    {cat.name}
+                                  </span>
+                                </Link>
+
+                                {hasChildren && (
+                                  <button
+                                    onClick={() => onToggleSection(`cat_${cat.id}`)}
+                                    className="px-4 py-3 mr-6"
+                                  >
+                                    <motion.span
+                                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                                      transition={{ duration: 0.25, ease: [0.65, 0, 0.35, 1] }}
+                                      className="block"
+                                    >
+                                      <ChevronDown size={12} strokeWidth={2.5} className={`transition-colors ${isExpanded ? 'text-slate-950' : 'text-slate-300'
+                                        }`} />
+                                    </motion.span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Subcategories */}
+                              <AnimatePresence>
+                                {hasChildren && isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: [0.65, 0, 0.35, 1] }}
+                                    className="overflow-hidden bg-white"
+                                  >
+                                    {cat.category_children!.map((sub) => (
+                                      <Link
+                                        key={sub.id}
+                                        href={`/shop/${sub.handle}`}
+                                        onClick={onClose}
+                                        className="flex items-center pl-[4.5rem] pr-10 py-2.5 group transition-colors"
+                                      >
+                                        <span className="w-1 h-1 rounded-full bg-slate-300 mr-3 group-hover:bg-slate-900 transition-colors shrink-0" />
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 group-hover:text-slate-950 transition-colors">
+                                          {sub.name}
+                                        </span>
+                                      </Link>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Fade indicator at bottom of scroll area */}
+                      <div className="h-4 bg-gradient-to-t from-white to-transparent pointer-events-none -mt-4 relative z-[2]" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Rest of static items */}
+              {staticItems.slice(1).map((item, idx) => (
                 <motion.div
                   key={item.href}
                   initial={{ opacity: 0, x: -5 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.03 * idx }}
+                  transition={{ delay: 0.09 + 0.03 * idx }}
                 >
-                  <Link 
+                  <Link
                     href={item.href}
                     onClick={onClose}
                     className="flex items-center px-10 py-4 group transition-colors"
