@@ -5,10 +5,21 @@ export async function GET(
   req: MedusaRequest,
   res: MedusaResponse
 ) {
-  const { limit = 5 } = req.query;
+  const { limit = 5, startDate, endDate } = req.query;
 
   try {
     const query = req.scope.resolve("query");
+
+    // Build date filter
+    let dateFilter = {};
+    if (startDate && endDate) {
+      dateFilter = {
+        created_at: {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string)
+        }
+      };
+    }
 
     // Get orders with items
     const { data: orders } = await query.graph({
@@ -22,7 +33,8 @@ export async function GET(
       filters: {
         status: {
           $in: ["pending", "completed", "archived"]
-        }
+        },
+        ...dateFilter
       }
     }) as { data: any[] };
 

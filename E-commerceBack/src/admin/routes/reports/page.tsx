@@ -4,7 +4,8 @@ import {
   Text,
   Select,
   Button,
-  Badge
+  Badge,
+  Input
 } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { 
@@ -77,6 +78,7 @@ export default function ReportsPage() {
   const [customerRegistrations, setCustomerRegistrations] = useState<CustomerRegistrations | null>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('month')
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const { theme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -99,17 +101,56 @@ export default function ReportsPage() {
 
   const loadReports = async () => {
     setLoading(true)
+    
+    let startDate: string | undefined
+    let endDate: string | undefined
+    let apiPeriod = period
+
+    const d = new Date(selectedDate)
+    // Adjust for timezone to get the correct date from YYYY-MM-DD
+    const localDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+
+    if (period === 'day') {
+      const start = new Date(localDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(localDate)
+      end.setHours(23, 59, 59, 999)
+      
+      startDate = start.toISOString()
+      endDate = end.toISOString()
+      apiPeriod = 'day'
+    } else if (period === 'month') {
+      const start = new Date(localDate.getFullYear(), localDate.getMonth(), 1)
+      const end = new Date(localDate.getFullYear(), localDate.getMonth() + 1, 0, 23, 59, 59, 999)
+      
+      startDate = start.toISOString()
+      endDate = end.toISOString()
+      apiPeriod = 'day'
+    } else if (period === 'year') {
+      const start = new Date(localDate.getFullYear(), 0, 1)
+      const end = new Date(localDate.getFullYear(), 11, 31, 23, 59, 59, 999)
+      
+      startDate = start.toISOString()
+      endDate = end.toISOString()
+      apiPeriod = 'month'
+    }
+
     try {
+      const params = new URLSearchParams()
+      params.append('period', apiPeriod)
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
+
       const [
         orderRes,
         topSellingRes,
         leastSellingRes,
         customerRes
       ] = await Promise.all([
-        fetch(`/admin/reports/orders/summary?period=${period}`),
-        fetch('/admin/reports/products/top-selling'),
-        fetch('/admin/reports/products/least-selling'),
-        fetch(`/admin/reports/customers/new-registrations?period=${period}`)
+        fetch(`/admin/reports/orders/summary?${params.toString()}`),
+        fetch(`/admin/reports/products/top-selling?${params.toString()}`),
+        fetch(`/admin/reports/products/least-selling?${params.toString()}`),
+        fetch(`/admin/reports/customers/new-registrations?${params.toString()}`)
       ])
 
       if (orderRes.ok) {
@@ -140,7 +181,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     loadReports()
-  }, [period])
+  }, [period, selectedDate])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -175,18 +216,56 @@ export default function ReportsPage() {
     <Container className="divide-y p-0 overflow-hidden">
       <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
         <Heading level="h1">Reportes de la Tienda</Heading>
-        <div className="flex items-center gap-2">
-          <Text className="text-sm text-ui-fg-subtle">Período:</Text>
-          <Select value={period} onValueChange={setPeriod}>
-            <Select.Trigger className="w-[120px]">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Content>
-              <Select.Item value="day">Diario</Select.Item>
-              <Select.Item value="month">Mensual</Select.Item>
-              <Select.Item value="year">Anual</Select.Item>
-            </Select.Content>
-          </Select>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Text className="text-sm text-ui-fg-subtle">Vista:</Text>
+            <Select value={period} onValueChange={(val) => setPeriod(val)}>
+              <Select.Trigger className="w-[120px]">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="day">Diario</Select.Item>
+                <Select.Item value="month">Mensual</Select.Item>
+                <Select.Item value="year">Anual</Select.Item>
+              </Select.Content>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Text className="text-sm text-ui-fg-subtle">
+              {period === 'day' ? 'Fecha:' : period === 'month' ? 'Mes:' : 'Año:'}
+            </Text>
+            {period === 'day' ? (
+              <Input 
+                type="date" 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-[160px]"
+              />
+            ) : period === 'month' ? (
+              <Input 
+                type="month" 
+                value={selectedDate.substring(0, 7)} 
+                onChange={(e) => setSelectedDate(e.target.value + "-01")}
+                className="w-[160px]"
+              />
+            ) : (
+              <Select 
+                value={selectedDate.substring(0, 4)} 
+                onValueChange={(val) => setSelectedDate(`${val}-01-01`)}
+              >
+                <Select.Trigger className="w-[100px]">
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Content>
+                  {[2024, 2025, 2026].map(y => (
+                    <Select.Item key={y} value={y.toString()}>{y}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+            )}
+          </div>
+
           <Button variant="secondary" onClick={loadReports}>
             Actualizar
           </Button>
@@ -261,7 +340,9 @@ export default function ReportsPage() {
             {/* Orders Over Time */}
             <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
-                <Heading level="h3">Órdenes por {period === 'day' ? 'Día' : period === 'month' ? 'Mes' : 'Año'}</Heading>
+                <Heading level="h3">
+                  Órdenes {period === 'day' ? `del ${formatPeriod(selectedDate)}` : period === 'month' ? `de ${formatPeriod(selectedDate.substring(0, 7))}` : `de ${selectedDate.substring(0, 4)}`}
+                </Heading>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -297,7 +378,9 @@ export default function ReportsPage() {
             {/* Customer Registrations */}
             <div className="border rounded-lg p-6 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="mb-4">
-                <Heading level="h3">Nuevos Clientes por {period === 'day' ? 'Día' : period === 'month' ? 'Mes' : 'Año'}</Heading>
+                <Heading level="h3">
+                  Nuevos Clientes {period === 'day' ? `del ${formatPeriod(selectedDate)}` : period === 'month' ? `de ${formatPeriod(selectedDate.substring(0, 7))}` : `de ${selectedDate.substring(0, 4)}`}
+                </Heading>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
