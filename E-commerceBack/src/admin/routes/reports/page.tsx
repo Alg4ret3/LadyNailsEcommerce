@@ -81,15 +81,15 @@ export default function ReportsPage() {
   const isDark = theme === 'dark'
 
   const CHART_COLORS = {
-    primary: isDark ? '#8884d8' : '#8884d8',
-    secondary: isDark ? '#82ca9d' : '#82ca9d',
-    text: isDark ? '#ffffff' : '#374151',
-    background: isDark ? '#1f2937ff' : '#ffffff',
-    border: isDark ? '#374151' : '#d1d5db',
-    card: isDark ? '#111827' : '#ffffff',
-    muted: isDark ? '#9ca3af' : '#6b7280',
-    accent1: isDark ? '#00c49f' : '#0088fe',
-    accent2: isDark ? '#ffc658' : '#ff8042',
+    primary: isDark ? "#F9FAFB" : "#111827",
+    secondary: isDark ? "#9CA3AF" : "#4B5563",
+    text: isDark ? "#ffffff" : "#374151",
+    background: isDark ? "#1f2937ff" : "#ffffff",
+    border: isDark ? "#374151" : "#d1d5db",
+    card: isDark ? "#111827" : "#ffffff",
+    muted: isDark ? "#9ca3af" : "#6b7280",
+    accent1: isDark ? "#E5E7EB" : "#374151",
+    accent2: isDark ? "#6B7280" : "#9CA3AF",
   }
 
   const CUSTOM_TOOLTIP_STYLE = {
@@ -149,6 +149,28 @@ export default function ReportsPage() {
     }).format(amount)
   }
 
+  const formatPeriod = (value: string) => {
+    if (!value || typeof value !== "string") return value
+    const parts = value.split("-")
+    const months = [
+      "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+      "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ]
+    
+    if (parts.length === 3) {
+      const day = parts[2]
+      const monthIdx = parseInt(parts[1]) - 1
+      return `${day} ${months[monthIdx]} ${parts[0]}`
+    }
+    
+    if (parts.length === 2) {
+      const monthIdx = parseInt(parts[1]) - 1
+      return `${months[monthIdx]} ${parts[0]}`
+    }
+    
+    return value
+  }
+
   return (
     <Container className="divide-y p-0 overflow-hidden">
       <div className="flex flex-col gap-y-4 md:flex-row md:items-center md:justify-between px-6 py-4">
@@ -182,8 +204,8 @@ export default function ReportsPage() {
             {/* Total Orders */}
             <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <ShoppingCart className="w-5 h-5 text-blue-400" />
+                <div className="p-2 bg-ui-bg-component rounded-lg border border-ui-border-base">
+                  <ShoppingCart className="w-5 h-5 text-ui-fg-base" />
                 </div>
                 <div>
                   <Text className="text-sm text-ui-fg-subtle">Órdenes Totales</Text>
@@ -195,12 +217,12 @@ export default function ReportsPage() {
             {/* Total Revenue */}
             <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <CurrencyDollar className="w-5 h-5 text-green-400" />
+                <div className="p-2 bg-ui-bg-base border border-ui-border-strong rounded-lg">
+                  <CurrencyDollar className="w-5 h-5 text-ui-fg-base" />
                 </div>
                 <div>
                   <Text className="text-sm text-ui-fg-subtle">Ingresos Totales</Text>
-                  <Text className="text-2xl font-bold text-green-400">{formatCurrency(orderSummary?.totalRevenue || 0)}</Text>
+                  <Text className="text-2xl font-bold text-ui-fg-base">{formatCurrency(orderSummary?.totalRevenue || 0)}</Text>
                 </div>
               </div>
             </div>
@@ -208,12 +230,12 @@ export default function ReportsPage() {
             {/* New Customers */}
             <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-400" />
+                <div className="p-2 bg-ui-bg-component rounded-lg border border-ui-border-base">
+                  <Users className="w-5 h-5 text-ui-fg-base" />
                 </div>
                 <div>
                   <Text className="text-sm text-ui-fg-subtle">Nuevos Clientes</Text>
-                  <Text className="text-2xl font-bold text-purple-400">{customerRegistrations?.totalNewCustomers || 0}</Text>
+                  <Text className="text-2xl font-bold text-ui-fg-base">{customerRegistrations?.totalNewCustomers || 0}</Text>
                 </div>
               </div>
             </div>
@@ -221,12 +243,12 @@ export default function ReportsPage() {
             {/* Products Sold */}
             <div className="border rounded-lg p-4 shadow-sm bg-ui-bg-base border-ui-border-base">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/20 rounded-lg">
-                  <BarsThree className="w-5 h-5 text-orange-400" />
+                <div className="p-2 bg-ui-bg-component rounded-lg border border-ui-border-base">
+                  <BarsThree className="w-5 h-5 text-ui-fg-base" />
                 </div>
                 <div>
                   <Text className="text-sm text-ui-fg-subtle">Productos Vendidos</Text>
-                  <Text className="text-2xl font-bold text-orange-400">
+                  <Text className="text-2xl font-bold text-ui-fg-base">
                     {(topSelling?.products || []).reduce((sum, p) => sum + p.total_quantity, 0)}
                   </Text>
                 </div>
@@ -257,10 +279,12 @@ export default function ReportsPage() {
                     <Tooltip 
                       contentStyle={CUSTOM_TOOLTIP_STYLE}
                       labelStyle={{ color: CHART_COLORS.text }}
+                      labelFormatter={formatPeriod}
                     />
                     <Line
                       type="monotone"
                       dataKey="count"
+                      name="Órdenes"
                       stroke={CHART_COLORS.primary}
                       strokeWidth={2}
                       dot={{ fill: CHART_COLORS.primary }}
@@ -291,10 +315,12 @@ export default function ReportsPage() {
                     <Tooltip 
                       contentStyle={CUSTOM_TOOLTIP_STYLE}
                       labelStyle={{ color: CHART_COLORS.text }}
+                      labelFormatter={formatPeriod}
                     />
                     <Line
                       type="monotone"
                       dataKey="count"
+                      name="Clientes"
                       stroke={CHART_COLORS.secondary}
                       strokeWidth={2}
                       dot={{ fill: CHART_COLORS.secondary }}

@@ -1,8 +1,8 @@
-import { 
-  Container, 
-  Heading, 
-  Button, 
-  Table, 
+import {
+  Container,
+  Heading,
+  Button,
+  Table,
   Input,
   Prompt
 } from "@medusajs/ui"
@@ -140,7 +140,7 @@ export default function BrandsPage() {
                         <Prompt.Cancel>Cancelar</Prompt.Cancel>
                         <Prompt.Action onClick={() => deleteBrand(brand.id)}>
                           Eliminar
-                         </Prompt.Action>
+                        </Prompt.Action>
                       </Prompt.Footer>
                     </Prompt.Content>
                   </Prompt>
