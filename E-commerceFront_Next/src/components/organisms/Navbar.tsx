@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { ShoppingCart, Menu, X, Truck, Phone, Heart, ChevronRight, UserIcon } from 'lucide-react';
+import { ShoppingCart, Truck, Phone, Heart, ChevronRight, UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
