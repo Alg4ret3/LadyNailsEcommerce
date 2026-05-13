@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Especialistas en insumos para uñas, barbería y cosmética profesional. Ladynail Shop es tu socio logístico para el crecimiento de tu salón.",
 };
 
+import { ChatWidget } from "@/components/organisms/ChatWidget";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +32,7 @@ export default function RootLayout({
           <CartDrawer />
           <CompareDrawer />
           <WhatsAppButton />
+          <ChatWidget />
         </Providers>
       </body>
     </html>
