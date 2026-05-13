@@ -6,7 +6,9 @@ import {
   Text,
   StatusBadge,
   toast,
-  Prompt
+  Prompt,
+  Input,
+  Label
 } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { ArrowDownTray, ArrowUpTray, CircleStack, Spinner, ArrowPath } from "@medusajs/icons"
@@ -29,6 +31,8 @@ export default function BackupsPage() {
     type: "file" | "url",
     data?: any
   }>({ show: false, type: "file" })
+  const [password, setPassword] = useState("")
+  const [verifying, setVerifying] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const loadBackups = async () => {
@@ -89,34 +93,47 @@ export default function BackupsPage() {
 
   const executeFileRestore = async (file: File) => {
     setRestoring(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(",")[1]
-        const res = await fetch("/admin/backups/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file: base64, filename: file.name })
-        })
-        const data = await res.json()
-        if (res.ok) {
-          toast.success("Éxito", {
-            description: "Base de datos restaurada correctamente"
-          })
-        } else {
-          throw new Error(data.message)
+    return new Promise<void>((resolve, reject) => {
+      try {
+        const reader = new FileReader()
+        reader.onload = async () => {
+          try {
+            const base64 = (reader.result as string).split(",")[1]
+            const res = await fetch("/admin/backups/import", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ file: base64, filename: file.name })
+            })
+            const data = await res.json()
+            if (res.ok) {
+              toast.success("Éxito", {
+                description: "Base de datos restaurada correctamente"
+              })
+              resolve()
+            } else {
+              throw new Error(data.message)
+            }
+          } catch (error: any) {
+            toast.error("Error", {
+              description: "Error al restaurar: " + error.message
+            })
+            reject(error)
+          } finally {
+            setRestoring(false)
+            if (fileInputRef.current) fileInputRef.current.value = ""
+            setConfirmRestore(prev => ({ ...prev, show: false }))
+          }
         }
+        reader.onerror = () => {
+          setRestoring(false)
+          reject(new Error("Error al leer el archivo"))
+        }
+        reader.readAsDataURL(file)
+      } catch (error: any) {
+        setRestoring(false)
+        reject(error)
       }
-      reader.readAsDataURL(file)
-    } catch (error: any) {
-      toast.error("Error", {
-        description: "Error al restaurar: " + error.message
-      })
-    } finally {
-      setRestoring(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-      setConfirmRestore(prev => ({ ...prev, show: false }))
-    }
+    })
   }
 
   const handleRestoreFromUrl = (url: string, name: string) => {
@@ -150,6 +167,44 @@ export default function BackupsPage() {
     } finally {
       setRestoring(false)
       setConfirmRestore(prev => ({ ...prev, show: false }))
+    }
+  }
+
+  const handleConfirmRestore = async () => {
+    if (!password) {
+      toast.error("Error", {
+        description: "Por favor, ingresa tu contraseña para continuar"
+      })
+      return
+    }
+
+    setVerifying(true)
+    try {
+      const res = await fetch("/admin/auth/verify-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || "Contraseña incorrecta")
+      }
+
+      // If password is correct, proceed with restore
+      if (confirmRestore.type === "file") {
+        await executeFileRestore(confirmRestore.data)
+      } else {
+        await executeUrlRestore(confirmRestore.data.url, confirmRestore.data.name)
+      }
+      
+      setPassword("") // Clear password on success
+    } catch (error: any) {
+      toast.error("Error de verificación", {
+        description: error.message
+      })
+    } finally {
+      setVerifying(false)
     }
   }
 
@@ -264,7 +319,15 @@ export default function BackupsPage() {
         </Text>
       </div>
 
-      <Prompt open={confirmRestore.show} onOpenChange={(open) => !open && setConfirmRestore(p => ({ ...p, show: false }))}>
+      <Prompt 
+        open={confirmRestore.show} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmRestore(p => ({ ...p, show: false }))
+            setPassword("")
+          }
+        }}
+      >
         <Prompt.Content>
           <Prompt.Header>
             <Prompt.Title>Confirmar Restauración</Prompt.Title>
@@ -275,22 +338,38 @@ export default function BackupsPage() {
               }
             </Prompt.Description>
           </Prompt.Header>
+          
+          <div className="flex flex-col gap-y-2 px-6 py-4 border-y">
+            <Label htmlFor="password">Verificar Contraseña</Label>
+            <Input 
+              id="password"
+              type="password" 
+              placeholder="Ingresa tu contraseña de administrador" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !verifying && !restoring) {
+                  handleConfirmRestore()
+                }
+              }}
+            />
+            <Text className="text-xs text-ui-fg-subtle">
+              Esta es una acción crítica. Por favor, confirma tu identidad.
+            </Text>
+          </div>
+
           <Prompt.Footer>
             <Prompt.Cancel onClick={() => {
               if (fileInputRef.current) fileInputRef.current.value = ""
+              setPassword("")
             }}>
               Cancelar
             </Prompt.Cancel>
             <Prompt.Action 
-              onClick={() => {
-                if (confirmRestore.type === "file") {
-                  executeFileRestore(confirmRestore.data)
-                } else {
-                  executeUrlRestore(confirmRestore.data.url, confirmRestore.data.name)
-                }
-              }}
+              onClick={handleConfirmRestore}
+              disabled={verifying || restoring || !password}
             >
-              Restaurar Ahora
+              {verifying || restoring ? "Procesando..." : "Restaurar Ahora"}
             </Prompt.Action>
           </Prompt.Footer>
         </Prompt.Content>
