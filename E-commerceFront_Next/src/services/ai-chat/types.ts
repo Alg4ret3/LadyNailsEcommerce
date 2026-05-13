@@ -46,8 +46,9 @@ export interface OpenRouterModel {
 
 // Models to use — ordered by priority (free tier)
 export const AI_MODELS: OpenRouterModel[] = [
-  { id: 'inclusionai/ring-2.6-1t:free', name: 'InclusionAI Ring', priority: 1 },
-  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3', priority: 2 },
-  { id: 'qwen/qwen3-32b:free', name: 'Qwen3 32B', priority: 3 },
-  { id: 'meta-llama/llama-4-maverick:free', name: 'Llama 4 Maverick', priority: 4 },
+  { id: 'baidu/cobuddy:free', name: 'Baidu Cobuddy', priority: 1 },
+  { id: 'inclusionai/ring-2.6-1t:free', name: 'InclusionAI Ring', priority: 2 },
+  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3', priority: 3 },
+  { id: 'qwen/qwen3-32b:free', name: 'Qwen3 32B', priority: 4 },
+  { id: 'meta-llama/llama-4-maverick:free', name: 'Llama 4 Maverick', priority: 5 },
 ]

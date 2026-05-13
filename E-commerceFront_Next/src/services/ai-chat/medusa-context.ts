@@ -17,12 +17,18 @@ interface MedusaStoreProduct {
   variants?: {
     id: string
     title: string
-    calculated_price?: {
-      original_amount: number
-      calculated_amount: number
-    }
-    inventory_quantity?: number
-    manage_inventory?: boolean
+    inventory_items?: {
+      inventory?: {
+        location_levels?: {
+          available_quantity: number
+          stocked_quantity: number
+        }[]
+      }
+    }[]
+    prices?: {
+      amount: number
+      currency_code: string
+    }[]
   }[]
   tags?: { id: string; value: string }[]
 }
@@ -150,6 +156,8 @@ async function searchProducts(keywords: string[]): Promise<MedusaStoreProduct[]>
   const url = new URL('/store/products', MEDUSA_URL)
   url.searchParams.set('q', query)
   url.searchParams.set('limit', '8')
+  // We need to expand variants, prices and inventory items to match Modal logic
+  url.searchParams.set('fields', '*variants,*variants.prices,*variants.inventory_items,*variants.inventory_items.inventory,*variants.inventory_items.inventory.location_levels')
 
   const res = await fetch(url.toString(), {
     method: 'GET',
@@ -172,7 +180,15 @@ async function searchProducts(keywords: string[]): Promise<MedusaStoreProduct[]>
  */
 function mapToProductContext(product: MedusaStoreProduct): ProductContext {
   const firstVariant = product.variants?.[0]
-  const price = firstVariant?.calculated_price?.calculated_amount
+  
+  // Get price using Modal's logic
+  const price = firstVariant?.prices?.[0]?.amount || 0
+
+  // Get inventory using Modal's logic
+  const getInStock = (v: any) => {
+    const stockQuantity = v?.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? 0;
+    return stockQuantity > 0;
+  }
 
   return {
     id: product.id,
@@ -180,17 +196,15 @@ function mapToProductContext(product: MedusaStoreProduct): ProductContext {
     handle: product.handle,
     description: product.description?.substring(0, 200),
     thumbnail: product.thumbnail,
-    price: price ? price : undefined,
+    price: price || undefined,
     currency: 'COP',
     category: product.categories?.[0]?.name,
     collection: product.collection?.title,
-    inStock: firstVariant?.manage_inventory
-      ? (firstVariant?.inventory_quantity ?? 0) > 0
-      : true,
+    inStock: firstVariant ? getInStock(firstVariant) : true,
     variants: product.variants?.map((v) => ({
       title: v.title,
-      price: v.calculated_price?.calculated_amount || 0,
-      inStock: v.manage_inventory ? (v.inventory_quantity ?? 0) > 0 : true,
+      price: v.prices?.[0]?.amount || price || 0,
+      inStock: getInStock(v),
     })),
   }
 }

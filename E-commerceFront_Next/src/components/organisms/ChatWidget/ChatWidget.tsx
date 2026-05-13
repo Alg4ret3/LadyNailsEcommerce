@@ -62,8 +62,8 @@ export function ChatWidget() {
             className="
               fixed bottom-6 right-6 z-[9998]
               w-14 h-14 rounded-full
-              bg-gradient-to-r from-rose-500 to-pink-600
-              text-white shadow-lg shadow-pink-500/30
+              bg-slate-800 hover:bg-slate-900
+              text-white shadow-lg shadow-slate-900/30
               flex items-center justify-center
               hover:shadow-xl hover:shadow-pink-500/40
               hover:scale-105
@@ -76,7 +76,7 @@ export function ChatWidget() {
           >
             {/* Pulse ring */}
             {!hasInteracted && (
-              <span className="absolute inset-0 rounded-full bg-pink-500 animate-ping opacity-30" />
+              <span className="absolute inset-0 rounded-full bg-slate-400 animate-ping opacity-30" />
             )}
             <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
 
@@ -116,7 +116,7 @@ export function ChatWidget() {
             {/* ── Header ─────────────────────────────────────────────────── */}
             <div className="
               flex items-center justify-between px-4 py-3
-              bg-gradient-to-r from-rose-500 to-pink-600
+              bg-slate-900
               text-white
             ">
               <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ export function ChatWidget() {
                     <span className="text-lg">💅</span>
                   </div>
                   {/* Online indicator */}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-rose-500" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-900" />
                 </div>
 
                 <div>
@@ -254,7 +254,7 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-        className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30 flex items-center justify-center mb-4"
+        className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4"
       >
         <span className="text-3xl">💅</span>
       </motion.div>
@@ -280,14 +280,14 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
               border border-slate-200 dark:border-slate-700
               bg-slate-50 dark:bg-slate-800/50
               text-[12px] text-slate-600 dark:text-slate-400
-              hover:border-pink-300 dark:hover:border-pink-600
-              hover:bg-pink-50 dark:hover:bg-pink-900/10
-              hover:text-pink-600 dark:hover:text-pink-400
+              hover:border-slate-400 dark:hover:border-slate-500
+              hover:bg-slate-100 dark:hover:bg-slate-800
+              hover:text-slate-900 dark:hover:text-slate-100
               transition-all duration-200 cursor-pointer
               flex items-center gap-2
             "
           >
-            <Sparkles className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
             {suggestion}
           </motion.button>
         ))}

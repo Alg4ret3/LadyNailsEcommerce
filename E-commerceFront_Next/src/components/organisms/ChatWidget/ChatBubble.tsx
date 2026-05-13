@@ -28,7 +28,7 @@ export function ChatBubble({ message, isLast }: ChatBubbleProps) {
           <span className="text-white text-xs font-bold">T</span>
         </div>
       ) : (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+        <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 shadow-sm">
           <span className="text-white text-xs font-bold">N</span>
         </div>
       )}
@@ -41,7 +41,7 @@ export function ChatBubble({ message, isLast }: ChatBubbleProps) {
             rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed
             ${
               isUser
-                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-tr-sm shadow-md shadow-pink-500/10'
+                ? 'bg-slate-800 text-white rounded-tr-sm shadow-md shadow-slate-900/10'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-sm'
             }
           `}
@@ -95,7 +95,7 @@ function FormattedContent({ content, isUser }: { content: string; isUser: boolea
         // Links
         const withLinks = formatted.replace(
           /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-          `<a href="$2" target="_blank" rel="noopener" class="${isUser ? 'underline' : 'text-pink-600 dark:text-pink-400 underline hover:no-underline'}">$1</a>`
+          `<a href="$2" target="_blank" rel="noopener" class="${isUser ? 'underline' : 'text-emerald-600 dark:text-emerald-400 font-semibold underline hover:no-underline'}">$1</a>`
         )
 
         // List items
@@ -137,7 +137,7 @@ function ProductCards({ products }: { products: ProductCard[] }) {
               rounded-xl border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800
               overflow-hidden transition-shadow
-              group-hover:shadow-md group-hover:border-pink-300 dark:group-hover:border-pink-600
+              group-hover:shadow-md group-hover:border-slate-400 dark:group-hover:border-slate-500
             "
           >
             {/* Image */}
@@ -170,7 +170,7 @@ function ProductCards({ products }: { products: ProductCard[] }) {
                 {product.title}
               </p>
               {product.price && (
-                <p className="text-[12px] font-bold text-pink-600 dark:text-pink-400 mt-1">
+                <p className="text-[12px] font-bold text-slate-900 dark:text-slate-100 mt-1">
                   ${product.price.toLocaleString('es-CO')}
                 </p>
               )}
