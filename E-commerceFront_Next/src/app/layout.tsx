@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { CompareDrawer } from "@/components/organisms/CompareDrawer";
 import { CartDrawer } from "@/components/organisms/CartDrawer";
-import { WhatsAppButton } from "@/components/atoms/WhatsAppButton";
+import { FloatingSpeedDial } from "@/components/organisms/FloatingSpeedDial";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -16,8 +16,6 @@ export const metadata: Metadata = {
   title: "Ladynail Shop | Distribuidora Profesional de Belleza",
   description: "Especialistas en insumos para uñas, barbería y cosmética profesional. Ladynail Shop es tu socio logístico para el crecimiento de tu salón.",
 };
-
-import { ChatWidget } from "@/components/organisms/ChatWidget";
 
 export default function RootLayout({
   children,
@@ -31,8 +29,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
           <CompareDrawer />
-          <WhatsAppButton />
-          <ChatWidget />
+          <FloatingSpeedDial />
         </Providers>
       </body>
     </html>

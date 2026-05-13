@@ -228,6 +228,23 @@ export function useChat() {
     )
   }, [])
 
+  const checkConnection = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ping': 'true' },
+        body: JSON.stringify({ messages: [] }),
+      })
+      if (!res.ok) throw new Error('Servicio no disponible')
+    } catch (err) {
+      setError('Error de conexión')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   return {
     messages,
     isLoading,
@@ -235,5 +252,6 @@ export function useChat() {
     sendMessage,
     clearHistory,
     stopStreaming,
+    checkConnection,
   }
 }

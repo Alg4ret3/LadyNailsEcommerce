@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import type { ChatMessage, ProductCard } from '@/hooks/useChat'
+import { User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -24,38 +25,56 @@ export function ChatBubble({ message, isLast }: ChatBubbleProps) {
     >
       {/* Avatar */}
       {isUser ? (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-500 dark:to-slate-700 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <span className="text-white text-xs font-bold">T</span>
+        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-200 text-slate-400">
+          <User className="w-4 h-4" />
         </div>
       ) : (
-        <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <span className="text-white text-xs font-bold">N</span>
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-200">
+          <img 
+            src="https://images.pexels.com/photos/3373737/pexels-photo-3373737.jpeg?auto=compress&cs=tinysrgb&w=100" 
+            alt="Naily" 
+            className="w-full h-full object-cover"
+          />
         </div>
       )}
 
       {/* Content */}
-      <div className={`max-w-[80%] flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className={`${message.products?.length ? 'max-w-[90%]' : 'max-w-[85%]'} flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
         {/* Bubble */}
         <div
           className={`
-            rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed
+            rounded-2xl px-4 py-3 text-[13px] leading-relaxed relative min-w-[40px] min-h-[40px] flex items-center
             ${
               isUser
-                ? 'bg-slate-800 text-white rounded-tr-sm shadow-md shadow-slate-900/10'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-sm'
+                ? 'bg-slate-900 text-white rounded-tr-sm shadow-sm'
+                : 'bg-slate-50 border border-slate-100 text-slate-800 rounded-tl-sm shadow-sm'
             }
           `}
         >
-          <FormattedContent content={message.content} isUser={isUser} />
+          <div className="w-full">
+            <FormattedContent content={message.content} isUser={isUser} />
 
-          {/* Streaming cursor */}
-          {message.isStreaming && (
-            <motion.span
-              className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle"
-              animate={{ opacity: [1, 0] }}
-              transition={{ duration: 0.6, repeat: Infinity }}
-            />
-          )}
+            {/* Streaming dots */}
+            {message.isStreaming && (
+              <span className="inline-flex gap-1 ml-2 align-middle">
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="w-1 h-1 rounded-full bg-slate-400"
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.8, 1.1, 0.8]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      delay: i * 0.15,
+                    }}
+                  />
+                ))}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Product Cards */}
@@ -124,35 +143,36 @@ function FormattedContent({ content, isUser }: { content: string; isUser: boolea
 
 function ProductCards({ products }: { products: ProductCard[] }) {
   return (
-    <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 max-w-full">
+    <div className="flex flex-col gap-3 py-2 w-full">
       {products.slice(0, 4).map((product) => (
         <Link
           key={product.id}
           href={`/product/${product.handle}`}
-          className="flex-shrink-0 w-[140px] group"
+          className="w-full group"
         >
           <motion.div
-            whileHover={{ y: -2 }}
+            whileHover={{ y: -4 }}
             className="
-              rounded-xl border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              overflow-hidden transition-shadow
-              group-hover:shadow-md group-hover:border-slate-400 dark:group-hover:border-slate-500
+              rounded-2xl border border-slate-100
+              bg-white
+              overflow-hidden transition-all duration-300
+              group-hover:shadow-xl group-hover:border-slate-200
             "
           >
             {/* Image */}
-            <div className="w-full h-[90px] bg-slate-100 dark:bg-slate-700 relative overflow-hidden">
+            <div className="w-full h-[180px] bg-white relative p-3">
               {product.thumbnail ? (
                 <Image
                   src={product.thumbnail}
                   alt={product.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  sizes="140px"
+                  className="object-contain p-2"
+                  sizes="180px"
+                  priority={false}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                  <span className="text-2xl">💅</span>
+                <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
+                  <span className="text-3xl">💅</span>
                 </div>
               )}
 
@@ -165,20 +185,22 @@ function ProductCards({ products }: { products: ProductCard[] }) {
             </div>
 
             {/* Info */}
-            <div className="p-2">
-              <p className="text-[11px] font-medium text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight">
+            <div className="p-3 border-t border-slate-50">
+              <p className="text-[12px] font-bold text-slate-800 line-clamp-2 leading-snug h-[32px]">
                 {product.title}
               </p>
-              {product.price && (
-                <p className="text-[12px] font-bold text-slate-900 dark:text-slate-100 mt-1">
-                  ${product.price.toLocaleString('es-CO')}
-                </p>
-              )}
-              {product.category && (
-                <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  {product.category}
-                </p>
-              )}
+              <div className="flex items-center justify-between mt-2">
+                {product.price && (
+                  <p className="text-[14px] font-extrabold text-slate-900">
+                    ${product.price.toLocaleString('es-CO')}
+                  </p>
+                )}
+                {product.category && (
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    {product.category}
+                  </p>
+                )}
+              </div>
             </div>
           </motion.div>
         </Link>

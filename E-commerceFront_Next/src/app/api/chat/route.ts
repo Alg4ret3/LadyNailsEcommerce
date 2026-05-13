@@ -10,6 +10,11 @@ import { ChatRequest, ProductContext } from '@/services/ai-chat/types'
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Pre-flight Ping Check ──────────────────────────────────────────────
+    if (request.headers.get('x-ping') === 'true') {
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 })
+    }
+
     // ── Rate Limiting ──────────────────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip')
@@ -78,14 +83,7 @@ export async function POST(request: NextRequest) {
 
     const stream = new ReadableStream({
       start(controller) {
-        // First, send products if any
-        if (products.length > 0) {
-          const productsEvent = `data: ${JSON.stringify({
-            type: 'products',
-            products,
-          })}\n\n`
-          controller.enqueue(encoder.encode(productsEvent))
-        }
+        // Products are no longer sent to the UI as per user request for text-only chat
 
         streamChatCompletion({
           messages: aiMessages,

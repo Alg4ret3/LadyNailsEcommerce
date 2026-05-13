@@ -1,0 +1,1 @@
+export { FloatingSpeedDial } from './FloatingSpeedDial'

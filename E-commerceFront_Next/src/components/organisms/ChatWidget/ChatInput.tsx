@@ -6,13 +6,15 @@ import { Send, Square } from 'lucide-react'
 interface ChatInputProps {
   onSend: (message: string) => void
   onStop?: () => void
-  isLoading?: boolean
-  disabled?: boolean
+  isLoading: boolean
+  isError?: boolean
 }
 
-export function ChatInput({ onSend, onStop, isLoading, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, onStop, isLoading, isError }: ChatInputProps) {
   const [value, setValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const disabled = isLoading || isError
 
   // Auto-resize textarea
   useEffect(() => {
@@ -44,68 +46,50 @@ export function ChatInput({ onSend, onStop, isLoading, disabled }: ChatInputProp
   }
 
   return (
-    <div className="border-t border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 p-3">
+    <div className="border-t border-slate-100 bg-white px-3 py-2.5">
       <div className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe tu mensaje..."
+          placeholder={isError ? "Asistente desconectada" : "Escribe tu mensaje..."}
           disabled={disabled}
           rows={1}
-          className="
-            flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-700
-            bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5
-            text-sm text-slate-900 dark:text-slate-100
-            placeholder:text-slate-400 dark:placeholder:text-slate-500
-            focus:outline-none focus:ring-2 focus:ring-slate-500/30 focus:border-slate-400
-            transition-all duration-200
+          className={`
+            flex-1 resize-none rounded-xl border border-slate-100
+            ${isError ? 'bg-red-50/50' : 'bg-slate-50'} px-3 py-2
+            text-sm ${isError ? 'text-red-400 italic' : 'text-slate-800'}
+            placeholder:${isError ? 'text-red-300' : 'text-slate-400'}
+            focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300
+            transition-all duration-150
             disabled:opacity-50 disabled:cursor-not-allowed
-            max-h-[120px]
-          "
-          style={{ minHeight: '40px' }}
+            max-h-[100px]
+          `}
+          style={{ minHeight: '38px' }}
         />
 
         {isLoading ? (
           <button
             type="button"
             onClick={onStop}
-            className="
-              flex-shrink-0 w-10 h-10 rounded-xl
-              bg-red-500 hover:bg-red-600
-              text-white flex items-center justify-center
-              transition-all duration-200
-              active:scale-95 cursor-pointer
-            "
-            title="Detener respuesta"
+            className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+            title="Detener"
           >
-            <Square className="w-4 h-4 fill-current" />
+            <Square className="w-3.5 h-3.5 fill-current" />
           </button>
         ) : (
           <button
             type="button"
             onClick={handleSend}
             disabled={!value.trim() || disabled}
-            className="
-              flex-shrink-0 w-10 h-10 rounded-xl
-              bg-slate-800 hover:bg-slate-900
-              text-white flex items-center justify-center
-              transition-all duration-200
-              disabled:opacity-30 disabled:cursor-not-allowed
-              active:scale-95 cursor-pointer
-              shadow-md shadow-slate-900/20
-            "
-            title="Enviar mensaje"
+            className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center transition-colors disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+            title="Enviar"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
-
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-1.5 select-none">
-        Naily puede cometer errores · Verifica información importante
-      </p>
     </div>
   )
 }
