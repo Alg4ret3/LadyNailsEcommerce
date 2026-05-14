@@ -118,6 +118,7 @@ export default function CheckoutPage() {
               isUpdatingCart={flow.isUpdatingCart}
               handleShippingContinue={flow.handleShippingContinue}
               isRegisterPath={isRegisterPath}
+              isCitySpecific={flow.isCitySpecific}
             />
 
             <PaymentMethodSection

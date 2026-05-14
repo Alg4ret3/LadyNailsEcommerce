@@ -110,6 +110,47 @@ export function useCheckoutFlow() {
     );
   }, [newAddressFormData]);
 
+  const normalizeText = (text: string) => 
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+  const currentCity = React.useMemo(() => {
+    let city = '';
+    if (user && selectedAddressId) {
+      const addr = user.addresses.find(a => a.id === selectedAddressId);
+      city = addr?.city || '';
+    } else {
+      city = guestFormData.city || newAddressFormData.city || '';
+    }
+    return city;
+  }, [user, selectedAddressId, guestFormData.city, newAddressFormData.city]);
+
+  const filteredShippingOptions = React.useMemo(() => {
+    const cityName = normalizeText(currentCity);
+    if (!cityName) return shippingOptions;
+
+    // Buscar opciones que mencionen la ciudad actual (sin tildes)
+    const citySpecificOptions = shippingOptions.filter(opt => 
+      normalizeText(opt.name).includes(cityName)
+    );
+
+    if (citySpecificOptions.length > 0) {
+      // Prioridad Local: Si hay específicas, solo mostramos esas
+      return citySpecificOptions;
+    } else {
+      // Si no hay nada específico, mostrar Pago en Casa
+      return shippingOptions.filter(opt => {
+        const normalizedName = normalizeText(opt.name);
+        return normalizedName.includes('pago de envio en casa') || normalizedName.includes('pago de envio en casa');
+      });
+    }
+  }, [shippingOptions, currentCity]);
+
+  const isCitySpecific = React.useMemo(() => {
+    const cityName = normalizeText(currentCity);
+    if (!cityName) return true;
+    return shippingOptions.some(opt => normalizeText(opt.name).includes(cityName));
+  }, [shippingOptions, currentCity]);
+
   // Sync initial new address form when user loads
   React.useEffect(() => {
     if (user && !newAddressFormData.firstName) {
@@ -258,7 +299,21 @@ export function useCheckoutFlow() {
 
         const { shipping_options } = await getShippingOptions(cartId);
         setShippingOptions(shipping_options);
-        if (shipping_options.length > 0) {
+        
+        // Auto-selección dinámica con normalización
+        const cityName = normalizeText(guestFormData.city);
+        const cityOptions = shipping_options.filter(opt => normalizeText(opt.name).includes(cityName));
+        
+        const validOptions = cityOptions.length > 0 
+          ? cityOptions
+          : shipping_options.filter(opt => {
+              const normalizedName = normalizeText(opt.name);
+              return normalizedName.includes('pago de envio en casa');
+            });
+
+        if (validOptions.length > 0) {
+          setSelectedShippingOptionId(validOptions[0].id);
+        } else if (shipping_options.length > 0) {
           setSelectedShippingOptionId(shipping_options[0].id);
         }
       }
@@ -330,7 +385,21 @@ export function useCheckoutFlow() {
 
           const { shipping_options } = await getShippingOptions(cartId);
           setShippingOptions(shipping_options);
-          if (shipping_options.length > 0) {
+
+          // Auto-selección dinámica con normalización
+          const cityName = normalizeText(addr.city);
+          const cityOptions = shipping_options.filter(opt => normalizeText(opt.name).includes(cityName));
+          
+          const validOptions = cityOptions.length > 0 
+            ? cityOptions
+            : shipping_options.filter(opt => {
+                const normalizedName = normalizeText(opt.name);
+                return normalizedName.includes('pago de envio en casa');
+              });
+
+          if (validOptions.length > 0) {
+            setSelectedShippingOptionId(validOptions[0].id);
+          } else if (shipping_options.length > 0) {
             setSelectedShippingOptionId(shipping_options[0].id);
           }
         }
@@ -415,7 +484,8 @@ export function useCheckoutFlow() {
     authMode, setAuthMode,
     checkoutAuthPath, setCheckoutAuthPath,
     selectedAddressId, setSelectedAddressId,
-    shippingOptions,
+    shippingOptions: filteredShippingOptions,
+    isCitySpecific,
     selectedShippingOptionId, setSelectedShippingOptionId,
     paymentCollection,
     selectedPaymentProviderId,

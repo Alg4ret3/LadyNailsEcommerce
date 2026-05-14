@@ -21,6 +21,7 @@ interface ShippingMethodSectionProps {
   isUpdatingCart: boolean;
   handleShippingContinue: () => void;
   isRegisterPath: boolean;
+  isCitySpecific: boolean;
 }
 
 export const ShippingMethodSection: React.FC<ShippingMethodSectionProps> = ({
@@ -31,7 +32,8 @@ export const ShippingMethodSection: React.FC<ShippingMethodSectionProps> = ({
   setSelectedShippingOptionId,
   isUpdatingCart,
   handleShippingContinue,
-  isRegisterPath
+  isRegisterPath,
+  isCitySpecific
 }) => {
   const isActive = checkoutStep === 'SHIPPING';
   const isCompleted = checkoutStep === 'PAYMENT';
@@ -49,6 +51,16 @@ export const ShippingMethodSection: React.FC<ShippingMethodSectionProps> = ({
 
       {isActive && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+          {!isCitySpecific && (
+            <div className="bg-slate-50 border-l-4 border-slate-900 p-6 rounded-r-lg space-y-2">
+              <Typography variant="h4" className="text-[10px] font-black uppercase tracking-widest text-slate-900">
+                Información de Envío Nacional
+              </Typography>
+              <Typography variant="body" className="text-sm text-slate-600 leading-relaxed">
+                Para ciudades fuera de la zona de cobertura local, el costo del envío <span className="font-bold text-slate-900">se cancela directamente a la transportadora</span> al momento de recibir tu pedido.
+              </Typography>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4">
             {shippingOptions.length > 0 ? (
               shippingOptions.map((option) => (
