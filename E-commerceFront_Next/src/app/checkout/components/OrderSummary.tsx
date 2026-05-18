@@ -47,7 +47,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
                  {item.name}
                </Typography>
                <Typography variant="detail" className="text-[9px] text-gray-400 font-medium uppercase tracking-widest block mt-0.5">
-                  {item.quantity} × ${item.price.toLocaleString()} {item.size ? `| TALLA: ${item.size}` : ''}
+                  {item.quantity} × ${item.price.toLocaleString()}
                </Typography>
              </div>
              <Typography variant="detail" className="text-[10px] font-black text-white shrink-0">

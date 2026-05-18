@@ -84,7 +84,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
         await addToCart({
           id: variantId,
           productId: product.id,
-          name: variant ? `${product.name} - ${variant.title}` : product.name,
+          name: variant && variant.title !== "Default Variant" ? `${product.name} - ${variant.title}` : product.name,
           price: variant?.prices?.[0]?.amount ?? product.price,
           image: product.image,
           quantity: qty,

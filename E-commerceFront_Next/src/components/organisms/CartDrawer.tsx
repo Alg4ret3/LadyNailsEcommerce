@@ -84,9 +84,6 @@ export const CartDrawer: React.FC = () => {
                         </div>
                         
                         <div className="flex gap-3 items-center">
-                          {item.size && (
-                             <span className="text-[8px] text-foreground/40 uppercase tracking-tighter">Talla: {item.size}</span>
-                          )}
                           {item.inventoryQuantity !== undefined && item.inventoryQuantity <= 5 && item.inventoryQuantity > 0 && (
                              <span className="text-[8px] text-orange-400/70 uppercase tracking-tighter font-medium">Últimas {item.inventoryQuantity}</span>
                           )}

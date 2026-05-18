@@ -137,10 +137,9 @@ export default function CartPage() {
                           <Link href={`/product/${item.productId || item.slug}`}>
                             <Typography variant="h3" className="text-xl sm:text-2xl hover:text-gray-300 transition-colors uppercase tracking-tight">{item.name}</Typography>
                           </Link>
-                          {(item.size || item.color) && (
+                          {item.color && (
                             <div className="flex gap-4 pt-2">
-                              {item.size && <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Talla: {item.size}</span>}
-                              {item.color && <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color: {item.color}</span>}
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color: {item.color}</span>
                             </div>
                           )}
                         </div>

@@ -70,20 +70,32 @@ function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem
  * Maps Medusa LineItem to frontend CartItem
  */
 function mapMedusaLineItemToCartItem(li: any): CartItem {
+  const productTitle = li.product_title || li.title || '';
+  const variantTitle = li.variant_title || '';
+  
+  let displayName = productTitle;
+  if (variantTitle && variantTitle !== 'Default Variant') {
+    displayName = variantTitle.includes(productTitle)
+      ? variantTitle
+      : `${productTitle} - ${variantTitle}`;
+  }
+
   return {
     id: li.variant_id,
-    productId: li.variant?.product?.id || li.product_id,
-    name: li.title,
+    productId: li.product_id,
+    name: displayName,
     price: li.unit_price,
     image: li.thumbnail,
     quantity: li.quantity,
-    size: li.variant?.options?.find((o: any) => o.option?.title === 'Size' || o.option_id?.includes('size'))?.value,
-    color: li.variant?.options?.find((o: any) => o.option?.title === 'Color' || o.option_id?.includes('color'))?.value,
-    slug: li.variant?.product?.handle || '',
-    tags: li.variant?.product?.tags?.map((t: any) => t.value) || [],
-    vendor: li.variant?.product?.vendor,
-    category: li.variant?.product?.categories?.[0]?.name,
-    inventoryQuantity: li.variant?.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? li.variant?.inventory_quantity,
+    size: variantTitle && variantTitle !== 'Default Variant'
+      ? (variantTitle.includes(productTitle) ? variantTitle.replace(productTitle, '').replace(/^\s*-\s*|\s*-\s*$/, '').trim() : variantTitle)
+      : undefined,
+    color: undefined,
+    slug: li.product_handle || '',
+    tags: [],
+    vendor: undefined,
+    category: undefined,
+    inventoryQuantity: li.inventory_quantity,
   };
 }
 
@@ -214,12 +226,38 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
        const mapped = cart.items.map((li: any) => {
          const item = mapMedusaLineItemToCartItem(li);
          
-         // Enriquecemos con el stock del master de productos si está disponible
+         // Enriquecemos con todos los detalles del maestro de productos si está disponible
          if (allProducts) {
            for (const product of allProducts) {
-             const variant = product.variants.find(v => v.id === li.variant_id);
+             const variant = product.variants?.find(v => v.id === li.variant_id);
              if (variant) {
                item.inventoryQuantity = variant.inventory_items?.[0]?.inventory?.location_levels?.[0]?.available_quantity ?? variant.inventory_quantity;
+               
+               // Enriquecemos el nombre con el formato de variante bonito
+               if (variant.title && variant.title !== 'Default Variant') {
+                 item.name = variant.title.includes(product.title)
+                   ? variant.title
+                   : `${product.title} - ${variant.title}`;
+                 item.size = variant.title;
+               } else {
+                 item.name = product.title;
+               }
+
+               // Enriquecemos slug, tags, vendor, category
+               item.slug = product.handle || item.slug;
+               if (product.tags && product.tags.length > 0) {
+                 item.tags = product.tags.map((t: any) => t.value || t);
+               }
+               item.vendor = product.vendor || item.vendor;
+               item.category = product.categories?.[0]?.name || item.category;
+               
+               // Buscamos opciones explícitas de color o tamaño si existen en el maestro
+               const sizeOption = variant.options?.find((o: any) => o.option?.title === 'Size' || o.option_id?.includes('size'));
+               if (sizeOption) item.size = sizeOption.value;
+
+               const colorOption = variant.options?.find((o: any) => o.option?.title === 'Color' || o.option_id?.includes('color'));
+               if (colorOption) item.color = colorOption.value;
+
                break;
              }
            }
@@ -347,6 +385,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = async (item: CartItem) => {
     try {
+      console.log(item);
       await addItem({ variantId: item.id, quantity: item.quantity });
     } catch (error) {
       console.error('Error adding to cart:', error);

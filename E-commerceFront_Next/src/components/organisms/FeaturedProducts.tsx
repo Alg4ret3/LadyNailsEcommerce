@@ -34,7 +34,6 @@ export const FeaturedProducts: React.FC = () => {
     const fetchProducts = async () => {
       try {
         const data = await getFeaturedProducts();
-        console.log(data);
  
         const transformed = data.map((product: MedusaProduct) => ({
           id: product.id,
