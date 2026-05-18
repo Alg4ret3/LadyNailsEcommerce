@@ -48,7 +48,7 @@ export const generateDbDumpStep = createStep(
       const env = { ...process.env, PGPASSWORD: password }
       
       // Wrap paths in quotes to handle spaces in Windows paths
-      const command = `${pgDumpPath} --dbname="${databaseUrl}" --file="${tempPath}" --no-owner --no-privileges`
+      const command = `${pgDumpPath} --dbname="${databaseUrl}" --file="${tempPath}" --clean --if-exists --no-owner --no-privileges`
       
       await execAsync(command, { env })
 

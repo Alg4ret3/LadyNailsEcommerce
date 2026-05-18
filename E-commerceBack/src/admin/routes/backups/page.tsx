@@ -354,7 +354,8 @@ export default function BackupsPage() {
               }}
             />
             <Text className="text-xs text-ui-fg-subtle">
-              Esta es una acción crítica. Por favor, confirma tu identidad.
+              Esta es una acción crítica. Por favor, confirma tu identidad. Si decides continuar con la restauración, 
+              deberás recargar la página para ver los cambios.
             </Text>
           </div>
 

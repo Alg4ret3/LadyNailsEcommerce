@@ -58,6 +58,15 @@ export const restoreDbDumpStep = createStep(
 
       console.log(`Executing restore from ${tempPath}...`)
       
+      // First, clean the database to avoid duplication
+      // This is extremely fast and ensures a clean slate
+      try {
+        console.log("Cleaning database schema...")
+        await execAsync(`${psqlPath} --dbname="${databaseUrl}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`, { env })
+      } catch (cleanError) {
+        console.warn("Warning: Could not clean schema, attempting to restore anyway:", cleanError.message)
+      }
+
       await execAsync(`${psqlPath} --dbname="${databaseUrl}" --file="${tempPath}"`, {
         env
       })
