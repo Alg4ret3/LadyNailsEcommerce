@@ -155,7 +155,7 @@ async function searchProducts(keywords: string[]): Promise<MedusaStoreProduct[]>
 
   const url = new URL('/store/products', MEDUSA_URL)
   url.searchParams.set('q', query)
-  url.searchParams.set('limit', '8')
+  url.searchParams.set('limit', '3')
   // We need to expand variants, prices and inventory items to match Modal logic
   url.searchParams.set('fields', '*variants,*variants.prices,*variants.inventory_items,*variants.inventory_items.inventory,*variants.inventory_items.inventory.location_levels')
 
@@ -194,7 +194,7 @@ function mapToProductContext(product: MedusaStoreProduct): ProductContext {
     id: product.id,
     title: product.title,
     handle: product.handle,
-    description: product.description?.substring(0, 200),
+    description: product.description?.substring(0, 100),
     thumbnail: product.thumbnail,
     price: price || undefined,
     currency: 'COP',

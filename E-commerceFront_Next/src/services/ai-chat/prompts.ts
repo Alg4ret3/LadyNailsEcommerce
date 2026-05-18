@@ -50,13 +50,13 @@ export function buildContextPrompt(products: ProductContext[]): string {
   }
 
   const productList = products
-    .slice(0, 10) // Max 10 products to avoid token overflow
+    .slice(0, 3) // Max 3 products to keep prompt highly lightweight and avoid errors
     .map((p) => {
       const price = p.price ? `$${p.price.toLocaleString('es-CO')} ${p.currency || 'COP'}` : 'Precio no disponible'
       const stock = p.inStock ? 'Disponible' : 'Agotado'
       const category = p.category ? `Categoría: ${p.category}` : ''
       return `- ${p.title} | ${price} | ${stock} | ${category}
-  ${p.description ? p.description.substring(0, 200) : 'Sin descripción'}`
+  ${p.description ? p.description.substring(0, 100) : 'Sin descripción'}`
     })
     .join('\n')
 

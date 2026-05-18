@@ -46,9 +46,8 @@ export interface OpenRouterModel {
 
 // Models to use — ordered by priority (free tier)
 export const AI_MODELS: OpenRouterModel[] = [
-  { id: 'google/gemini-2.0-flash-lite-preview-02-05:free', name: 'Gemini 2.0 Flash Lite', priority: 1 },
-  { id: 'google/gemini-2.0-pro-exp-02-05:free', name: 'Gemini 2.0 Pro', priority: 2 },
-  { id: 'inclusionai/ring-2.6-1t:free', name: 'Inclusion AI Ring 2.6 1T', priority: 3 },
-  { id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', name: 'Nvidia Nemotron 3 Nano Omni 30B A3B Reasoning', priority: 4 },
-  { id: 'baidu/cobuddy:free', name: 'Baidu', priority: 5 },
+  { id: 'openrouter/free', name: 'Auto-Ruteador de Modelos Gratuitos', priority: 1 },
+  { id: 'qwen/qwen-2.5-7b-instruct:free', name: 'Qwen 2.5 7B Instruct', priority: 2 },
+  { id: 'meta-llama/llama-3.2-3b-instruct:free', name: 'Llama 3.2 3B Instruct', priority: 3 },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct', priority: 4 },
 ]

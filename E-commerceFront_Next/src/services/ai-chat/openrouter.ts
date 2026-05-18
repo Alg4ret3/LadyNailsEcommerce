@@ -1,4 +1,4 @@
-import { AI_MODELS } from './types'
+import { AI_MODELS, OpenRouterModel } from './types'
 
 // ─── OpenRouter Client ───────────────────────────────────────────────────────
 // Compatible with OpenAI SDK format, with model fallback
@@ -15,6 +15,7 @@ interface OpenRouterStreamOptions {
   onToken: (token: string) => void
   onDone: () => void
   onError: (error: string) => void
+  onModelSelected?: (model: OpenRouterModel) => void
   signal?: AbortSignal
 }
 
@@ -26,6 +27,7 @@ export async function streamChatCompletion({
   onToken,
   onDone,
   onError,
+  onModelSelected,
   signal,
 }: OpenRouterStreamOptions): Promise<void> {
   const apiKey = process.env.OPENROUTER_API_KEY
@@ -45,6 +47,11 @@ export async function streamChatCompletion({
         onToken,
         onDone,
         onError,
+        onModelSelected: () => {
+          if (onModelSelected) {
+            onModelSelected(model)
+          }
+        },
         signal,
       })
       return // Success — exit
@@ -70,6 +77,7 @@ async function attemptStream({
   onToken,
   onDone,
   onError,
+  onModelSelected,
   signal,
 }: {
   model: string
@@ -78,6 +86,7 @@ async function attemptStream({
   onToken: (token: string) => void
   onDone: () => void
   onError: (error: string) => void
+  onModelSelected?: () => void
   signal?: AbortSignal
 }): Promise<void> {
   const response = await fetch(OPENROUTER_API_URL, {
@@ -102,6 +111,10 @@ async function attemptStream({
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`HTTP ${response.status}: ${errorBody}`)
+  }
+
+  if (onModelSelected) {
+    onModelSelected()
   }
 
   if (!response.body) {

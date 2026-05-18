@@ -3,7 +3,8 @@ import { streamChatCompletion } from '@/services/ai-chat/openrouter'
 import { fetchRelevantProducts } from '@/services/ai-chat/medusa-context'
 import { buildSystemPrompt, buildContextPrompt } from '@/services/ai-chat/prompts'
 import { checkRateLimit } from '@/services/ai-chat/rate-limiter'
-import { ChatRequest, ProductContext } from '@/services/ai-chat/types'
+import { ChatRequest, ProductContext, OpenRouterModel, AI_MODELS } from '@/services/ai-chat/types'
+import { writeChatLog } from '@/services/ai-chat/logger'
 
 // ─── POST /api/chat ──────────────────────────────────────────────────────────
 // Streams AI responses using Server-Sent Events
@@ -48,12 +49,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sanitize messages (max 20 messages, max 500 chars each)
+    // Sanitize messages (max 5 messages in history, max 300 chars each to keep context light)
     const sanitizedMessages = body.messages
-      .slice(-20)
+      .slice(-5)
       .map((m) => ({
         role: m.role as 'user' | 'assistant',
-        content: m.content.substring(0, 500).trim(),
+        content: m.content.substring(0, 300).trim(),
       }))
       .filter((m) => m.content.length > 0)
 
@@ -80,6 +81,9 @@ export async function POST(request: NextRequest) {
 
     // ── Stream Response ────────────────────────────────────────────────────
     const encoder = new TextEncoder()
+    const startTime = Date.now()
+    let selectedModel: OpenRouterModel = AI_MODELS[0] // Default fallback, updates when stream connects
+    let accumulatedResponse = ''
 
     const stream = new ReadableStream({
       start(controller) {
@@ -87,7 +91,11 @@ export async function POST(request: NextRequest) {
 
         streamChatCompletion({
           messages: aiMessages,
+          onModelSelected(model) {
+            selectedModel = model
+          },
           onToken(token) {
+            accumulatedResponse += token
             const event = `data: ${JSON.stringify({
               type: 'text',
               content: token,
@@ -98,6 +106,24 @@ export async function POST(request: NextRequest) {
             const event = `data: ${JSON.stringify({ type: 'done' })}\n\n`
             controller.enqueue(encoder.encode(event))
             controller.close()
+
+            // Safe background logging
+            writeChatLog({
+              timestamp: new Date().toISOString(),
+              ip,
+              question: lastUserMessage,
+              response: accumulatedResponse,
+              modelId: selectedModel.id,
+              modelName: selectedModel.name,
+              productsFetched: products.map((p) => ({
+                id: p.id,
+                title: p.title,
+                handle: p.handle,
+                price: p.price,
+              })),
+              durationMs: Date.now() - startTime,
+              status: 'success',
+            })
           },
           onError(error) {
             const event = `data: ${JSON.stringify({
@@ -106,6 +132,25 @@ export async function POST(request: NextRequest) {
             })}\n\n`
             controller.enqueue(encoder.encode(event))
             controller.close()
+
+            // Safe background logging
+            writeChatLog({
+              timestamp: new Date().toISOString(),
+              ip,
+              question: lastUserMessage,
+              response: accumulatedResponse,
+              modelId: selectedModel.id,
+              modelName: selectedModel.name,
+              productsFetched: products.map((p) => ({
+                id: p.id,
+                title: p.title,
+                handle: p.handle,
+                price: p.price,
+              })),
+              durationMs: Date.now() - startTime,
+              status: 'error',
+              errorMessage: error,
+            })
           },
         })
       },
