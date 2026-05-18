@@ -46,10 +46,13 @@ export async function fetchRelevantProducts(userMessage: string): Promise<Produc
       return []
     }
 
-    // Fetch products from Medusa Store API
+    // Fetch products from Medusa Store API (fetch a pool of 12 for high-quality ranking)
     const products = await searchProducts(keywords)
 
-    return products.map(mapToProductContext)
+    // Programmatic ranking to boost products with matching titles/handles
+    const rankedProducts = rankProducts(products, keywords)
+
+    return rankedProducts.map(mapToProductContext)
   } catch (error) {
     console.error('[AI Chat] Error fetching Medusa products:', error)
     return []
@@ -155,7 +158,7 @@ async function searchProducts(keywords: string[]): Promise<MedusaStoreProduct[]>
 
   const url = new URL('/store/products', MEDUSA_URL)
   url.searchParams.set('q', query)
-  url.searchParams.set('limit', '3')
+  url.searchParams.set('limit', '12') // Fetch a pool of 12 potential products
   // We need to expand variants, prices and inventory items to match Modal logic
   url.searchParams.set('fields', '*variants,*variants.prices,*variants.inventory_items,*variants.inventory_items.inventory,*variants.inventory_items.inventory.location_levels')
 
@@ -207,4 +210,46 @@ function mapToProductContext(product: MedusaStoreProduct): ProductContext {
       inStock: getInStock(v),
     })),
   }
+}
+
+/**
+ * Programmatically ranks and sorts products by title, handle, and description keyword matches.
+ * Gives major weight boost to title matches to bypass Medusa full-text search relevance issues.
+ */
+function rankProducts(products: MedusaStoreProduct[], keywords: string[]): MedusaStoreProduct[] {
+  if (!keywords.length) return products
+
+  return products
+    .map((product) => {
+      let score = 0
+      const titleLower = product.title.toLowerCase()
+      const descLower = (product.description || '').toLowerCase()
+      const handleLower = product.handle.toLowerCase()
+
+      for (const keyword of keywords) {
+        const kw = keyword.toLowerCase()
+        
+        // 1. Title matches (highest priority)
+        if (titleLower.includes(kw)) {
+          score += 15
+          if (titleLower.startsWith(kw)) {
+            score += 10 // Extra points if it starts with the keyword
+          }
+        }
+
+        // 2. Handle matches (high priority for clean searches)
+        if (handleLower.includes(kw)) {
+          score += 10
+        }
+
+        // 3. Description matches (low priority fallback)
+        if (descLower.includes(kw)) {
+          score += 2
+        }
+      }
+
+      return { product, score }
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.product)
 }
