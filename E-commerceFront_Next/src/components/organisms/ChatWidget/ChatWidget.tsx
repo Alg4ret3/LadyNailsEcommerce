@@ -64,7 +64,7 @@ export function ChatWidget({ isOpen, onClose }: ChatWidgetProps) {
               <div className="relative">
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
                   <img 
-                    src="https://images.pexels.com/photos/3373737/pexels-photo-3373737.jpeg?auto=compress&cs=tinysrgb&w=100" 
+                    src="https://res.cloudinary.com/dqky6oqrd/image/upload/f_auto,q_auto/v1779209792/kcf5zfmvznma0f9bjxql.svg" 
                     alt="Naily Logo" 
                     className="w-full h-full object-cover"
                   />
@@ -182,9 +182,9 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
     >
       <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 mb-4 bg-white">
         <img 
-          src="https://images.pexels.com/photos/3373737/pexels-photo-3373737.jpeg?auto=compress&cs=tinysrgb&w=200" 
+          src="https://res.cloudinary.com/dqky6oqrd/image/upload/f_auto,q_auto/v1779209792/kcf5zfmvznma0f9bjxql.svg" 
           alt="Naily" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover p-1"
         />
       </div>
       <p className="text-base font-bold text-slate-800">¡Hola! Soy Naily</p>

@@ -60,7 +60,7 @@ export function FloatingSpeedDial() {
                 transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                 whileHover={{ scale: 1.12 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 rounded-full bg-slate-800 shadow-md flex items-center justify-center"
+                className="w-10 h-10 rounded-full bg-purple-900 shadow-md flex items-center justify-center"
               >
                 <Sparkles className="w-4 h-4 text-white" />
               </motion.button>
@@ -76,7 +76,7 @@ export function FloatingSpeedDial() {
           whileTap={{ scale: 0.92 }}
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-          className="w-12 h-12 rounded-full bg-slate-900 shadow-lg flex items-center justify-center relative"
+          className="w-12 h-12 rounded-full bg-black shadow-lg flex items-center justify-center relative"
         >
           <AnimatePresence mode="wait">
             {open ? (
@@ -92,7 +92,7 @@ export function FloatingSpeedDial() {
 
           {/* Online dot */}
           {!open && (
-            <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
+            <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black" />
           )}
         </motion.button>
       </div>
