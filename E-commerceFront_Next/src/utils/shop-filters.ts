@@ -10,8 +10,10 @@ export const filterProducts = (products: MedusaProduct[], state: FilterState): M
   const { query, selectedCategories, selectedBrands } = state;
 
   return products.filter((p) => {
+    const queryLower = query.toLowerCase();
     const matchesSearch =
-      p.title.toLowerCase().includes(query.toLowerCase());
+      p.title.toLowerCase().includes(queryLower) ||
+      (p.description && p.description.toLowerCase().includes(queryLower));
 
     const matchesCategory = 
       selectedCategories.length === 0 || 
