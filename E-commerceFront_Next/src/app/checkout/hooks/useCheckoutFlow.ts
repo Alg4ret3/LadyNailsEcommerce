@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useCartQuery } from '@/hooks/useCart';
 import { useCustomerAddresses } from '@/hooks/useCurrentUser';
 import { getShippingOptions, ShippingOption, PaymentCollection } from '@/services/medusa';
+import { medusaFetch } from '@/services/medusa/client';
 import { validatePassword, validateName, validatePhone, validateAddress } from '@/utils/validations';
 
 export type CheckoutStep = 'AUTH_CHOICE' | 'EMAIL_VERIFY' | 'SHIP_INFO' | 'SHIPPING' | 'PAYMENT';
@@ -14,6 +15,23 @@ export type AuthMode = 'choice' | 'login' | 'register';
 
 export function useCheckoutFlow() {
   const router = useRouter();
+  const [wompiRef, setWompiRef] = React.useState<string | null>(null);
+  const [wompiTxId, setWompiTxId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('wompi_ref');
+      const id = params.get('id');
+      if (ref) {
+        setWompiRef(ref);
+      }
+      if (id) {
+        setWompiTxId(id);
+      }
+    }
+  }, []);
+
   const { cartItems, totalItems, totalAmount, clearCart } = useCart();
   const { user, login, logout, sendOtp, verifyOtp, register, isLoading: isUserLoading, error: contextError, clearError } = useUser();
 
@@ -162,6 +180,49 @@ export function useCheckoutFlow() {
       }));
     }
   }, [user]);
+
+  // Verify redirect-based Wompi transactions on mount if redirect reference or ID exists
+  const hasVerified = React.useRef(false);
+  React.useEffect(() => {
+    if ((!wompiRef && !wompiTxId) || hasVerified.current) return;
+    hasVerified.current = true;
+
+    const verifyTransaction = async () => {
+      setIsProcessingOrder(true);
+      setLocalError('');
+      try {
+        const queryParam = wompiTxId
+          ? `id=${encodeURIComponent(wompiTxId)}`
+          : `reference=${encodeURIComponent(wompiRef!)}`;
+
+        const response = await medusaFetch<any>(`/store/wompi/verify?${queryParam}`);
+        
+        if (response.status === 'APPROVED') {
+          const cartId = await ensureCart();
+          if (cartId) {
+            const completeResponse = await completeCartMutation();
+            clearCart();
+            const orderId = completeResponse?.order?.id || (completeResponse?.type === 'order' ? completeResponse.order.id : null);
+            router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+          } else {
+            router.push('/checkout/confirmation');
+          }
+        } else if (response.status === 'PENDING') {
+          setLocalError('El pago aún está en proceso de verificación por Wompi. Por favor espere o verifique con su banco.');
+          setIsProcessingOrder(false);
+        } else {
+          setLocalError(`El pago no fue aprobado o falló. Estado: ${response.status || 'Desconocido'}`);
+          setIsProcessingOrder(false);
+        }
+      } catch (err: any) {
+        console.error('Error verifying redirect transaction:', err);
+        setLocalError('Hubo un error verificando su pago. Por favor contacte a soporte si el dinero fue debitado.');
+        setIsProcessingOrder(false);
+      }
+    };
+
+    verifyTransaction();
+  }, [wompiRef, wompiTxId, router, ensureCart, completeCartMutation, clearCart]);
 
   // Redirect if cart is empty
   React.useEffect(() => {
