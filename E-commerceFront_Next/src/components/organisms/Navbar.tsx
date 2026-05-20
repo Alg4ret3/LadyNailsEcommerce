@@ -21,6 +21,7 @@ export const Navbar: React.FC = () => {
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [activeHoverCategory, setActiveHoverCategory] = useState<Category | null>(null);
+  const catalogRef = React.useRef<HTMLDivElement>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -37,6 +38,10 @@ export const Navbar: React.FC = () => {
     function handleClickOutside(event: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
+      }
+      if (catalogRef.current && !catalogRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+        setActiveHoverCategory(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -131,17 +136,17 @@ export const Navbar: React.FC = () => {
 
           {/* Logo - Responsivo: Se oculta en pantallas < 430px para evitar solapamientos */}
           <div className="hidden min-[430px]:flex items-center justify-center absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 lg:justify-start z-10">
-            <Link href={ROUTES.home} className="group py-2">
-              <div className="relative w-20 h-20 lg:w-30 lg:h-30 flex items-center justify-center">
+            <div className="py-2 cursor-default">
+              <div className="relative w-20 h-20 lg:w-30 lg:h-30 flex items-center justify-center pointer-events-none">
                 <Image
                   src={COMPANY_INFO.logo.src}
                   alt={COMPANY_INFO.logo.alt}
                   fill
-                  className="object-contain group-hover:scale-105 transition-transform"
+                  className="object-contain"
                   priority
                 />
               </div>
-            </Link>
+            </div>
           </div>
 
           {/* Desktop Links */}
@@ -150,11 +155,7 @@ export const Navbar: React.FC = () => {
 
             {/* Catálogo dinámico */}
             <div
-              onMouseEnter={() => setActiveDropdown("catalogo")}
-              onMouseLeave={() => {
-                setActiveDropdown(null);
-                setActiveHoverCategory(null);
-              }}
+              ref={catalogRef}
               className="relative"
             >
               <NavItem
@@ -162,6 +163,10 @@ export const Navbar: React.FC = () => {
                 href={ROUTES.shop}
                 hasSubcategories
                 active={activeDropdown === "catalogo"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveDropdown(activeDropdown === "catalogo" ? null : "catalogo");
+                }}
               />
 
               <AnimatePresence>
@@ -171,10 +176,17 @@ export const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute top-full left-0 flex bg-white border border-slate-100 shadow-2xl z-50 rounded-b-xl overflow-hidden"
-                    onMouseLeave={() => setActiveHoverCategory(null)}
                   >
                     {/* Left Column: Categories List (Scrollable) */}
                     <div className="w-[280px] py-4 max-h-[65vh] overflow-y-auto overflow-x-hidden custom-scrollbar border-r border-slate-100 bg-white">
+                      <Link
+                        href="/shop"
+                        className="flex items-center justify-between px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all border-b border-slate-100 mb-1"
+                      >
+                        Ver todo
+                        <ChevronRight size={10} strokeWidth={2.5} />
+                      </Link>
+
                       <Typography
                         variant="detail"
                         className="px-6 mb-3 block text-[9px] text-slate-400 uppercase tracking-widest"

@@ -15,6 +15,11 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Ladynail Shop | Distribuidora Profesional de Belleza",
   description: "Especialistas en insumos para uñas, barbería y cosmética profesional. Ladynail Shop es tu socio logístico para el crecimiento de tu salón.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

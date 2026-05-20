@@ -11,6 +11,7 @@ interface NavItemProps {
   active?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   className?: string;
   type?: 'desktop' | 'mobile';
   icon?: React.ReactNode;
@@ -23,6 +24,7 @@ export const NavItem: React.FC<NavItemProps> = ({
   active, 
   onMouseEnter, 
   onMouseLeave, 
+  onClick,
   className = '',
   type = 'desktop',
   icon
@@ -46,10 +48,14 @@ export const NavItem: React.FC<NavItemProps> = ({
       className={`relative py-8 ${className}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     >
       <Link 
         href={href} 
         className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5 ${active ? 'text-slate-950' : 'text-slate-400 hover:text-slate-950'}`}
+        onClick={(e) => {
+          if (onClick) e.preventDefault();
+        }}
       >
         {name}
         {hasSubcategories && (
