@@ -80,6 +80,18 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
     return null;
   }, [pathname]);
 
+  // ── Scroll al grid cuando cambian los filtros ──
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [filters]);
+
   const filteredProducts = useMemo(() => {
     let base = sourceProducts;
     if (currentPathCategory) {
@@ -189,8 +201,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
                       setIsSortOpen(false);
                     }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === option.value
-                        ? 'bg-zinc-950 text-white'
-                        : 'text-zinc-400 hover:bg-zinc-50 hover:text-zinc-950'
+                      ? 'bg-zinc-950 text-white'
+                      : 'text-zinc-400 hover:bg-zinc-50 hover:text-zinc-950'
                       }`}
                   >
                     {option.label}
