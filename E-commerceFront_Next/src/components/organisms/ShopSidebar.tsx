@@ -16,16 +16,16 @@ interface FilterSectionProps {
   scrollable?: boolean;
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({ 
-  title, 
-  children, 
-  defaultOpen = true, 
-  scrollable = true 
+const FilterSection: React.FC<FilterSectionProps> = ({
+  title,
+  children,
+  defaultOpen = true,
+  scrollable = true
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
     <div className="border-b border-slate-100 py-6">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center group"
       >
@@ -39,7 +39,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -64,7 +64,7 @@ export const ShopSidebar = () => {
   const currentPathCategory = useMemo(() => {
     const parts = pathname.split('/');
     if (parts.length > 2 && parts[1] === 'shop' && parts[2] !== '') {
-       try { return decodeURIComponent(parts[2]); } catch (e) { return parts[2]; }
+      try { return decodeURIComponent(parts[2]); } catch (e) { return parts[2]; }
     }
     return null;
   }, [pathname]);
@@ -72,19 +72,19 @@ export const ShopSidebar = () => {
   const matchedCount = useMemo(() => {
     let base = products;
     if (currentPathCategory) {
-      base = base.filter(p => 
+      base = base.filter(p =>
         p.categories?.some((c: any) => c.handle === currentPathCategory)
       );
     }
     return filterProducts(base, filters).length;
   }, [products, filters, currentPathCategory]);
-  
+
   const toggleCategory = (val: string) => {
     const isSelected = filters.selectedCategories.includes(val);
     const newCats = isSelected
       ? filters.selectedCategories.filter(c => c !== val)
       : [...filters.selectedCategories, val];
-    
+
     setFilters({ selectedCategories: newCats });
   };
 
@@ -93,14 +93,14 @@ export const ShopSidebar = () => {
     const newBrands = isSelected
       ? filters.selectedBrands.filter(b => b !== brand)
       : [...filters.selectedBrands, brand];
-    
+
     setFilters({ selectedBrands: newBrands });
   };
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between pb-6 border-b border-slate-100">
-        <button 
+        <button
           onClick={resetFilters}
           className="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-950 transition-colors tracking-[0.2em]"
         >
@@ -112,9 +112,9 @@ export const ShopSidebar = () => {
       <div className="pt-2">
         <div className="relative group">
           <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-900 transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Buscar..." 
+          <input
+            type="text"
+            placeholder="Buscar..."
             value={filters.query}
             onChange={(e) => setFilters({ query: e.target.value })}
             className="w-full bg-transparent border-b border-slate-100 pl-7 pr-4 py-3 outline-none focus:border-slate-900 transition-all text-xs font-medium tracking-wide placeholder:text-slate-300 text-slate-800"
@@ -135,58 +135,57 @@ export const ShopSidebar = () => {
       </div>
 
       <FilterSection title="Categorías" scrollable={false}>
-          <div className="space-y-4">
-            {categoriesLoading ? (
-               <div className="space-y-4">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="flex items-center gap-4 animate-pulse">
-                      <div className="w-5 h-5 bg-slate-50 border border-slate-100" />
-                      <div className="h-3 w-32 bg-slate-50 rounded" />
-                    </div>
-                  ))}
-               </div>
-            ) : (
-              categories.map(c => (
-                <label key={c.id} className="flex items-center gap-4 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle)}
-                    onChange={() => toggleCategory(c.handle || c.id)}
-                    className="hidden"
-                  />
-                  <div className={`w-5 h-5 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
-                      <div className={`w-2 h-2 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
-                  </div>
-                  <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'text-slate-950' : 'text-slate-400 group-hover:text-slate-950'}`}>{c.name}</Typography>
-                </label>
-              ))
-            )}
-          </div>
+        <div className="space-y-4">
+          {categoriesLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-center gap-4 animate-pulse">
+                  <div className="w-5 h-5 bg-slate-50 border border-slate-100" />
+                  <div className="h-3 w-32 bg-slate-50 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            categories.map(c => (
+              <label key={c.id} className="flex items-center gap-4 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle)}
+                  onChange={() => toggleCategory(c.handle || c.id)}
+                  className="hidden"
+                />
+                <div className={`w-5 h-5 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
+                  <div className={`w-2 h-2 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
+                </div>
+                <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'text-slate-950' : 'text-slate-400 group-hover:text-slate-950'}`}>{c.name}</Typography>
+              </label>
+            ))
+          )}
+        </div>
       </FilterSection>
 
 
-<FilterSection title="Marcas" scrollable={false}>
-          <div className="grid grid-cols-2 gap-2">
-            {productsLoading ? (
-               <Typography variant="body" className="text-slate-400 text-[10px]">Cargando marcas...</Typography>
-            ) : brands.length > 0 ? (
-              brands.map(brand => (
-                <button 
-                  key={brand} 
-                  onClick={() => toggleBrand(brand)}
-                  className={`px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-all rounded-lg ${
-                    filters.selectedBrands.includes(brand)
-                    ? 'border-slate-950 bg-slate-950 text-white shadow-xl shadow-slate-200' 
+      <FilterSection title="Marcas" scrollable={false}>
+        <div className="grid grid-cols-2 gap-2">
+          {productsLoading ? (
+            <Typography variant="body" className="text-slate-400 text-[10px]">Cargando marcas...</Typography>
+          ) : brands.length > 0 ? (
+            brands.map(brand => (
+              <button
+                key={brand}
+                onClick={() => toggleBrand(brand)}
+                className={`px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-all rounded-lg ${filters.selectedBrands.includes(brand)
+                    ? 'border-slate-950 bg-slate-950 text-white shadow-xl shadow-slate-200'
                     : 'border-slate-100 text-slate-400 hover:border-slate-950 hover:text-slate-950'
                   }`}
-                >
-                    {brand}
-                </button>
-              ))
-            ) : (
-              <Typography variant="body" className="text-slate-400 text-[10px]">Sin marcas</Typography>
-            )}
-          </div>
+              >
+                {brand}
+              </button>
+            ))
+          ) : (
+            <Typography variant="body" className="text-slate-400 text-[10px]">Sin marcas</Typography>
+          )}
+        </div>
       </FilterSection>
     </div>
   );

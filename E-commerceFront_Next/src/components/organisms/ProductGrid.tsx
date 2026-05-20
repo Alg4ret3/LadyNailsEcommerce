@@ -58,9 +58,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
     { value: 'newest', label: 'Recientes' }
   ], []);
 
-  const currentSortLabel = useMemo(() => 
+  const currentSortLabel = useMemo(() =>
     sortOptions.find(o => o.value === sortBy)?.label || 'Orden Sugerido',
-  [sortBy, sortOptions]);
+    [sortBy, sortOptions]);
 
   const sourceProducts = useMemo(() => {
     if (infiniteProducts.length > 0) return infiniteProducts;
@@ -71,11 +71,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
   const currentPathCategory = useMemo(() => {
     const parts = pathname.split('/');
     if (parts.length > 2 && parts[1] === 'shop' && parts[2] !== '') {
-       try {
-         return decodeURIComponent(parts[2]);
-       } catch (e) {
-         return parts[2];
-       }
+      try {
+        return decodeURIComponent(parts[2]);
+      } catch (e) {
+        return parts[2];
+      }
     }
     return null;
   }, [pathname]);
@@ -83,7 +83,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
   const filteredProducts = useMemo(() => {
     let base = sourceProducts;
     if (currentPathCategory) {
-      base = base.filter(p => 
+      base = base.filter(p =>
         p.categories?.some((c: any) => c.handle === currentPathCategory)
       );
     }
@@ -149,79 +149,74 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, title
 
   return (
     <div ref={resultsRef} className="space-y-8 min-h-[600px]">
-      {/* Header */}
-      {(title || subtitle) && (
-        <div className="mb-12 sm:mb-20">
-          <div className="space-y-2 lg:space-y-4">
-            <Typography variant="detail" className="text-slate-400 block pb-2 tracking-widest">{subtitle}</Typography>
-            <Typography variant="h1" className="text-4xl xs:text-5xl sm:text-5xl lg:text-5xl tracking-tighter leading-none sm:leading-[0.95] font-medium pt-2 uppercase">
-              {title?.split(' ')[0]} <br /> 
-              <span className="text-slate-200 font-light">{title?.split(' ').slice(1).join(' ') || 'PARA TI'}</span>
-            </Typography>
-          </div>
+      {/* Header + Sort aligned */}
+      <div className="flex justify-between items-center mb-12 sm:mb-20">
+        <div className="space-y-2 lg:space-y-4">
+          <Typography variant="detail" className="text-slate-400 block pb-2 tracking-widest">{subtitle}</Typography>
+          <Typography variant="h1" className="text-4xl xs:text-5xl sm:text-5xl lg:text-5xl tracking-tighter leading-none sm:leading-[0.95] font-medium pt-2 uppercase">
+            {title?.split(' ')[0]} <br />
+            <span className="text-slate-200 font-light">{title?.split(' ').slice(1).join(' ') || 'PARA TI'}</span>
+          </Typography>
+          {/* Show current sort label under title */}
+          <Typography variant="detail" className="text-xs text-slate-500">{currentSortLabel}</Typography>
         </div>
-      )}
-
-      {/* Results Header (Minimalist) */}
-      <div className="flex justify-end py-6 border-b border-zinc-100 mt-8 mb-8">
-         <div className="relative" ref={sortRef}>
-            <button 
-              onClick={() => setIsSortOpen(!isSortOpen)}
-              className="flex items-center gap-3 px-6 py-3 bg-zinc-50/50 hover:bg-zinc-50 rounded-full transition-all group"
-            >
-               <ListOrdered size={14} className="text-zinc-400 group-hover:text-zinc-950 transition-colors" />
-               <Typography variant="h4" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-950">
-                 {currentSortLabel}
-               </Typography>
-               <ChevronDown size={14} className={`text-zinc-400 transition-transform duration-300 ${isSortOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            <AnimatePresence>
-              {isSortOpen && (
-                 <motion.div
-                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                   transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                   className="absolute right-0 top-full mt-4 w-60 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl border border-zinc-50 overflow-hidden z-60 p-1.5"
-                 >
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          setSortBy(option.value);
-                          setIsSortOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          sortBy === option.value 
-                          ? 'bg-zinc-950 text-white' 
-                          : 'text-zinc-400 hover:bg-zinc-50 hover:text-zinc-950'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                 </motion.div>
-              )}
-            </AnimatePresence>
-         </div>
+        {/* Sort button on the right */}
+        <div className="relative" ref={sortRef}>
+          <button
+            onClick={() => setIsSortOpen(!isSortOpen)}
+            className="flex items-center gap-3 px-6 py-3 bg-zinc-50/50 hover:bg-zinc-50 rounded-full transition-all group"
+          >
+            <ListOrdered size={14} className="text-zinc-400 group-hover:text-zinc-950 transition-colors" />
+            <Typography variant="h4" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-950">
+              Ordenar
+            </Typography>
+            <ChevronDown size={14} className={`text-zinc-400 transition-transform duration-300 ${isSortOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence>
+            {isSortOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute right-0 top-full mt-4 w-60 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl border border-zinc-50 overflow-hidden z-60 p-1.5"
+              >
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setIsSortOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === option.value
+                        ? 'bg-zinc-950 text-white'
+                        : 'text-zinc-400 hover:bg-zinc-50 hover:text-zinc-950'
+                      }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-           {[1,2,3,4,5,6].map(i => (
-             <div key={i} className="aspect-[3/4] bg-slate-50 animate-pulse rounded-3xl" />
-           ))}
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="aspect-[3/4] bg-slate-50 animate-pulse rounded-3xl" />
+          ))}
         </div>
       ) : normalizedProducts.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-             {normalizedProducts.map((p, index) => (
-                <ProductCard key={p.id} {...p} slug={p.slug} priority={index < 6} />
-             ))}
+            {normalizedProducts.map((p, index) => (
+              <ProductCard key={p.id} {...p} slug={p.slug} priority={index < 6} />
+            ))}
           </div>
-          
+
           {/* Elemento observado para el scroll infinito */}
           <div ref={observerRef} className="h-20 flex items-center justify-center mt-12">
             {isFetchingNextPage && (
