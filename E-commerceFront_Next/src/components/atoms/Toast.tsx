@@ -23,10 +23,10 @@ export const Toast: React.FC<ToastProps> = ({ message, isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="hidden sm:flex fixed top-28 right-10 z-[2000] items-center bg-black text-white px-8 py-2.5 rounded-none border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden min-w-[240px]"
+          className="fixed top-4 left-1/2 -translate-x-1/2 sm:top-28 sm:right-10 sm:left-auto sm:bottom-auto sm:translate-x-0 z-[55] flex items-center bg-black text-white px-4 sm:px-8 py-2 sm:py-2.5 rounded-none border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden min-w-[200px] sm:min-w-[240px]"
         >
           {/* Progress bar subtle */}
           <motion.div 
@@ -36,8 +36,8 @@ export const Toast: React.FC<ToastProps> = ({ message, isOpen, onClose }) => {
             className="absolute bottom-0 left-0 right-0 h-px bg-white/30 origin-left"
           />
           
-          <div className="mx-auto flex justify-center scale-[0.4] sm:scale-100 origin-center min-w-0">
-            <Typography variant="body" className="text-white text-[10px] font-medium uppercase tracking-[0.4em] leading-tight whitespace-nowrap opacity-90 italic">
+          <div className="mx-auto flex justify-center origin-center min-w-0">
+            <Typography variant="body" className="text-white text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.4em] leading-tight whitespace-nowrap opacity-90 italic">
               {message}
             </Typography>
           </div>

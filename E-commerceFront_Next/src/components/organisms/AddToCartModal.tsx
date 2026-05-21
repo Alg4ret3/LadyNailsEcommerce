@@ -30,7 +30,6 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 }) => {
   const { addToCart, setIsCartOpen } = useCart();
   const [isAdding, setIsAdding] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // If the product has multiple variants, we want a quantity per variant
   // Initial state: a map of variantId to quantity
@@ -69,15 +68,15 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
       return;
     }
 
-    // ✅ UI INSTANTANEA: Mostramos exito INMEDIATAMENTE
-    setShowSuccess(true);
-    setTimeout(() => {
-      onClose();
-      setShowSuccess(false);
-      setIsCartOpen(true);
-    }, 1500);
+    // Cierra el modal
+    onClose();
 
-    // Procesamos en background sin bloquear la UI
+    // Abre el drawer (con pequeño delay para que anime bien)
+    setTimeout(() => {
+      setIsCartOpen(true);
+    }, 80);
+
+    // Procesamos en background
     try {
       for (const [variantId, qty] of totalItemsToAdd) {
         const variant = product.variants?.find((v) => v.id === variantId);
@@ -98,8 +97,6 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
       }
     } catch (error) {
       console.error(error);
-      // ❌ Si hay error de servidor: Aqui podrias mostrar un toast de error
-      // Por ahora silencioso, el usuario no nota nada y el carrito se actualiza correctamente
     }
   };
 
@@ -127,26 +124,6 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-3xl p-8 sm:p-10 w-full max-w-md max-h-[90vh] overflow-y-auto z-[101] border border-zinc-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] scrollbar-hide"
           >
-            {/* Success Overlay */}
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-[105] bg-white flex flex-col items-center justify-center p-8 text-center"
-                >
-                  <Typography
-                    variant="h3"
-                    className="text-[20px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-black"
-                  >
-                    AGREGADO CON ÉXITO
-                  </Typography>
-                  <div className="w-12 h-[1px] bg-black/10 mt-4" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Header */}
             <div className="flex items-start justify-between mb-8">
               <div className="space-y-0.5">
