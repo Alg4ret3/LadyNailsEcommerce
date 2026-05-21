@@ -256,7 +256,7 @@ export const Navbar: React.FC = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="fixed inset-0 top-[96px] bg-black/5 backdrop-blur-sm z-[40] lg:hidden"
+                      className="fixed inset-0 top-[96px] bg-black/5 z-[40] lg:hidden"
                       onClick={() => setIsProfileOpen(false)}
                     />
                   )}
@@ -350,7 +350,7 @@ export const Navbar: React.FC = () => {
       {/* Custom Logout Confirmation Modal */}
       <AnimatePresence>
         {showLogoutConfirm && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/20 p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}

@@ -19,7 +19,7 @@ export const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, className = '
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className={`fixed inset-0 z-[90] bg-slate-950/40 ${blur ? 'backdrop-blur-sm' : ''} ${className}`} 
+      className={`fixed inset-0 z-[90] bg-slate-950/40 ${className}`} 
     />
   );
 };

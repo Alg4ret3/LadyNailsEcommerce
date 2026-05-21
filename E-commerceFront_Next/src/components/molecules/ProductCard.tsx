@@ -195,7 +195,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="bg-zinc-950 text-white text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-lg">Mayorista</span>
               )}
               {visibleTag && (
-                <span className="bg-white/90 backdrop-blur text-zinc-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-zinc-100">{visibleTag}</span>
+                <span className="bg-white/90 text-zinc-950 text-[7px] sm:text-[9px] font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-widest shadow-sm border border-zinc-100">{visibleTag}</span>
               )}
             </div>
           );

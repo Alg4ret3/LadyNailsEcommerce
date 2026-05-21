@@ -25,7 +25,7 @@ export const CartDrawer: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsCartOpen(false)}
-            className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-foreground/20 z-50"
           />
 
           {/* Drawer */}
@@ -34,7 +34,7 @@ export const CartDrawer: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full max-w-xs sm:max-w-sm md:max-w-md bg-background shadow-[0_12px_24px_-4px_rgba(42,37,32,0.12)] z-60 flex flex-col font-sans"
+            className="fixed right-0 top-0 h-full w-full max-w-full sm:max-w-sm md:max-w-md bg-background shadow-[0_12px_24px_-4px_rgba(42,37,32,0.12)] z-60 flex flex-col font-sans overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 sm:p-6 md:p-8 border-b border-border flex items-center justify-between">
@@ -60,7 +60,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
               ) : (
                 cartItems.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex gap-4 sm:gap-6 group relative border-b border-black/[0.05] pb-8 last:border-0">
+                  <div key={`${item.id}-${item.size}`} className="flex gap-4 sm:gap-6 group relative border-b border-black/[0.05] pb-8 last:border-0 min-w-0">
                     <div className="relative w-16 sm:w-20 aspect-square bg-[#F9F9F9] rounded-sm overflow-hidden shrink-0">
                       {item.image ? (
                         <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -72,8 +72,8 @@ export const CartDrawer: React.FC = () => {
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0">
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex justify-between items-start gap-4 min-w-0">
                           <Typography variant="h4" className="text-[9px] font-medium text-foreground leading-snug line-clamp-2 uppercase tracking-wide">{item.name}</Typography>
                           <button 
                             onClick={() => removeFromCart(item.id, item.size)}
@@ -90,8 +90,8 @@ export const CartDrawer: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="flex items-center gap-4">
+                      <div className="flex justify-between items-center mt-4 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0">
                           <div className="flex items-center gap-3">
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}

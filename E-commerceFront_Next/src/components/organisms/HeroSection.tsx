@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Typography } from '@/components/atoms/Typography';
@@ -8,6 +8,11 @@ import { Button } from '@/components/atoms/Button';
 import { HERO_CONTENT, ROUTES } from '@/constants';
 
 export const HeroSection: React.FC = () => {
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    setHasAnimated(true);
+  }, []);
   return (
     <section aria-label="Sección Principal" className="relative min-h-screen lg:min-h-[90vh] flex items-center pt-32 sm:pt-40 pb-20 overflow-hidden bg-black">
       <div className="absolute inset-0 opacity-40 pointer-events-none">
@@ -24,9 +29,9 @@ export const HeroSection: React.FC = () => {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-10 relative z-10 w-full flex justify-center text-center">
         <div className="max-w-5xl space-y-8 sm:space-y-12">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            transition={{ duration: 1, ease: "easeOut" }}
+            initial={{ opacity: 0 }} 
+            animate={hasAnimated ? { opacity: 1 } : { opacity: 0 }} 
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <Typography variant="detail" className="text-white mb-6 sm:mb-8 bg-white/5 inline-block px-5 py-2 border border-white/10 text-[10px] sm:text-[12px] tracking-[0.4em] uppercase font-bold">
               {HERO_CONTENT.surtitle}
@@ -41,9 +46,9 @@ export const HeroSection: React.FC = () => {
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.8, delay: 0.4 }} 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }} 
+            transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }} 
             className="mx-auto space-y-8 sm:space-y-12"
           >
              <Typography variant="body" className="text-slate-200 text-lg sm:text-xl font-light leading-relaxed max-w-3xl mx-auto italic drop-shadow-md">

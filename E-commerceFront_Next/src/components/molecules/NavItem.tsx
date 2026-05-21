@@ -52,7 +52,7 @@ export const NavItem: React.FC<NavItemProps> = ({
     >
       <Link 
         href={href} 
-        className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5 ${active ? 'text-slate-950' : 'text-slate-400 hover:text-slate-950'}`}
+        className="text-xs font-bold uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5 text-slate-950"
         onClick={(e) => {
           if (onClick) e.preventDefault();
         }}

@@ -29,7 +29,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center group"
       >
-        <Typography variant="h4" className="text-[10px] font-black tracking-[0.2em] text-slate-400 group-hover:text-slate-950 transition-colors uppercase">{title}</Typography>
+        <Typography variant="h4" className="text-[10px] font-black tracking-[0.2em] text-slate-950 group-hover:text-slate-950 transition-colors uppercase">{title}</Typography>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -99,15 +99,6 @@ export const ShopSidebar = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between pb-6 border-b border-slate-100">
-        <button
-          onClick={resetFilters}
-          className="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-950 transition-colors tracking-[0.2em]"
-        >
-          Limpiar
-        </button>
-      </div>
-
       {/* Minimalist Search */}
       <div className="pt-2">
         <div className="relative group">
@@ -134,6 +125,15 @@ export const ShopSidebar = () => {
         )}
       </div>
 
+      <div className="flex items-center justify-between">
+        <button
+          onClick={resetFilters}
+          className="text-[10px] font-bold uppercase text-slate-950 hover:text-slate-950 transition-colors tracking-[0.2em]"
+        >
+          Limpiar
+        </button>
+      </div>
+
       <FilterSection title="Categorías" scrollable={false}>
         <div className="space-y-4">
           {categoriesLoading ? (
@@ -157,7 +157,7 @@ export const ShopSidebar = () => {
                 <div className={`w-5 h-5 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
                   <div className={`w-2 h-2 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
                 </div>
-                <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'text-slate-950' : 'text-slate-400 group-hover:text-slate-950'}`}>{c.name}</Typography>
+                <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'text-slate-950' : 'text-slate-950 group-hover:text-slate-950'}`}>{c.name}</Typography>
               </label>
             ))
           )}
@@ -176,7 +176,7 @@ export const ShopSidebar = () => {
                 onClick={() => toggleBrand(brand)}
                 className={`px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-all rounded-lg ${filters.selectedBrands.includes(brand)
                     ? 'border-slate-950 bg-slate-950 text-white shadow-xl shadow-slate-200'
-                    : 'border-slate-100 text-slate-400 hover:border-slate-950 hover:text-slate-950'
+                    : 'border-slate-100 text-slate-950 hover:border-slate-950 hover:text-slate-950'
                   }`}
               >
                 {brand}

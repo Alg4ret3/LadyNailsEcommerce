@@ -22,7 +22,7 @@ export const WhatsAppButton: React.FC = () => {
       animate={{ scale: 1, opacity: 1, y: 0 }}
       whileHover={{ scale: 1.05, y: -5 }}
       whileTap={{ scale: 0.95 }}
-      className={`fixed left-6 z-[100] bg-[#25D366] text-white p-4.5 rounded-2xl shadow-[0_20px_40px_-10px_rgba(37,211,102,0.4)] flex items-center justify-center border border-white/20 group backdrop-blur-sm transition-all duration-500 ${hasItemsToCompare ? 'bottom-24 sm:bottom-32 md:bottom-36' : 'bottom-6 sm:bottom-8'}`}
+      className={`fixed left-6 z-[100] bg-[#25D366] text-white p-4.5 rounded-2xl shadow-[0_20px_40px_-10px_rgba(37,211,102,0.4)] flex items-center justify-center border border-white/20 group transition-all duration-500 ${hasItemsToCompare ? 'bottom-24 sm:bottom-32 md:bottom-36' : 'bottom-6 sm:bottom-8'}`}
       aria-label="Chat on WhatsApp"
     >
       <svg 

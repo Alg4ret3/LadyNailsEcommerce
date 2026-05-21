@@ -41,7 +41,7 @@ export default function ShopLayout({
           <motion.button 
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsMobileDrawerOpen(true)}
-            className="flex items-center gap-2.5 px-7 py-3.5 bg-white/90 backdrop-blur-md border border-slate-200 text-slate-800 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
+            className="flex items-center gap-2.5 px-7 py-3.5 bg-white/90 border border-slate-200 text-slate-800 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
           >
             <SlidersHorizontal size={14} className="text-slate-400" />
             <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Filtros</span>
@@ -57,7 +57,7 @@ export default function ShopLayout({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setIsMobileDrawerOpen(false)}
-                  className="fixed inset-0 top-[96px] bg-black/5 backdrop-blur-sm z-[55]"
+                  className="fixed inset-0 top-[96px] bg-black/5 z-[55]"
                 />
                 <motion.div 
                   initial={{ y: -20, opacity: 0 }}
