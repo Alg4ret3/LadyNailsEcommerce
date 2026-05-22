@@ -14,9 +14,9 @@ export const COMPANY_INFO = {
     address: "Parque Industrial Sur, Bloque C-12, \nPasto, Nariño",
   },
   social: {
-    instagram: { url: "https://instagram.com", handle: "@LadyNailsShop" },
-    facebook: { url: "https://facebook.com", handle: "LadyNails Shop" },
-    tiktok: { url: "https://tiktok.com", handle: "@LadyNailsShop" },
+    instagram: { url: "https://www.instagram.com/ladynailshop/?hl=es-la", handle: "@LadyNailShop" },
+    facebook: { url: "https://www.facebook.com/share/1GKjBAGt4e/", handle: "LadyNailShop" },
+    tiktok: { url: "https://www.tiktok.com/@ladynailshop", handle: "@LadyNailShop" },
   }
 };
 
