@@ -134,35 +134,55 @@ export const ShopSidebar = () => {
         </button>
       </div>
 
-      <FilterSection title="Categorías" scrollable={false}>
-        <div className="space-y-4">
-          {categoriesLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex items-center gap-4 animate-pulse">
-                  <div className="w-5 h-5 bg-slate-50 border border-slate-100" />
-                  <div className="h-3 w-32 bg-slate-50 rounded" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            categories.map(c => (
-              <label key={c.id} className="flex items-center gap-4 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle)}
-                  onChange={() => toggleCategory(c.handle || c.id)}
-                  className="hidden"
-                />
-                <div className={`w-5 h-5 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
-                  <div className={`w-2 h-2 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
-                </div>
-                <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(c.id) || filters.selectedCategories.includes(c.handle) ? 'text-slate-950' : 'text-slate-950 group-hover:text-slate-950'}`}>{c.name}</Typography>
-              </label>
-            ))
-          )}
-        </div>
-      </FilterSection>
+<FilterSection title="Categorías" scrollable={false}>
+         <div className="space-y-2">
+           {categoriesLoading ? (
+             <div className="space-y-4">
+               {[1, 2, 3, 4].map(i => (
+                 <div key={i} className="flex items-center gap-4 animate-pulse">
+                   <div className="w-5 h-5 bg-slate-50 border border-slate-100" />
+                   <div className="h-3 w-32 bg-slate-50 rounded" />
+                 </div>
+               ))}
+             </div>
+           ) : (
+             categories.map((category) => (
+               <div key={category.id}>
+                 <label className="flex items-center gap-4 cursor-pointer group py-2">
+                   <input
+                     type="checkbox"
+                     checked={filters.selectedCategories.includes(category.id) || filters.selectedCategories.includes(category.handle)}
+                     onChange={() => toggleCategory(category.handle || category.id)}
+                     className="hidden"
+                   />
+                   <div className={`w-5 h-5 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(category.id) || filters.selectedCategories.includes(category.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
+                     <div className={`w-2 h-2 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(category.id) || filters.selectedCategories.includes(category.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
+                   </div>
+                   <Typography variant="body" className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${filters.selectedCategories.includes(category.id) || filters.selectedCategories.includes(category.handle) ? 'text-slate-950' : 'text-slate-950 group-hover:text-slate-950'}`}>{category.name}</Typography>
+                 </label>
+                 {category.category_children && category.category_children.length > 0 && (
+                   <div className="ml-10 space-y-1 mt-1">
+                     {category.category_children.map((child) => (
+                       <label key={child.id} className="flex items-center gap-3 cursor-pointer group py-1">
+                         <input
+                           type="checkbox"
+                           checked={filters.selectedCategories.includes(child.id) || filters.selectedCategories.includes(child.handle)}
+                           onChange={() => toggleCategory(child.handle || child.id)}
+                           className="hidden"
+                         />
+                         <div className={`w-4 h-4 border flex items-center justify-center transition-all ${filters.selectedCategories.includes(child.id) || filters.selectedCategories.includes(child.handle) ? 'border-slate-950 bg-slate-950' : 'border-slate-200 group-hover:border-slate-950'}`}>
+                           <div className={`w-1.5 h-1.5 bg-white rounded-full transition-opacity ${filters.selectedCategories.includes(child.id) || filters.selectedCategories.includes(child.handle) ? 'opacity-100' : 'opacity-0'}`}></div>
+                         </div>
+                         <Typography variant="body" className={`text-[12px] font-medium tracking-wider transition-colors text-slate-600 group-hover:text-slate-950`}>{child.name}</Typography>
+                       </label>
+                     ))}
+                   </div>
+                 )}
+               </div>
+             ))
+           )}
+         </div>
+       </FilterSection>
 
 
       <FilterSection title="Marcas" scrollable={false}>

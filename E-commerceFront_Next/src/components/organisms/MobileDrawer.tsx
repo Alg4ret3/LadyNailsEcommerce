@@ -131,6 +131,22 @@ const MainScreen = memo(function MainScreen({
         ))}
       </div>
 
+      {/* VER TODO EL CATALOGO */}
+      <Link
+        href="/shop"
+        onClick={onClose}
+        className="
+          border-b
+          border-neutral-100
+          py-5
+          active:opacity-60
+        "
+      >
+        <span className="text-[15px] font-medium tracking-tight text-black">
+          Ver todo el catálogo
+        </span>
+      </Link>
+
       {/* CATALOG */}
       <div className="pb-2 pt-10">
         <span
