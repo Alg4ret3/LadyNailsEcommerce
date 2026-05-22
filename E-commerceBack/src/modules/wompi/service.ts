@@ -70,10 +70,15 @@ export class WompiPaymentProvider extends AbstractPaymentProvider<WompiOptions> 
 
   async authorizePayment(input: AuthorizePaymentInput): Promise<AuthorizePaymentOutput> {
     const statusData = await this.getPaymentStatus({ data: input.data })
-    
+    const data = (input.data || {}) as Record<string, unknown>
+
+    if (statusData.status === PaymentSessionStatus.AUTHORIZED) {
+      data.status = "APPROVED"
+    }
+
     return {
       status: statusData.status,
-      data: input.data
+      data,
     }
   }
 

@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import { ShieldCheck, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { getPersistedWompiCheckoutCartId, persistWompiCheckoutCartId } from '@/utils/wompiCheckout';
+import {
+  getPersistedWompiCheckoutCartId,
+  persistWompiCheckoutCartId,
+  persistWompiCheckoutReference,
+  WOMPI_RETURN_PATH,
+} from '@/utils/wompiCheckout';
 
 declare global {
   interface Window {
@@ -21,7 +25,6 @@ interface Props {
 }
 
 export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabled, siteUrl }: Props) {
-  const pathname = usePathname();
   const { medusaCartId } = useCart();
   useEffect(() => {
     const script = document.createElement("script");
@@ -39,6 +42,9 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
     if (medusaCartId && !getPersistedWompiCheckoutCartId()) {
       persistWompiCheckoutCartId(medusaCartId);
     }
+    if (paymentSessionData?.reference) {
+      persistWompiCheckoutReference(paymentSessionData.reference);
+    }
 
     if (!window.WidgetCheckout) {
       alert("El widget de Wompi está cargando...");
@@ -50,10 +56,8 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
       return;
     }
     
-    // Build the redirect URL so PSE/Nequi/Bancolombia come back here
     const baseUrl = siteUrl || (typeof window !== 'undefined' ? window.location.origin : '');
-    const redirectUrl = `${baseUrl}${pathname}`;
-    console.log("Wompi redirectUrl configured as:", redirectUrl);
+    const redirectUrl = `${baseUrl}${WOMPI_RETURN_PATH}`;
 
     const checkoutOptions: any = {
       currency: paymentSessionData.currency,
@@ -69,10 +73,6 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
     const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
     if (!isLocalhost) {
       checkoutOptions.redirectUrl = redirectUrl;
-      console.log("Adding dynamic redirectUrl to options:", redirectUrl);
-    } else {
-      console.log("Localhost detected: omitting dynamic redirectUrl to prevent Wompi 403 whitelist errors.");
-      console.log("To test redirects locally, configure 'http://localhost:3000/checkout' as the redirection URL directly in the Wompi Sandbox Console.");
     }
 
     const checkout = new window.WidgetCheckout(checkoutOptions);
@@ -83,8 +83,7 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
         // Widget modal payment (credit/debit card) succeeded immediately
         onPaymentSuccess();
       } else if (transaction.status === 'PENDING') {
-        // Redirect-based payment (PSE, Nequi) — the page will reload via redirectUrl
-        // Nothing to do here; useCheckoutFlow will handle it on mount
+        // Redirect-based payment (PSE, Nequi) — user returns via redirectUrl to /checkout/wompi-return
       } else {
         alert("El pago no fue aprobado. Estado: " + transaction.status);
       }
