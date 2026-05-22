@@ -6,6 +6,14 @@ import { XIcon as X, Plus, Minus } from "@/components/icons";
 import { Typography } from "@/components/atoms/Typography";
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { modalVariants } from "@/utils/animations";
+
+const addToCartBackdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 0.5, transition: { duration: 0.2 } },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
+};
 
 interface AddToCartModalProps {
   isOpen: boolean;
@@ -30,6 +38,7 @@ export const AddToCartModal: React.FC<AddToCartModalProps> = ({
 }) => {
   const { addToCart, setIsCartOpen } = useCart();
   const [isAdding, setIsAdding] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // If the product has multiple variants, we want a quantity per variant
   // Initial state: a map of variantId to quantity

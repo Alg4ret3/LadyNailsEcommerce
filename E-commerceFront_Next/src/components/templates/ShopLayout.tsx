@@ -11,6 +11,8 @@ import { Badge } from '@/components/atoms/Badge';
 import { useCategories } from '@/context/CategoriesContext';
 import { useShop } from '@/context/ShopContext';
 import { filterProducts } from '@/utils/shop-filters';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { filterSectionVariants, chevronVariants } from '@/utils/animations';
 
 interface ShopLayoutProps {
   title: string;
@@ -21,6 +23,8 @@ interface ShopLayoutProps {
 
 const FilterSection = ({ title, children, defaultOpen = true, scrollable = true }: { title: string, children: React.ReactNode, defaultOpen?: boolean, scrollable?: boolean }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
     <div className="border-b border-slate-100 py-6">
       <button 
@@ -29,8 +33,9 @@ const FilterSection = ({ title, children, defaultOpen = true, scrollable = true 
       >
         <Typography variant="h4" className="text-[10px] font-bold tracking-[0.15em] text-slate-400 group-hover:text-slate-950 transition-colors uppercase">{title}</Typography>
         <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          variants={chevronVariants}
+          animate={isOpen ? 'open' : 'closed'}
+          initial={false}
         >
           <ChevronDown size={12} className="text-slate-200 group-hover:text-slate-950 transition-colors" />
         </motion.div>
@@ -38,11 +43,12 @@ const FilterSection = ({ title, children, defaultOpen = true, scrollable = true 
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            variants={filterSectionVariants}
+            initial="closed"
+            animate="open"
+            exit="exit"
+            className="overflow-hidden will-change-transform"
+            style={{ transformOrigin: '0% 0%' }}
           >
             <div className={`pt-6 ${scrollable ? 'max-h-64 overflow-y-auto custom-scrollbar pr-2' : ''}`}>
               {children}

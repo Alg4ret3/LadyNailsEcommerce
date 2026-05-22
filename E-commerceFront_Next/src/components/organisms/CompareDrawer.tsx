@@ -7,19 +7,29 @@ import { useCompare } from '@/context/CompareContext';
 import { Typography } from '@/components/atoms/Typography';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const compareDrawerVariants = {
+  hidden: { y: 100, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { y: 100, opacity: 0, transition: { duration: 0.2 } },
+};
 
 export const CompareDrawer: React.FC = () => {
   const { compareItems, removeFromCompare, clearCompare } = useCompare();
+  const prefersReducedMotion = useReducedMotion();
 
   if (compareItems.length === 0) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] p-2 sm:p-6 pointer-events-none">
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="max-w-3xl mx-auto bg-white border border-zinc-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] rounded-[24px] sm:rounded-full p-2 flex items-center gap-3 sm:gap-6 pointer-events-auto"
+        variants={compareDrawerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="max-w-3xl mx-auto bg-white border border-zinc-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] rounded-[24px] sm:rounded-full p-2 flex items-center gap-3 sm:gap-6 pointer-events-auto will-change-transform"
+        style={{ transformOrigin: 'center bottom' }}
       >
         <div className="items-center gap-3 border-r border-zinc-100 pr-4 sm:pr-6 ml-1 sm:ml-2 hidden sm:flex">
           <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center shrink-0">

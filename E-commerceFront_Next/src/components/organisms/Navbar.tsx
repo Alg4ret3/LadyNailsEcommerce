@@ -14,6 +14,8 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCategories, Category } from '@/context/CategoriesContext';
 import { useUser } from '@/context/UserContext';
 import { COMPANY_INFO, NAVBAR_CONTENT, ROUTES, WHATSAPP_CONFIG } from '@/constants';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hamburgerVariants, hamburgerLineTransition, badgeVariants, dropdownVariants, modalVariants } from '@/utils/animations';
 
 
 export const Navbar: React.FC = () => {
@@ -117,18 +119,21 @@ export const Navbar: React.FC = () => {
           >
             <div className="flex flex-col justify-center items-center gap-[5px] w-6 h-6">
               <motion.span
-                animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
+                variants={hamburgerVariants.top}
+                animate={isOpen ? 'open' : 'closed'}
+                transition={hamburgerLineTransition}
                 className="w-full h-[1.5px] bg-slate-900 rounded-full"
               />
               <motion.span
-                animate={isOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-                transition={{ duration: 0.3, ease: [0.65, 0, 0.35, 1] }}
+                variants={hamburgerVariants.middle}
+                animate={isOpen ? 'open' : 'closed'}
+                transition={hamburgerLineTransition}
                 className="w-full h-[1.5px] bg-slate-900 rounded-full"
               />
               <motion.span
-                animate={isOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
+                variants={hamburgerVariants.bottom}
+                animate={isOpen ? 'open' : 'closed'}
+                transition={hamburgerLineTransition}
                 className="w-full h-[1.5px] bg-slate-900 rounded-full"
               />
             </div>
@@ -172,9 +177,10 @@ export const Navbar: React.FC = () => {
               <AnimatePresence>
                 {activeDropdown === "catalogo" && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
+                    variants={dropdownVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
                     className="absolute top-full left-0 flex bg-white border border-slate-100 shadow-2xl z-50 rounded-b-xl overflow-hidden"
                   >
                     {/* Left Column: Categories List (Scrollable) */}
@@ -224,6 +230,8 @@ export const Navbar: React.FC = () => {
               </AnimatePresence>
             </div>
             <NavItem name="Contacto" href={ROUTES.contact} />
+            <NavItem name="Nosotros" href={ROUTES.about} />
+
           </div>
 
           {/* Actions */}

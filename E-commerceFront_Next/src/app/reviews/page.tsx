@@ -10,6 +10,8 @@ import { useUser } from '@/context/UserContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import { getPlatformReviews, createPlatformReview, updatePlatformReview, deletePlatformReview, getCustomerReviews, ReviewData } from '@/services/medusa/review';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { dropdownVariants, modalVariants } from '@/utils/animations';
 
 const REVIEW_TAGS = ['Experiencia Web', 'Seguridad', 'Ficha Técnica', 'Mobile Friendly', 'Proceso de Compra', 'Rendimiento'];
 
@@ -167,7 +169,7 @@ export default function ReviewsPage() {
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
               className="text-slate-500 text-lg sm:text-xl font-light max-w-2xl leading-relaxed"
             >
               Voces auténticas que definen el estándar de excelencia en Lady Nails. Análisis y métricas de nuestra infraestructura digital.
