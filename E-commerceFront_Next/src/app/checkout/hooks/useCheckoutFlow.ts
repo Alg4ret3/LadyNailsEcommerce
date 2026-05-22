@@ -23,6 +23,9 @@ export function useCheckoutFlow() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get('wompi_ref');
       const id = params.get('id');
+      // #region agent log
+      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:parseUrlParams',message:'Wompi URL params on mount',data:{search:window.location.search,wompi_ref:ref,id,allKeys:[...params.keys()]},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (ref) {
         setWompiRef(ref);
       }
@@ -188,6 +191,9 @@ export function useCheckoutFlow() {
     hasVerified.current = true;
 
     const verifyTransaction = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyStart',message:'Starting Wompi redirect verify',data:{wompiRef,wompiTxId,cartItemsLen:cartItems.length,medusaCartId},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       setIsProcessingOrder(true);
       setLocalError('');
       try {
@@ -196,14 +202,30 @@ export function useCheckoutFlow() {
           : `reference=${encodeURIComponent(wompiRef!)}`;
 
         const response = await medusaFetch<any>(`/store/wompi/verify?${queryParam}`);
+        // #region agent log
+        fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyResponse',message:'Wompi verify API response',data:{status:response?.status,queryParam},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         if (response.status === 'APPROVED') {
           const cartId = await ensureCart();
+          // #region agent log
+          fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:ensureCartAfterApprove',message:'ensureCart after APPROVED',data:{cartId:cartId||null,hadMedusaCartId:!!medusaCartId},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           if (cartId) {
-            const completeResponse = await completeCartMutation();
-            clearCart();
-            const orderId = completeResponse?.order?.id || (completeResponse?.type === 'order' ? completeResponse.order.id : null);
-            router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+            try {
+              const completeResponse = await completeCartMutation();
+              // #region agent log
+              fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:completeCartSuccess',message:'completeCart after redirect',data:{type:completeResponse?.type,orderId:completeResponse?.order?.id},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
+              clearCart();
+              const orderId = completeResponse?.order?.id || (completeResponse?.type === 'order' ? completeResponse.order.id : null);
+              router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+            } catch (completeErr: any) {
+              // #region agent log
+              fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:completeCartError',message:'completeCart failed after redirect',data:{errorMessage:completeErr?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
+              throw completeErr;
+            }
           } else {
             router.push('/checkout/confirmation');
           }
@@ -215,6 +237,9 @@ export function useCheckoutFlow() {
           setIsProcessingOrder(false);
         }
       } catch (err: any) {
+        // #region agent log
+        fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyCatch',message:'verifyTransaction error',data:{errorMessage:err?.message},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         console.error('Error verifying redirect transaction:', err);
         setLocalError('Hubo un error verificando su pago. Por favor contacte a soporte si el dinero fue debitado.');
         setIsProcessingOrder(false);
@@ -222,14 +247,18 @@ export function useCheckoutFlow() {
     };
 
     verifyTransaction();
-  }, [wompiRef, wompiTxId, router, ensureCart, completeCartMutation, clearCart]);
+  }, [wompiRef, wompiTxId, router, ensureCart, completeCartMutation, clearCart, cartItems.length, medusaCartId]);
 
   // Redirect if cart is empty
   React.useEffect(() => {
     if (cartItems.length === 0 && !isProcessingOrder) {
+      const hasWompiReturn = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).has('id') || new URLSearchParams(window.location.search).has('wompi_ref'));
+      // #region agent log
+      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:emptyCartRedirect',message:'Empty cart redirect firing',data:{cartItemsLen:cartItems.length,isProcessingOrder,hasWompiReturn,wompiRef,wompiTxId},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       router.push('/cart');
     }
-  }, [cartItems.length, isProcessingOrder, router]);
+  }, [cartItems.length, isProcessingOrder, router, wompiRef, wompiTxId]);
 
   // Skip auth step if user is already logged in
   React.useEffect(() => {
@@ -522,6 +551,9 @@ export function useCheckoutFlow() {
   };
 
   const handleWompiSuccess = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:handleWompiSuccess',message:'Widget inline success path',data:{medusaCartId},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     setIsProcessingOrder(true);
     try {
       const cartId = await ensureCart();

@@ -75,6 +75,9 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
 
     checkout.open((result: any) => {
       const transaction = result.transaction;
+      // #region agent log
+      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'WompiSubmitButton.tsx:widgetCallback',message:'Widget checkout callback',data:{status:transaction?.status,redirectUrl:checkoutOptions.redirectUrl||null},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (transaction.status === 'APPROVED') {
         // Widget modal payment (credit/debit card) succeeded immediately
         onPaymentSuccess();
