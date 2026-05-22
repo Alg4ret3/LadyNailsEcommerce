@@ -9,11 +9,18 @@ import { Button } from '@/components/atoms/Button';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const drawerTransition = {
+  duration: 0.3,
+  ease: 'easeOut',
+};
 
 export const CartDrawer: React.FC = () => {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, isCartOpen, setIsCartOpen } = useCart();
   const router = useRouter();
   const [showMinWarning, setShowMinWarning] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Bloquea el scroll del body cuando el drawer está abierto (especialmente importante en mobile)
   useEffect(() => {
