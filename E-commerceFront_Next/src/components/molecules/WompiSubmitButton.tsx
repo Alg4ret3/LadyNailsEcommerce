@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { ShieldCheck, Lock } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { getPersistedWompiCheckoutCartId, persistWompiCheckoutCartId } from '@/utils/wompiCheckout';
 
 declare global {
   interface Window {
@@ -20,6 +22,7 @@ interface Props {
 
 export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabled, siteUrl }: Props) {
   const pathname = usePathname();
+  const { medusaCartId } = useCart();
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.wompi.co/widget.js";
@@ -33,8 +36,9 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
   }, []);
 
   const handlePay = () => {
-    console.log("WompiSubmitButton: handlePay triggered");
-    console.log("paymentSessionData:", paymentSessionData);
+    if (medusaCartId && !getPersistedWompiCheckoutCartId()) {
+      persistWompiCheckoutCartId(medusaCartId);
+    }
 
     if (!window.WidgetCheckout) {
       alert("El widget de Wompi está cargando...");
@@ -75,9 +79,6 @@ export function WompiSubmitButton({ paymentSessionData, onPaymentSuccess, disabl
 
     checkout.open((result: any) => {
       const transaction = result.transaction;
-      // #region agent log
-      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'WompiSubmitButton.tsx:widgetCallback',message:'Widget checkout callback',data:{status:transaction?.status,redirectUrl:checkoutOptions.redirectUrl||null},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       if (transaction.status === 'APPROVED') {
         // Widget modal payment (credit/debit card) succeeded immediately
         onPaymentSuccess();

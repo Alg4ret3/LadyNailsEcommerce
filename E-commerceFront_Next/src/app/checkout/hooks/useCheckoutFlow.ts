@@ -9,30 +9,31 @@ import { useCustomerAddresses } from '@/hooks/useCurrentUser';
 import { getShippingOptions, ShippingOption, PaymentCollection } from '@/services/medusa';
 import { medusaFetch } from '@/services/medusa/client';
 import { validatePassword, validateName, validatePhone, validateAddress } from '@/utils/validations';
+import {
+  clearPersistedWompiCheckoutCartId,
+  getPersistedWompiCheckoutCartId,
+  getWompiReturnParams,
+  hasWompiReturnInUrl,
+  persistWompiCheckoutCartId,
+} from '@/utils/wompiCheckout';
 
 export type CheckoutStep = 'AUTH_CHOICE' | 'EMAIL_VERIFY' | 'SHIP_INFO' | 'SHIPPING' | 'PAYMENT';
 export type AuthMode = 'choice' | 'login' | 'register';
 
 export function useCheckoutFlow() {
   const router = useRouter();
-  const [wompiRef, setWompiRef] = React.useState<string | null>(null);
-  const [wompiTxId, setWompiTxId] = React.useState<string | null>(null);
+  const initialWompi = typeof window !== 'undefined' ? getWompiReturnParams() : { txId: null, ref: null };
+  const [wompiRef, setWompiRef] = React.useState<string | null>(initialWompi.ref);
+  const [wompiTxId, setWompiTxId] = React.useState<string | null>(initialWompi.txId);
+  const [isProcessingOrder, setIsProcessingOrder] = React.useState(
+    () => !!(initialWompi.txId || initialWompi.ref)
+  );
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const ref = params.get('wompi_ref');
-      const id = params.get('id');
-      // #region agent log
-      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:parseUrlParams',message:'Wompi URL params on mount',data:{search:window.location.search,wompi_ref:ref,id,allKeys:[...params.keys()]},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      if (ref) {
-        setWompiRef(ref);
-      }
-      if (id) {
-        setWompiTxId(id);
-      }
-    }
+    const { txId, ref } = getWompiReturnParams();
+    if (ref) setWompiRef(ref);
+    if (txId) setWompiTxId(txId);
+    if (txId || ref) setIsProcessingOrder(true);
   }, []);
 
   const { cartItems, totalItems, totalAmount, clearCart } = useCart();
@@ -61,7 +62,6 @@ export function useCheckoutFlow() {
   const [selectedShippingOptionId, setSelectedShippingOptionId] = React.useState<string | null>(null);
   const [paymentCollection, setPaymentCollection] = React.useState<PaymentCollection | null>(null);
   const [selectedPaymentProviderId, setSelectedPaymentProviderId] = React.useState<string | null>(null);
-  const [isProcessingOrder, setIsProcessingOrder] = React.useState(false);
   const [isUpdatingCart, setIsUpdatingCart] = React.useState(false);
   const [isAddingAddress, setIsAddingAddress] = React.useState(false);
   const [hasSkippedAuth, setHasSkippedAuth] = React.useState(false);
@@ -184,51 +184,73 @@ export function useCheckoutFlow() {
     }
   }, [user]);
 
-  // Verify redirect-based Wompi transactions on mount if redirect reference or ID exists
+  const resolveCheckoutCartId = React.useCallback(async (): Promise<string | null> => {
+    const persisted = getPersistedWompiCheckoutCartId();
+    if (persisted) return persisted;
+    if (medusaCartId) return medusaCartId;
+    try {
+      return await ensureCart();
+    } catch {
+      return null;
+    }
+  }, [medusaCartId, ensureCart]);
+
+  const pushToConfirmation = React.useCallback((completeResponse: any) => {
+    clearPersistedWompiCheckoutCartId();
+    clearCart();
+    const orderId =
+      completeResponse?.order?.id ||
+      (completeResponse?.type === 'order' ? completeResponse.order?.id : null);
+    router.replace(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+  }, [router, clearCart]);
+
+  const completeCartWithRetry = React.useCallback(async (cartId: string) => {
+    const retryDelaysMs = [0, 1500, 3000];
+    let lastError: unknown;
+    for (const delay of retryDelaysMs) {
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      try {
+        return await completeCartMutation(cartId);
+      } catch (err) {
+        lastError = err;
+        const status = (err as { status?: number })?.status;
+        if (status !== 409) throw err;
+      }
+    }
+    throw lastError;
+  }, [completeCartMutation]);
+
+  // Verify redirect-based Wompi transactions (PSE, Nequi, Bancolombia, etc.)
   const hasVerified = React.useRef(false);
   React.useEffect(() => {
-    if ((!wompiRef && !wompiTxId) || hasVerified.current) return;
+    const { txId, ref } = getWompiReturnParams();
+    if ((!txId && !ref && !wompiTxId && !wompiRef) || hasVerified.current) return;
     hasVerified.current = true;
 
     const verifyTransaction = async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyStart',message:'Starting Wompi redirect verify',data:{wompiRef,wompiTxId,cartItemsLen:cartItems.length,medusaCartId},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       setIsProcessingOrder(true);
       setLocalError('');
+      const effectiveTxId = txId || wompiTxId;
+      const effectiveRef = ref || wompiRef;
+
       try {
-        const queryParam = wompiTxId
-          ? `id=${encodeURIComponent(wompiTxId)}`
-          : `reference=${encodeURIComponent(wompiRef!)}`;
+        const queryParam = effectiveTxId
+          ? `id=${encodeURIComponent(effectiveTxId)}`
+          : `reference=${encodeURIComponent(effectiveRef!)}`;
 
         const response = await medusaFetch<any>(`/store/wompi/verify?${queryParam}`);
-        // #region agent log
-        fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyResponse',message:'Wompi verify API response',data:{status:response?.status,queryParam},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
-        
+
         if (response.status === 'APPROVED') {
-          const cartId = await ensureCart();
-          // #region agent log
-          fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:ensureCartAfterApprove',message:'ensureCart after APPROVED',data:{cartId:cartId||null,hadMedusaCartId:!!medusaCartId},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
-          if (cartId) {
-            try {
-              const completeResponse = await completeCartMutation();
-              // #region agent log
-              fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:completeCartSuccess',message:'completeCart after redirect',data:{type:completeResponse?.type,orderId:completeResponse?.order?.id},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
-              clearCart();
-              const orderId = completeResponse?.order?.id || (completeResponse?.type === 'order' ? completeResponse.order.id : null);
-              router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
-            } catch (completeErr: any) {
-              // #region agent log
-              fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:completeCartError',message:'completeCart failed after redirect',data:{errorMessage:completeErr?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
-              throw completeErr;
-            }
-          } else {
-            router.push('/checkout/confirmation');
+          const cartId = await resolveCheckoutCartId();
+          if (!cartId) {
+            setLocalError('No se encontró el carrito de la compra. Contacte a soporte si el pago fue debitado.');
+            setIsProcessingOrder(false);
+            return;
           }
+          const completeResponse = await completeCartWithRetry(cartId);
+          pushToConfirmation(completeResponse);
         } else if (response.status === 'PENDING') {
           setLocalError('El pago aún está en proceso de verificación por Wompi. Por favor espere o verifique con su banco.');
           setIsProcessingOrder(false);
@@ -236,10 +258,7 @@ export function useCheckoutFlow() {
           setLocalError(`El pago no fue aprobado o falló. Estado: ${response.status || 'Desconocido'}`);
           setIsProcessingOrder(false);
         }
-      } catch (err: any) {
-        // #region agent log
-        fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:verifyCatch',message:'verifyTransaction error',data:{errorMessage:err?.message},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+      } catch (err: unknown) {
         console.error('Error verifying redirect transaction:', err);
         setLocalError('Hubo un error verificando su pago. Por favor contacte a soporte si el dinero fue debitado.');
         setIsProcessingOrder(false);
@@ -247,18 +266,14 @@ export function useCheckoutFlow() {
     };
 
     verifyTransaction();
-  }, [wompiRef, wompiTxId, router, ensureCart, completeCartMutation, clearCart, cartItems.length, medusaCartId]);
+  }, [wompiRef, wompiTxId, resolveCheckoutCartId, completeCartWithRetry, pushToConfirmation]);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty — never interrupt Wompi return (?id= / ?wompi_ref=)
   React.useEffect(() => {
-    if (cartItems.length === 0 && !isProcessingOrder) {
-      const hasWompiReturn = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).has('id') || new URLSearchParams(window.location.search).has('wompi_ref'));
-      // #region agent log
-      fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:emptyCartRedirect',message:'Empty cart redirect firing',data:{cartItemsLen:cartItems.length,isProcessingOrder,hasWompiReturn,wompiRef,wompiTxId},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+    if (cartItems.length === 0 && !isProcessingOrder && !hasWompiReturnInUrl()) {
       router.push('/cart');
     }
-  }, [cartItems.length, isProcessingOrder, router, wompiRef, wompiTxId]);
+  }, [cartItems.length, isProcessingOrder, router]);
 
   // Skip auth step if user is already logged in
   React.useEffect(() => {
@@ -514,6 +529,7 @@ export function useCheckoutFlow() {
     try {
       const cartId = await ensureCart();
       if (cartId) {
+        persistWompiCheckoutCartId(cartId);
         await addShippingMethodMutation(selectedShippingOptionId);
         const { payment_collection: new_collection } = await createPaymentCollectionMutation();
         setPaymentCollection(new_collection);
@@ -551,21 +567,17 @@ export function useCheckoutFlow() {
   };
 
   const handleWompiSuccess = async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7391/ingest/f342cf71-3ac6-446c-ab83-55df48bac7de',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'95c955'},body:JSON.stringify({sessionId:'95c955',location:'useCheckoutFlow.ts:handleWompiSuccess',message:'Widget inline success path',data:{medusaCartId},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     setIsProcessingOrder(true);
     try {
-      const cartId = await ensureCart();
+      const cartId = await resolveCheckoutCartId();
       if (cartId) {
-        const response = await completeCartMutation();
-        clearCart();
-        const orderId = response?.order?.id || (response?.type === 'order' ? response.order.id : null);
-        router.push(`/checkout/confirmation${orderId ? `?order_id=${orderId}` : ''}`);
+        const response = await completeCartWithRetry(cartId);
+        pushToConfirmation(response);
       } else {
-        router.push('/checkout/confirmation');
+        router.replace('/checkout/confirmation');
       }
     } catch (err) {
+      console.error('Error completing order after Wompi widget payment:', err);
       setLocalError('El pago en Wompi fue EXITOSO, pero hubo un error generando la orden final.');
       setIsProcessingOrder(false);
     }

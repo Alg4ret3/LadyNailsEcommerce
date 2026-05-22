@@ -295,8 +295,8 @@ export function useCartQuery() {
   });
 
   const completeCartMutation = useMutation({
-    mutationFn: async () => {
-      const activeCartId = await ensureCart();
+    mutationFn: async (explicitCartId?: string) => {
+      const activeCartId = explicitCartId || await ensureCart();
       return completeCart(activeCartId);
     },
     onSuccess: () => {
