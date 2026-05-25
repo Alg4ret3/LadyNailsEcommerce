@@ -5,8 +5,8 @@ export const HERO_CONTENT = {
   subtitle: "BELLEZA Y BARBERÍA SIN LÍMITES",
   description: "El suministro industrial definitivo para artistas del estilo. Herramientas y geles de grado profesional para salones y barberías que no aceptan menos que la perfección.",
   buttonLabel: "VER CATÁLOGO COMPLETO",
-  backgroundImage: "https://res.cloudinary.com/dqky6oqrd/image/upload/w_1500,h_1500,c_fit/f_auto,q_auto/v1775580903/jnfuo0azdsjehnlwhiww.webp"
-
+  // backgroundImage: "https://res.cloudinary.com/dqky6oqrd/image/upload/w_1500,h_1500,c_fit/f_auto,q_auto/v1775580903/jnfuo0azdsjehnlwhiww.webp"
+  backgroundImage: "https://res.cloudinary.com/dak78ytuc/image/upload/w_1500,h_1500,c_fit/f_auto,q_auto/v1779746942/jnfuo0azdsjehnlwhiww_ezkoiw.webp"
 };
 
 export const ACADEMY_LOCATIONS = [
@@ -25,7 +25,7 @@ export const ACADEMY_LOCATIONS = [
       "https://images.unsplash.com/photo-1607779097040-26e80aa78e66?q=80&w=1000",
       "https://images.unsplash.com/photo-1607779097040-26e80aa78e66?q=80&w=1000"
     ],
-    whatsappNumber: "573000000000"
+    whatsappNumber: "573170098770"
   },
   {
     id: 'pasto-barber',
@@ -42,30 +42,30 @@ export const ACADEMY_LOCATIONS = [
       "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1000",
       "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=1000"
     ],
-    whatsappNumber: "573111111111"
+    whatsappNumber: "573185220753"
   }
 ];
 
 export const HOME_CATEGORIES = [
-  { name: 'Uñas y Geles', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580687/efnvpygjngh8ckqs5lxt.webp', count: '1.2k SKU', href: '/shop/uñas' },
-  { name: 'Barberia', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580893/gqsgpkw2xnjbcg4e1amz.jpg', count: '850k SKU', href: '/shop/barbería' },
-  { name: 'Maquillaje', img: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1775580891/gphgnidiphejo2daumep.jpg', count: '120 SKU', href: '/shop/maquillaje' },
+  { name: 'Uñas y Geles', img: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1779746940/efnvpygjngh8ckqs5lxt_eac8hq.webp', count: '1.2k SKU', href: '/shop/uñas' },
+  { name: 'Barberia', img: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1779746943/gqsgpkw2xnjbcg4e1amz_yrw5ux.webp', count: '850k SKU', href: '/shop/barbería' },
+  { name: 'Maquillaje', img: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_600,h_600,c_fit/f_auto,q_auto/v1779746941/gphgnidiphejo2daumep_cpz60f.webp', count: '120 SKU', href: '/shop/maquillaje' },
 ];
 export const HOME_PARTNERS = [
   { 
     name: 'Bioaqua', 
-    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/vnrhdnivfw4fiirbvdrh.svg' 
+    logo: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1779746941/vnrhdnivfw4fiirbvdrh_whh7dp.svg' 
   },
   { 
     name: 'Hola Señorita', 
-    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/ojmyfcxmtnktodbhmjqa.svg' 
+    logo: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1779746941/ojmyfcxmtnktodbhmjqa_c7e26f.svg' 
   },
   { 
     name: 'Kemei', 
-    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/z4qaqrdr8xjx2v6bqvh5.svg' 
+    logo: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1779746942/z4qaqrdr8xjx2v6bqvh5_mwnd3c.svg' 
   },
   { 
     name: 'Lattafa', 
-    logo: 'https://res.cloudinary.com/dqky6oqrd/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1775580573/ov4pq65ndj266owapddy.svg' 
+    logo: 'https://res.cloudinary.com/dak78ytuc/image/upload/w_200,h_200,c_fit/f_auto,q_auto/v1779746941/ov4pq65ndj266owapddy_v7dflt.svg' 
   },
 ];

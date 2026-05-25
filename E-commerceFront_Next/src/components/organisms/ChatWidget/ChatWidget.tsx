@@ -7,6 +7,7 @@ import { useChat } from '@/hooks/useChat'
 import { ChatBubble } from './ChatBubble'
 import { ChatInput } from './ChatInput'
 import { TypingIndicator } from './TypingIndicator'
+import { ASSISTANT_IMAGES } from '@/constants/images'
 
 // ─── Chat Widget (controlled externally by FloatingSpeedDial) ─────────────────
 
@@ -61,14 +62,14 @@ export function ChatWidget({ isOpen, onClose }: ChatWidgetProps) {
           {/* ── Header ──────────────────────────────────────────────── */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
-                  <img 
-                    src="https://res.cloudinary.com/dqky6oqrd/image/upload/f_auto,q_auto/v1779209792/kcf5zfmvznma0f9bjxql.svg" 
-                    alt="Naily Logo" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+<div className="relative">
+                 <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
+                   <img 
+                     src={ASSISTANT_IMAGES.nailyLogo} 
+                     alt="Naily Logo" 
+                     className="w-full h-full object-cover"
+                   />
+                 </div>
                 <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
               </div>
               <div>
@@ -180,13 +181,13 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
       transition={{ delay: 0.1, duration: 0.3 }}
       className="flex flex-col items-center px-5 pt-10 pb-4 text-center"
     >
-      <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 mb-4 bg-white">
-        <img 
-          src="https://res.cloudinary.com/dqky6oqrd/image/upload/f_auto,q_auto/v1779209792/kcf5zfmvznma0f9bjxql.svg" 
-          alt="Naily" 
-          className="w-full h-full object-cover p-1"
-        />
-      </div>
+<div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-slate-100 mb-4 bg-white">
+                 <img 
+                   src={ASSISTANT_IMAGES.nailyLogo} 
+                   alt="Naily" 
+                   className="w-full h-full object-cover p-1"
+                 />
+               </div>
       <p className="text-base font-bold text-slate-800">¡Hola! Soy Naily</p>
       <p className="text-xs text-slate-500 mt-2 max-w-[240px] leading-relaxed font-medium">
         Tu asesora experta en belleza de Ladynail Shop. ¿En qué puedo ayudarte hoy?

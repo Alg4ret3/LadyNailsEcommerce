@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ASSISTANT_IMAGES } from '@/constants/images'
 
 interface TypingIndicatorProps {
   name?: string
@@ -16,7 +17,7 @@ export function TypingIndicator({ name = 'Naily' }: TypingIndicatorProps) {
       {/* Avatar */}
       <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-200">
         <img 
-          src="https://res.cloudinary.com/dqky6oqrd/image/upload/f_auto,q_auto/v1779209792/kcf5zfmvznma0f9bjxql.svg" 
+          src={ASSISTANT_IMAGES.nailyLogo} 
           alt="Naily" 
           className="w-full h-full object-cover"
         />

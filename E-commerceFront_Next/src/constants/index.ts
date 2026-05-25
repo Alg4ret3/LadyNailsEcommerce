@@ -4,3 +4,4 @@ export * from './home';
 export * from './config';
 export * from './support';
 export * from './legal';
+export * from './images';

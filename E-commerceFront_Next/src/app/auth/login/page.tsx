@@ -11,6 +11,7 @@ import Image from "next/image";
 
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
+import { LOGIN_IMAGES } from "@/constants/images";
 
 export default function LoginPage() {
   const { login, user, isLoading, error, clearError } = useUser();
@@ -63,7 +64,7 @@ export default function LoginPage() {
           <div className="hidden lg:block relative bg-slate-950 p-16 text-white space-y-12">
             <div className="absolute inset-0 opacity-40 transition-all">
               <Image
-                src="https://res.cloudinary.com/dqky6oqrd/image/upload/w_1600,h_900,c_fill,f_auto,q_auto/v1775582390/rdohll6ztxp9bgcykhjq.jpg"
+                src={LOGIN_IMAGES.background}
                 fill
                 className="object-cover saturate-80 grayscale-[20%]"
                 alt="Login Visual"
