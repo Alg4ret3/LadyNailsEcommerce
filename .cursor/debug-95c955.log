@@ -1,4 +1,0 @@
-{"sessionId":"95c955","location":"useCheckoutFlow.ts:parseUrlParams","message":"Wompi URL params on mount","data":{"search":"","wompi_ref":null,"id":null,"allKeys":[]},"timestamp":1779464032565,"hypothesisId":"A"}
-{"sessionId":"95c955","location":"useCheckoutFlow.ts:parseUrlParams","message":"Wompi URL params on mount","data":{"search":"","wompi_ref":null,"id":null,"allKeys":[]},"timestamp":1779464032580,"hypothesisId":"A"}
-{"sessionId":"95c955","location":"useCheckoutFlow.ts:parseUrlParams","message":"Wompi URL params on mount","data":{"search":"","wompi_ref":null,"id":null,"allKeys":[]},"timestamp":1779464122500,"hypothesisId":"A"}
-{"sessionId":"95c955","location":"useCheckoutFlow.ts:emptyCartRedirect","message":"Empty cart redirect firing","data":{"cartItemsLen":0,"isProcessingOrder":false,"hasWompiReturn":false,"wompiRef":null,"wompiTxId":null},"timestamp":1779464122502,"hypothesisId":"B"}
